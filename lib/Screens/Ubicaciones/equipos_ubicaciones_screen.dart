@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/Components/location_filter.dart';
+import 'package:frontend/Screens/Ubicaciones/mod_crear_ubicacion.dart';
+import 'package:frontend/Screens/Ubicaciones/mod_crear_equipo.dart';
 
 class EquiposUbicacionesScreen extends StatelessWidget {
   const EquiposUbicacionesScreen({Key? key}) : super(key: key);
@@ -53,11 +55,38 @@ class EquiposUbicacionesScreen extends StatelessWidget {
                     children: [
                       _ActionButton(text: 'Ver Mantenimientos'),
                       const SizedBox(width: 8),
-                      _ActionButton(text: 'Modificar'),
+                      _ActionButton(
+                        text: 'Modificar',
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const ModCrearUbicacionScreen(),
+                            ),
+                          );
+                        },
+                      ),
                       const SizedBox(width: 8),
-                      _ActionButton(text: 'Crear Nuevo Equipo'),
+                      _ActionButton(
+                        text: 'Crear Nuevo Equipo',
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const ModCrearEquipoScreen(),
+                            ),
+                          );
+                        },
+                      ),
                       const SizedBox(width: 8),
-                      _ActionButton(text: 'Crear Nueva Ubicación'),
+                      _ActionButton(
+                        text: 'Crear Nueva Ubicación',
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const ModCrearUbicacionScreen(),
+                            ),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ],
@@ -72,7 +101,9 @@ class EquiposUbicacionesScreen extends StatelessWidget {
 
 class _ActionButton extends StatelessWidget {
   final String text;
-  const _ActionButton({required this.text});
+  final VoidCallback? onPressed; // Permite pasar una función personalizada
+
+  const _ActionButton({required this.text, this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +115,7 @@ class _ActionButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         textStyle: const TextStyle(fontWeight: FontWeight.w500),
       ),
-      onPressed: () {},
+      onPressed: onPressed ?? () {},
       child: Text(text),
     );
   }

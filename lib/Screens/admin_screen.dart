@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../Components/sidebar.dart';
 import 'mantenimientos_screen.dart';
-import 'equipos_ubicaciones_screen.dart';
+import 'Ubicaciones/equipos_ubicaciones_screen.dart';
 import 'cuadrillas_screen.dart';
 
 class AdminScreen extends StatefulWidget {
