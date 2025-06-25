@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/Components/tag.dart';
 
 class EquiposUbicacionesScreen extends StatelessWidget {
-  const EquiposUbicacionesScreen({Key? key}) : super(key: key);
+  const EquiposUbicacionesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

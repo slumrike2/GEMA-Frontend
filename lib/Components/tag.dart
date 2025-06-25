@@ -7,12 +7,12 @@ class Tag extends StatelessWidget {
   final VoidCallback? onTap;
 
   const Tag({
-    Key? key,
+    super.key,
     required this.label,
     this.color = const Color(0xFF43A047),
     this.onRemove,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

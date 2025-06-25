@@ -14,9 +14,22 @@ class Sidebar extends StatelessWidget {
   Widget build(BuildContext context) {
     // Definir los colores de fondo para cada pantalla
     final List<Color> sidebarColors = [
-      const Color(0xFF0A3444), // Azul para la primera pantalla
-      const Color(0xFF002811), // Verde para la segunda pantalla
-      const Color(0xFF2C2001), // Amarillo para la tercera pantalla
+      const Color(0xFF2C2001), // Amarillo para Mantenimientos
+      const Color(0xFF002811), // Verde para ubicaciones y equipos
+       const Color(0xFF0A3444), // Azul para personal y cuadrillas
+    ];
+
+    final List<Color> selectedItemColors = [
+      const Color.fromARGB(255, 255, 198, 39), // Amarillo para Mantenimientos
+      const Color.fromARGB(255, 0, 121, 52), // Verde para Equipos y Ubicaciones
+      const Color.fromARGB(255, 65, 180, 229), // Azul para Cuadrillas
+    ];
+
+    // Lista de iconos del sidebar
+    final List<String> sidebarLogos = [
+      'Icon/Status=Yellow.png', // Icono para Mantenimientos
+      'Icon/Status=Green.png', // Icono para Equipos y Ubicaciones
+      'Icon/Status=Blue.png', // Icono para Cuadrillas
     ];
 
     final items = [
@@ -24,18 +37,21 @@ class Sidebar extends StatelessWidget {
         icon: Icons.build,
         label: 'Mantenimientos',
         isSelected: selectedIndex == 0,
+        selectedColor: selectedItemColors[0],
         onTap: () => onItemSelected(0),
       ),
       _SidebarItem(
         icon: Icons.devices,
         label: 'Equipos y Ubicaciones',
         isSelected: selectedIndex == 1,
+        selectedColor: selectedItemColors[1],
         onTap: () => onItemSelected(1),
       ),
       _SidebarItem(
         icon: Icons.group,
         label: 'Cuadrillas',
         isSelected: selectedIndex == 2,
+        selectedColor: selectedItemColors[2],
         onTap: () => onItemSelected(2),
       ),
     ];
@@ -47,10 +63,16 @@ class Sidebar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           const SizedBox(height: 32),
-          // Logo
+          // Logo dinámico
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
-            child: Icon(Icons.construction, size: 48, color: Colors.white),
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.12, // Ajusta el porcentaje según lo que necesites
+              child: Image.asset(
+                sidebarLogos[selectedIndex],
+                fit: BoxFit.contain,
+              ),
+            ),
           ),
           const SizedBox(height: 32),
           ...items,
@@ -64,12 +86,14 @@ class _SidebarItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool isSelected;
+  final Color selectedColor;
   final VoidCallback onTap;
 
   const _SidebarItem({
     required this.icon,
     required this.label,
     required this.isSelected,
+    required this.selectedColor,
     required this.onTap,
   });
 
@@ -81,7 +105,7 @@ class _SidebarItem extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 8),
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF2D9CDB) : Colors.transparent,
+          color: isSelected ? selectedColor : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(

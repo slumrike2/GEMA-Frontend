@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class MantenimientosScreen extends StatelessWidget {
-  const MantenimientosScreen({Key? key}) : super(key: key);
+  const MantenimientosScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
