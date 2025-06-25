@@ -13,6 +13,7 @@ class ModCrearEquipoScreen extends StatelessWidget {
     final TextEditingController descriptionController = TextEditingController();
     final TextEditingController locationFilterController = TextEditingController();
 
+    int selectedIndex = 1;
     // Simulación de datos para Brand, State y Ubicación Operativa
     final List<String> brands = ['Marca A', 'Marca B', 'Marca C'];
     final List<String> equipmentStates = [
@@ -38,10 +39,7 @@ class ModCrearEquipoScreen extends StatelessWidget {
     return Scaffold(
       body: Row(
         children: [
-          Sidebar(
-            selectedIndex: 1,
-            onItemSelected: (index) {},
-          ),
+          Sidebar(selectedIndex: selectedIndex),
           Expanded(
             child: Container(
               color: const Color(0xFFD6ECE0),

@@ -11,15 +11,12 @@ class ModCrearUbicacionScreen extends StatelessWidget {
     final TextEditingController codigoController = TextEditingController();
     final TextEditingController nombreController = TextEditingController();
 
+    int selectedIndex = 1;
+
     return Scaffold(
       body: Row(
         children: [
-          Sidebar(
-            selectedIndex: 1, // 1 para "Equipos y Ubicaciones"
-            onItemSelected: (index) {
-              // Navegación opcional
-            },
-          ),
+          Sidebar(selectedIndex: selectedIndex),
           Expanded(
             child: Container(
               color: const Color(0xFFD6ECE0),

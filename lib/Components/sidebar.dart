@@ -1,14 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/Screens/mantenimientos_screen.dart';
+import 'package:frontend/Screens/Ubicaciones/equipos_ubicaciones_screen.dart';
+import 'package:frontend/Screens/cuadrillas_screen.dart';
 
 class Sidebar extends StatelessWidget {
   final int selectedIndex;
-  final ValueChanged<int> onItemSelected;
 
   const Sidebar({
     Key? key,
     required this.selectedIndex,
-    required this.onItemSelected,
   }) : super(key: key);
+
+  void _navigateTo(BuildContext context, int index) {
+    Widget screen;
+    switch (index) {
+      case 0:
+        screen = const MantenimientosScreen();
+        break;
+      case 1:
+        screen = const EquiposUbicacionesScreen();
+        break;
+      case 2:
+        screen = const CuadrillasScreen();
+        break;
+      default:
+        screen = const MantenimientosScreen();
+    }
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => screen),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,21 +59,21 @@ class Sidebar extends StatelessWidget {
         label: 'Mantenimientos',
         isSelected: selectedIndex == 0,
         selectedColor: selectedItemColors[0],
-        onTap: () => onItemSelected(0),
+        onTap: () => _navigateTo(context, 0),
       ),
       _SidebarItem(
         icon: Icons.devices,
         label: 'Equipos y Ubicaciones',
         isSelected: selectedIndex == 1,
         selectedColor: selectedItemColors[1],
-        onTap: () => onItemSelected(1),
+        onTap: () => _navigateTo(context, 1),
       ),
       _SidebarItem(
         icon: Icons.group,
         label: 'Cuadrillas',
         isSelected: selectedIndex == 2,
         selectedColor: selectedItemColors[2],
-        onTap: () => onItemSelected(2),
+        onTap: () => _navigateTo(context, 2),
       ),
     ];
 

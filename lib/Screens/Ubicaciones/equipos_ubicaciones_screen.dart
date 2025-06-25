@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/Components/sidebar.dart'; // <-- Importa el Sidebar
 import 'package:frontend/Components/location_filter.dart';
 import 'package:frontend/Screens/Ubicaciones/mod_crear_ubicacion.dart';
 import 'package:frontend/Screens/Ubicaciones/mod_crear_equipo.dart';
@@ -9,85 +10,96 @@ class EquiposUbicacionesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TextEditingController searchController = TextEditingController();
+    int selectedIndex = 1;
 
-    return Container(
-      color: const Color(0xFFD6ECE0),
-      width: double.infinity,
-      height: double.infinity,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+
+    return Scaffold(
+      body: Row(
         children: [
-          const SizedBox(height: 24),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0),
+          Sidebar(selectedIndex: selectedIndex), // Sidebar con el índice de "Equipos y Ubicaciones"
+          Expanded(
             child: Container(
+              color: const Color(0xFFD6ECE0),
               width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-              child: Text(
-                'Ubicaciones Técnicas y Equipos',
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.w500),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0),
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
+              height: double.infinity,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const SizedBox(height: 24),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                      child: const Text(
+                        'Ubicaciones Técnicas y Equipos',
+                        style: TextStyle(fontSize: 32, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 16),
-                  // Panel extraído
-                  EquiposUbicacionesPanel(controller: searchController),
-                  const SizedBox(height: 16),
-                  // Botones
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _ActionButton(text: 'Ver Mantenimientos'),
-                      const SizedBox(width: 8),
-                      _ActionButton(
-                        text: 'Modificar',
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const ModCrearUbicacionScreen(),
-                            ),
-                          );
-                        },
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                    child: Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      const SizedBox(width: 8),
-                      _ActionButton(
-                        text: 'Crear Nuevo Equipo',
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const ModCrearEquipoScreen(),
-                            ),
-                          );
-                        },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 16),
+                          // Panel extraído
+                          EquiposUbicacionesPanel(controller: searchController),
+                          const SizedBox(height: 16),
+                          // Botones
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _ActionButton(text: 'Ver Mantenimientos'),
+                              const SizedBox(width: 8),
+                              _ActionButton(
+                                text: 'Modificar',
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => const ModCrearUbicacionScreen(),
+                                    ),
+                                  );
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                              _ActionButton(
+                                text: 'Crear Nuevo Equipo',
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => const ModCrearEquipoScreen(),
+                                    ),
+                                  );
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                              _ActionButton(
+                                text: 'Crear Nueva Ubicación',
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => const ModCrearUbicacionScreen(),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      _ActionButton(
-                        text: 'Crear Nueva Ubicación',
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const ModCrearUbicacionScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
