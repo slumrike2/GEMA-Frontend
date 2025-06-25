@@ -18,9 +18,17 @@ class EquiposUbicacionesScreen extends StatelessWidget {
           const SizedBox(height: 24),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32.0),
-            child: Text(
-              'Ubicaciones Técnicas y Equipos',
-              style: TextStyle(fontSize: 32, fontWeight: FontWeight.w500),
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+              child: Text(
+                'Ubicaciones Técnicas y Equipos',
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.w500),
+              ),
             ),
           ),
           const SizedBox(height: 16),
