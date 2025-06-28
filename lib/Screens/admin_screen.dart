@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/Screens/equipos_ubicaciones_screen.dart';
-import '../Components/sidebar.dart';
 import 'mantenimientos_screen.dart';
-
 import 'cuadrillas_screen.dart';
 
 class AdminScreen extends StatefulWidget {
@@ -13,25 +11,81 @@ class AdminScreen extends StatefulWidget {
 }
 
 class _AdminScreenState extends State<AdminScreen> {
-  int selectedIndex = 0; // O calcula según la ruta
+  int selectedIndex = 0;
+  // bool _railExtended = true; // No longer needed
+
+  final List<IconData> _navIcons = [Icons.build, Icons.devices, Icons.group];
+  final List<String> _navLabels = [
+    'Mantenimientos',
+    'Equipos y Ubicaciones',
+    'Cuadrillas',
+  ];
 
   @override
   Widget build(BuildContext context) {
-    // Puedes obtener el índice según la pantalla actual si lo necesitas
-
+    // Color list for each index
+    final List<Color> navColors = [
+      Color.fromARGB(255, 209, 212, 12), // Cuadrillas
+      Color(0xFF1B5E20), // Equipos y Ubicaciones
+      Color(0xFF2293B4), // Mantenimientos
+    ];
     return Scaffold(
       body: Row(
         children: [
-          Sidebar(
+          NavigationRail(
+            minWidth: 200,
             selectedIndex: selectedIndex,
-            onItemSelected: (index) {
-              if (selectedIndex != index) {
-                setState(() {
-                  selectedIndex = index;
-                });
-              }
+            onDestinationSelected: (int index) {
+              setState(() {
+                selectedIndex = index;
+              });
             },
+            backgroundColor: navColors[selectedIndex],
+            leading: Padding(
+              padding: const EdgeInsets.only(top: 24.0),
+              child: Column(
+                children: const [
+                  Icon(Icons.construction, size: 40, color: Colors.white),
+                  SizedBox(height: 8),
+                  Text(
+                    'Panel',
+                    style: TextStyle(color: Colors.white, fontSize: 18),
+                  ),
+                ],
+              ),
+            ),
+            destinations: List.generate(
+              _navIcons.length,
+              (i) => NavigationRailDestination(
+                icon: Icon(
+                  _navIcons[i],
+                  color: i == selectedIndex ? Colors.amberAccent : Colors.white,
+                ),
+                selectedIcon: Icon(_navIcons[i], color: Colors.amberAccent),
+                label: Text(
+                  _navLabels[i],
+                  style: TextStyle(
+                    color:
+                        i == selectedIndex ? Colors.amberAccent : Colors.white,
+                    fontWeight:
+                        i == selectedIndex
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                  ),
+                ),
+              ),
+            ),
+            selectedIconTheme: const IconThemeData(
+              color: Colors.amberAccent,
+              size: 28,
+            ),
+            unselectedIconTheme: const IconThemeData(
+              color: Colors.white,
+              size: 28,
+            ),
+            labelType: NavigationRailLabelType.all,
           ),
+          const VerticalDivider(width: 1, thickness: 1),
           Expanded(
             child: IndexedStack(
               index: selectedIndex,
