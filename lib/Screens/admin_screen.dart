@@ -7,7 +7,7 @@ import 'cuadrillas_screen.dart';
 
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
-
+  static const String routeName = '/admin';
   @override
   State<AdminScreen> createState() => _AdminScreenState();
 }
