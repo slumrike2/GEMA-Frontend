@@ -13,14 +13,25 @@ class AdminScreen extends StatefulWidget {
 }
 
 class _AdminScreenState extends State<AdminScreen> {
+  int selectedIndex = 0; // O calcula según la ruta
+
   @override
   Widget build(BuildContext context) {
     // Puedes obtener el índice según la pantalla actual si lo necesitas
-    int selectedIndex = 0; // O calcula según la ruta
 
     return Scaffold(
       body: Row(
         children: [
+          Sidebar(
+            selectedIndex: selectedIndex,
+            onItemSelected: (index) {
+              if (selectedIndex != index) {
+                setState(() {
+                  selectedIndex = index;
+                });
+              }
+            },
+          ),
           Expanded(
             child: IndexedStack(
               index: selectedIndex,
