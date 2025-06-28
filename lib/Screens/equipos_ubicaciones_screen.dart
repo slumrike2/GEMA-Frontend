@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../Pages/crear_equipo.dart';
-import '../Pages/crear_ubicacion_tecnica.dart';
-import '../Pages/inicio_equipos_ubicaciones.dart';
+import '../Pages/equipos&ubicaciones/crear_equipo.dart';
+import '../Pages/equipos&ubicaciones/crear_ubicacion_tecnica.dart';
+import '../Pages/equipos&ubicaciones/inicio_equipos_ubicaciones.dart';
 
 class EquiposUbicacionesScreen extends StatefulWidget {
   final VoidCallback? onCrearEquipo;
@@ -38,13 +38,37 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
     });
   }
 
+  Widget buildBackButton(VoidCallback? onBack) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 24, top: 18, bottom: 8),
+        child: TextButton.icon(
+          onPressed: onBack,
+          icon: const Icon(Icons.arrow_back),
+          label: const Text('Volver'),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget child;
     if (_pantalla == 1) {
-      child = CrearEquipo(onBack: _goToInicio);
+      child = Column(
+        children: [
+          buildBackButton(_goToInicio),
+          Expanded(child: CrearEquipo(onBack: _goToInicio)),
+        ],
+      );
     } else if (_pantalla == 2) {
-      child = CrearUbicacionTecnica(onBack: _goToInicio);
+      child = Column(
+        children: [
+          buildBackButton(_goToInicio),
+          Expanded(child: CrearUbicacionTecnica(onBack: _goToInicio)),
+        ],
+      );
     } else {
       child = InicioEquiposUbicaciones(
         onCrearEquipo: _goToCrearEquipo,

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import '../Components/tag.dart';
+import '../../Components/tag.dart';
 
-class CrearEquipo extends StatelessWidget {
+class CrearUbicacionTecnica extends StatelessWidget {
   final VoidCallback? onBack;
-  const CrearEquipo({super.key, this.onBack});
-
-  static const String routeName = '/crear-equipo';
+  const CrearUbicacionTecnica({super.key, this.onBack});
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +36,7 @@ class CrearEquipo extends StatelessWidget {
                         vertical: 8,
                       ),
                       child: const Text(
-                        'Crear/Modificar Equipo',
+                        'Crear/Modificar Ubicación Técnica',
                         style: TextStyle(
                           fontSize: 40,
                           fontWeight: FontWeight.w400,
@@ -107,10 +105,54 @@ class CrearEquipo extends StatelessWidget {
                       const Text('Nombre'),
                       const SizedBox(height: 8),
                       TextField(
-                        controller: TextEditingController(text: 'Bombillo-3'),
+                        controller: TextEditingController(text: 'A2-21'),
                         decoration: const InputDecoration(
                           border: OutlineInputBorder(),
                         ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 0.0),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Agregar Equipos'),
+                      const SizedBox(height: 8),
+                      _EquipoRow(nombre: 'AC-1', tipo: 'Aclimatado'),
+                      _EquipoRow(nombre: 'Puertas', tipo: 'Amueblado'),
+                      _EquipoRow(nombre: 'Bombillos-1', tipo: 'Iluminación'),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              decoration: const InputDecoration(
+                                hintText: 'Nombre:',
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextField(
+                              decoration: const InputDecoration(
+                                hintText: 'Tipo:',
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add_circle_outline),
+                            onPressed: () {},
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -146,6 +188,21 @@ class CrearEquipo extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _EquipoRow extends StatelessWidget {
+  final String nombre;
+  final String tipo;
+  const _EquipoRow({required this.nombre, required this.tipo});
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(child: Text('Nombre: $nombre')),
+        Expanded(child: Text('Tipo: $tipo', textAlign: TextAlign.right)),
+      ],
     );
   }
 }
