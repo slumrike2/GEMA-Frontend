@@ -25,9 +25,9 @@ class _AdminScreenState extends State<AdminScreen> {
   Widget build(BuildContext context) {
     // Color list for each index
     final List<Color> navColors = [
-      Color.fromARGB(255, 209, 212, 12), // Cuadrillas
-      Color(0xFF1B5E20), // Equipos y Ubicaciones
-      Color(0xFF2293B4), // Mantenimientos
+      Color(0xFFFCC430), // Cuadrillas
+      Color(0xFF007934), // Equipos y Ubicaciones
+      Color(0xFF37B4E3), // Mantenimientos
     ];
     return Scaffold(
       body: Row(
@@ -45,11 +45,11 @@ class _AdminScreenState extends State<AdminScreen> {
               padding: const EdgeInsets.only(top: 24.0),
               child: Column(
                 children: const [
-                  Icon(Icons.construction, size: 40, color: Colors.white),
+                  Icon(Icons.construction, size: 40, color: Colors.black),
                   SizedBox(height: 8),
                   Text(
                     'Panel',
-                    style: TextStyle(color: Colors.white, fontSize: 18),
+                    style: TextStyle(color: Colors.black, fontSize: 18),
                   ),
                 ],
               ),
@@ -59,14 +59,13 @@ class _AdminScreenState extends State<AdminScreen> {
               (i) => NavigationRailDestination(
                 icon: Icon(
                   _navIcons[i],
-                  color: i == selectedIndex ? Colors.amberAccent : Colors.white,
+                  color: i == selectedIndex ? Colors.black : Colors.black,
                 ),
-                selectedIcon: Icon(_navIcons[i], color: Colors.amberAccent),
+                selectedIcon: Icon(_navIcons[i], color: Colors.black),
                 label: Text(
                   _navLabels[i],
                   style: TextStyle(
-                    color:
-                        i == selectedIndex ? Colors.amberAccent : Colors.white,
+                    color: Colors.black,
                     fontWeight:
                         i == selectedIndex
                             ? FontWeight.bold
@@ -76,11 +75,11 @@ class _AdminScreenState extends State<AdminScreen> {
               ),
             ),
             selectedIconTheme: const IconThemeData(
-              color: Colors.amberAccent,
+              color: Colors.black,
               size: 28,
             ),
             unselectedIconTheme: const IconThemeData(
-              color: Colors.white,
+              color: Colors.black,
               size: 28,
             ),
             labelType: NavigationRailLabelType.all,
