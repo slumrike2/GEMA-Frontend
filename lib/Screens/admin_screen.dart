@@ -5,7 +5,8 @@ import 'equipos_ubicaciones_screen.dart';
 import 'cuadrillas_screen.dart';
 
 class AdminScreen extends StatefulWidget {
-  const AdminScreen({Key? key}) : super(key: key);
+  const AdminScreen({super.key});
+  static const String routeName = '/admin';
 
   @override
   State<AdminScreen> createState() => _AdminScreenState();
@@ -30,10 +31,10 @@ class _AdminScreenState extends State<AdminScreen> {
           Expanded(
             child: IndexedStack(
               index: _selectedPage,
-              children: const [
-                MantenimientosScreen(),
+              children: [
+                const MantenimientosScreen(),
                 EquiposUbicacionesScreen(),
-                CuadrillasScreen(),
+                const CuadrillasScreen(),
               ],
             ),
           ),

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class CuadrillasScreen extends StatelessWidget {
-  const CuadrillasScreen({Key? key}) : super(key: key);
+  const CuadrillasScreen({super.key});
+
+  static const String routeName = '/cuadrillas';
 
   @override
   Widget build(BuildContext context) {

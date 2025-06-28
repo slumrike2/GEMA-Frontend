@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'Screens/adminScreen.dart';
+import 'package:frontend/Pages/crear_equipo.dart';
+import 'Screens/admin_screen.dart';
 
 void main() {
   runApp(const MainApp());
@@ -10,9 +11,14 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: AdminScreen(),
+      routes: {
+        AdminScreen.routeName: (context) =>  AdminScreen(),
+        CrearEquipo.routeName: (context) => const CrearEquipo(),
+
+      },
     );
   }
 }
