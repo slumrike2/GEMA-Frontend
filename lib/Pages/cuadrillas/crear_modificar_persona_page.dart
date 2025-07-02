@@ -224,7 +224,10 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+        backgroundColor: const Color(0xFFD6F3FB),
+      );
     }
 
     return SingleChildScrollView(
