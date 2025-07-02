@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../Services/technical_team_service.dart';
+import '../../Services/technician_service.dart';
 
 class CrearModificarCuadrillaPage extends StatefulWidget {
   final Map<String, dynamic>? cuadrillaData;
@@ -16,6 +18,11 @@ class _CrearModificarCuadrillaPageState
   List<Map<String, String>> miembros = [];
   List<TextEditingController> _nombreControllers = [];
   List<TextEditingController> _ciControllers = [];
+  
+  // Listas para cargar datos desde la API
+  List<dynamic> technicalTeams = [];
+  List<dynamic> technicians = [];
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -26,15 +33,44 @@ class _CrearModificarCuadrillaPageState
     _especialidadController = TextEditingController(
       text: widget.cuadrillaData?["especialidad"] ?? "",
     );
-    miembros = List<Map<String, String>>.from(
-      widget.cuadrillaData?["miembros"] ??
-          [
-            {"nombre": "Juan Pablo Gómez", "ci": "20134586"},
-            {"nombre": "María Fernanda Fermín", "ci": "29315985"},
-            {"nombre": "Pedro Manuel Guzmán", "ci": "19874625"},
-          ],
-    );
+    
+    // Inicializar miembros vacíos o con datos existentes
+    if (widget.cuadrillaData?["miembros"] != null) {
+      miembros = List<Map<String, String>>.from(widget.cuadrillaData!["miembros"]);
+    } else {
+      miembros = [];
+    }
+    
     _initControllers();
+    _loadDataFromAPI();
+  }
+
+  // Cargar datos desde la API
+  Future<void> _loadDataFromAPI() async {
+    setState(() {
+      isLoading = true;
+    });
+    
+    try {
+      // Cargar equipos técnicos y técnicos en paralelo
+      final teamsFuture = TechnicalTeamService.getAll();
+      final techniciansFuture = TechnicianService.getAll();
+      
+      final results = await Future.wait([teamsFuture, techniciansFuture]);
+      
+      setState(() {
+        technicalTeams = results[0];
+        technicians = results[1];
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al cargar datos: $e')),
+      );
+    }
   }
 
   void _initControllers() {
@@ -64,16 +100,101 @@ class _CrearModificarCuadrillaPageState
     });
   }
 
-  void _onGuardar() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text("Guardado (endpoint)")));
+  Future<void> _onGuardar() async {
+    if (_liderController.text.isEmpty || _especialidadController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor complete todos los campos requeridos')),
+      );
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      // Preparar datos de la cuadrilla
+      final crewData = {
+        'leader': _liderController.text,
+        'speciality': _especialidadController.text,
+        'members': miembros.where((m) => m['nombre']?.isNotEmpty == true && m['ci']?.isNotEmpty == true).toList(),
+      };
+
+      if (widget.cuadrillaData?['id'] != null) {
+        // Actualizar equipo técnico existente
+        await TechnicalTeamService.update(widget.cuadrillaData!['id'], crewData);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Equipo técnico actualizado exitosamente')),
+        );
+      } else {
+        // Crear nuevo equipo técnico
+        await TechnicalTeamService.create(crewData);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Equipo técnico creado exitosamente')),
+        );
+      }
+      
+      // Regresar a la página anterior
+      Navigator.of(context).pop();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
-  void _onEliminar() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text("Eliminado (endpoint)")));
+  Future<void> _onEliminar() async {
+    if (widget.cuadrillaData?['id'] == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se puede eliminar una cuadrilla que no existe')),
+      );
+      return;
+    }
+
+    // Mostrar diálogo de confirmación
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar eliminación'),
+        content: const Text('¿Está seguro de que desea eliminar esta cuadrilla?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() {
+        isLoading = true;
+      });
+
+      try {
+        await TechnicalTeamService.delete(widget.cuadrillaData!['id']);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Equipo técnico eliminado exitosamente')),
+        );
+        Navigator.of(context).pop();
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al eliminar: $e')),
+        );
+      } finally {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -91,6 +212,14 @@ class _CrearModificarCuadrillaPageState
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 32),
@@ -105,14 +234,14 @@ class _CrearModificarCuadrillaPageState
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Text(
-                'Crear/Modificar Cuadrilla',
-                style: TextStyle(
-                  fontSize: 44,
-                  fontWeight: FontWeight.w400,
-                  fontFamily: "Arial",
-                ),
-              ),
+              child:         const Text(
+          'Crear/Modificar Equipo Técnico',
+          style: TextStyle(
+            fontSize: 44,
+            fontWeight: FontWeight.w400,
+            fontFamily: "Arial",
+          ),
+        ),
             ),
             const SizedBox(height: 32),
             // Campo líder
@@ -130,7 +259,7 @@ class _CrearModificarCuadrillaPageState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          "Líder de la Cuadrilla",
+                          "Líder del Equipo Técnico",
                           style: TextStyle(fontSize: 15),
                         ),
                         const SizedBox(height: 5),
@@ -195,7 +324,7 @@ class _CrearModificarCuadrillaPageState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    "Miembros de la Cuadrilla",
+                    "Miembros del Equipo Técnico",
                     style: TextStyle(fontSize: 20),
                   ),
                   const SizedBox(height: 8),
@@ -271,24 +400,25 @@ class _CrearModificarCuadrillaPageState
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                ElevatedButton(
-                  onPressed: _onEliminar,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF5443),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 10,
+                if (widget.cuadrillaData?['id'] != null)
+                  ElevatedButton(
+                    onPressed: isLoading ? null : _onEliminar,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFF5443),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 10,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(7),
+                      ),
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(7),
-                    ),
+                    child: const Text('Eliminar'),
                   ),
-                  child: const Text('Eliminar'),
-                ),
-                const SizedBox(width: 20),
+                if (widget.cuadrillaData?['id'] != null) const SizedBox(width: 20),
                 ElevatedButton(
-                  onPressed: _onGuardar,
+                  onPressed: isLoading ? null : _onGuardar,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2293B4),
                     foregroundColor: Colors.white,
@@ -300,7 +430,16 @@ class _CrearModificarCuadrillaPageState
                       borderRadius: BorderRadius.circular(7),
                     ),
                   ),
-                  child: const Text('Guardar'),
+                  child: isLoading 
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Text('Guardar'),
                 ),
               ],
             ),
