@@ -29,6 +29,12 @@ class _AdminScreenState extends State<AdminScreen> {
       Color(0xFF007934), // Equipos y Ubicaciones
       Color(0xFF37B4E3), // Mantenimientos
     ];
+    List<Image> navIcons = [
+      Image.asset('assets/images/IconCuadrillas.png'),
+      Image.asset('assets/images/IconEquiposUbicaciones.png'),
+      Image.asset('assets/images/IconMantenimientos.png'),
+    ];
+
     return Scaffold(
       body: Row(
         children: [
@@ -44,8 +50,8 @@ class _AdminScreenState extends State<AdminScreen> {
             leading: Padding(
               padding: const EdgeInsets.only(top: 24.0),
               child: Column(
-                children: const [
-                  Icon(Icons.construction, size: 40, color: Colors.black),
+                children: [
+                  navIcons[selectedIndex],
                   SizedBox(height: 8),
                   Text(
                     'Panel',
