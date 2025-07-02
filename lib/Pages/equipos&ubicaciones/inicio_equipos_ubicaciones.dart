@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/Components/tag.dart';
 import '../../Services/technical_location_service.dart';
 import '../../Services/equipment_service.dart';
 import '../../Models/backend_types.dart';
