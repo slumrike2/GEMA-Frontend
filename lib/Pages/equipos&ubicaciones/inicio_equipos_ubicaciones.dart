@@ -4,6 +4,7 @@ import '../../Services/equipment_service.dart';
 import '../../Models/backend_types.dart';
 import 'equipos_list_page.dart';
 import 'ubicaciones_list_page.dart';
+import '../../Services/technical_location_type_service.dart';
 
 class InicioEquiposUbicaciones extends StatefulWidget {
   final VoidCallback? onCrearEquipo;
@@ -26,11 +27,14 @@ class _InicioEquiposUbicacionesState extends State<InicioEquiposUbicaciones>
   List<Equipment> allEquipments = [];
   List<TechnicalLocation> selectedLocations = [];
   bool isLoading = false;
+  List<LocationType> locationTypes = [];
+  String? _selectedLocationTypeName;
 
   @override
   void initState() {
     super.initState();
     _fetchData();
+    _fetchLocationTypes();
   }
 
   Future<void> _fetchData() async {
@@ -47,6 +51,7 @@ class _InicioEquiposUbicacionesState extends State<InicioEquiposUbicaciones>
         isLoading = false;
       });
     } catch (e) {
+      print(e);
       setState(() {
         isLoading = false;
       });
@@ -54,12 +59,105 @@ class _InicioEquiposUbicacionesState extends State<InicioEquiposUbicaciones>
     }
   }
 
+  Future<void> _fetchLocationTypes() async {
+    try {
+      final types = await TechnicalLocationTypeService.getAll();
+      setState(() {
+        locationTypes = types;
+        if (locationTypes.isNotEmpty && _selectedLocationTypeName == null) {
+          _selectedLocationTypeName = locationTypes.first.name;
+        }
+      });
+    } catch (e) {
+      print('Error fetching location types: $e');
+    }
+  }
+
+  Future<bool?> onCreateLocationTypeDialog(BuildContext context) async {
+    final nameController = TextEditingController();
+    final nameTemplateController = TextEditingController();
+    final codeTemplateController = TextEditingController();
+    final result = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Nuevo Tipo de Ubicación'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'Nombre'),
+                ),
+                TextField(
+                  controller: nameTemplateController,
+                  decoration: const InputDecoration(
+                    labelText: 'Plantilla de Nombre',
+                  ),
+                ),
+                TextField(
+                  controller: codeTemplateController,
+                  decoration: const InputDecoration(
+                    labelText: 'Plantilla de Código',
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancelar'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (nameController.text.trim().isEmpty ||
+                      nameTemplateController.text.trim().isEmpty ||
+                      codeTemplateController.text.trim().isEmpty) {
+                    return;
+                  }
+                  await onCreateLocationType(
+                    nameController.text.trim(),
+                    nameTemplateController.text.trim(),
+                    codeTemplateController.text.trim(),
+                  );
+                  Navigator.pop(context, true);
+                },
+                child: const Text('Agregar'),
+              ),
+            ],
+          ),
+    );
+    nameController.dispose();
+    nameTemplateController.dispose();
+    codeTemplateController.dispose();
+    return result;
+  }
+
+  Future<void> onCreateLocationType(
+    String name,
+    String nameTemplate,
+    String codeTemplate,
+  ) async {
+    try {
+      await TechnicalLocationTypeService.createWithTemplates(
+        name,
+        nameTemplate,
+        codeTemplate,
+      );
+      await _fetchLocationTypes();
+      setState(() {
+        _selectedLocationTypeName = name;
+      });
+    } catch (e) {
+      print('Error creating location type: $e');
+    }
+  }
+
   List<TechnicalLocation> get currentPossibleLocations {
     if (selectedLocations.isEmpty) {
       // Show root children
-      return allLocations
-          .where((l) => l.parentTechnicalCode == 'root')
-          .toList();
+
+      return allLocations.where((l) => l.technicalCode == 'SEDE').toList();
     } else {
       // Show children of the last selected location
       return allLocations
@@ -148,12 +246,48 @@ class _InicioEquiposUbicacionesState extends State<InicioEquiposUbicaciones>
     });
   }
 
+  // Location creation state
+  final _locationNameController = TextEditingController();
+  final _locationCodeController = TextEditingController();
+
+  Future<void> onCreateLocation() async {
+    final parent =
+        selectedLocations.isNotEmpty
+            ? selectedLocations.last.technicalCode
+            : null;
+    final newLocation = TechnicalLocation(
+      name: _locationNameController.text,
+      technicalCode: _locationCodeController.text,
+      type: locationTypes.indexWhere(
+        (t) =>
+            t.name ==
+            (_selectedLocationTypeName ??
+                (locationTypes.isNotEmpty ? locationTypes.first.name : '')),
+      ),
+      parentTechnicalCode: parent,
+    );
+    try {
+      await TechnicalLocationService.create(newLocation.toJson());
+      await _fetchData();
+    } catch (e) {
+      print('Error creating location: $e');
+    }
+    setState(() {
+      _locationNameController.clear();
+      _locationCodeController.clear();
+      _selectedLocationTypeName =
+          locationTypes.isNotEmpty ? locationTypes.first.name : null;
+    });
+  }
+
   @override
   void dispose() {
     _equipmentNameController.dispose();
     _equipmentLocationController.dispose();
     _equipmentSerialController.dispose();
     _equipmentBrandIdController.dispose();
+    _locationNameController.dispose();
+    _locationCodeController.dispose();
     super.dispose();
   }
 
@@ -179,6 +313,142 @@ class _InicioEquiposUbicacionesState extends State<InicioEquiposUbicaciones>
                   selected: selectedSection == 1,
                   onSelected: (_) => setState(() => selectedSection = 1),
                 ),
+                const Spacer(),
+                if (selectedSection == 0)
+                  ElevatedButton(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder:
+                            (context) => AlertDialog(
+                              title: const Text('Crear Ubicación'),
+                              content: SizedBox(
+                                width: 600,
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Left: Form
+                                    Expanded(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          TextField(
+                                            controller: _locationNameController,
+                                            decoration: const InputDecoration(
+                                              labelText: 'Nombre',
+                                            ),
+                                          ),
+                                          TextField(
+                                            controller: _locationCodeController,
+                                            decoration: const InputDecoration(
+                                              labelText: 'Código Técnico',
+                                            ),
+                                          ),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: DropdownButtonFormField<
+                                                  String
+                                                >(
+                                                  value:
+                                                      _selectedLocationTypeName,
+                                                  items:
+                                                      locationTypes
+                                                          .map(
+                                                            (type) =>
+                                                                DropdownMenuItem(
+                                                                  value:
+                                                                      type.name,
+                                                                  child: Text(
+                                                                    type.name,
+                                                                  ),
+                                                                ),
+                                                          )
+                                                          .toList(),
+                                                  onChanged: (val) {
+                                                    setState(() {
+                                                      _selectedLocationTypeName =
+                                                          val;
+                                                    });
+                                                  },
+                                                  decoration:
+                                                      const InputDecoration(
+                                                        labelText:
+                                                            'Tipo de Ubicación',
+                                                      ),
+                                                ),
+                                              ),
+                                              IconButton(
+                                                icon: const Icon(Icons.add),
+                                                tooltip: 'Agregar nuevo tipo',
+                                                onPressed: () async {
+                                                  await onCreateLocationTypeDialog(
+                                                    context,
+                                                  );
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 24),
+                                    // Right: Location tree
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'Jerarquía actual:',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          ...selectedLocations.map(
+                                            (loc) => Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    vertical: 2.0,
+                                                  ),
+                                              child: Text(
+                                                '${loc.name} (${loc.technicalCode})',
+                                              ),
+                                            ),
+                                          ),
+                                          if (selectedLocations.isEmpty)
+                                            const Text(
+                                              'Nivel raíz (sin padre)',
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: const Text('Cancelar'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () async {
+                                    await onCreateLocation();
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: const Text('Crear'),
+                                ),
+                              ],
+                            ),
+                      );
+                    },
+                    child: const Text('Crear Ubicación'),
+                  ),
+                if (selectedSection == 1)
+                  ElevatedButton(
+                    onPressed: widget.onCrearEquipo,
+                    child: const Text('Crear Equipo'),
+                  ),
               ],
             ),
           ),
@@ -186,7 +456,7 @@ class _InicioEquiposUbicacionesState extends State<InicioEquiposUbicaciones>
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32.0),
               child: UbicacionesListPage(
-                allLocations: allLocations,
+                currentPossibleLocations: currentPossibleLocations,
                 selectedLocations: selectedLocations,
                 onSelectLocation: onSelectLocation,
                 onRemoveLocation: onRemoveLocation,

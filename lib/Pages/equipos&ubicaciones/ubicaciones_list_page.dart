@@ -1,95 +1,24 @@
 import 'package:flutter/material.dart';
 import '../../Models/backend_types.dart';
 import 'package:frontend/Components/tag.dart';
-import '../../Services/technical_location_service.dart';
-import '../../Services/equipment_service.dart';
 
 class UbicacionesListPage extends StatelessWidget {
-  final List<TechnicalLocation> allLocations;
+  final List<TechnicalLocation> currentPossibleLocations;
   final List<TechnicalLocation> selectedLocations;
   final void Function(TechnicalLocation) onSelectLocation;
   final void Function(TechnicalLocation) onRemoveLocation;
   final List<Equipment> currentEquipments;
+  final VoidCallback? onCreateLocation;
 
   const UbicacionesListPage({
     super.key,
-    required this.allLocations,
+    required this.currentPossibleLocations,
     required this.selectedLocations,
     required this.onSelectLocation,
     required this.onRemoveLocation,
     required this.currentEquipments,
+    this.onCreateLocation,
   });
-
-  List<TechnicalLocation> get currentPossibleLocations {
-    if (selectedLocations.isEmpty) {
-      return allLocations
-          .where((l) => l.parentTechnicalCode == 'root')
-          .toList();
-    } else {
-      return allLocations
-          .where(
-            (l) =>
-                l.parentTechnicalCode == selectedLocations.last.technicalCode,
-          )
-          .toList();
-    }
-  }
-
-  Future<void> _createLocation(BuildContext context) async {
-    final nameController = TextEditingController();
-    final codeController = TextEditingController();
-    final typeController = TextEditingController();
-    final parentController = TextEditingController();
-    await showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Crear Nueva Ubicación Técnica'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Nombre'),
-                ),
-                TextField(
-                  controller: codeController,
-                  decoration: const InputDecoration(
-                    labelText: 'Código Técnico',
-                  ),
-                ),
-                TextField(
-                  controller: typeController,
-                  decoration: const InputDecoration(labelText: 'Tipo (número)'),
-                ),
-                TextField(
-                  controller: parentController,
-                  decoration: const InputDecoration(labelText: 'Código Padre'),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancelar'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  final newLoc = TechnicalLocation(
-                    technicalCode: codeController.text,
-                    name: nameController.text,
-                    type: int.tryParse(typeController.text) ?? 0,
-                    parentTechnicalCode: parentController.text,
-                  );
-                  await TechnicalLocationService.create(newLoc.toJson());
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Crear'),
-              ),
-            ],
-          ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +33,7 @@ class UbicacionesListPage extends StatelessWidget {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
             ),
             ElevatedButton(
-              onPressed: () => _createLocation(context),
+              onPressed: onCreateLocation,
               child: const Text('Crear Ubicación'),
             ),
           ],
@@ -131,10 +60,7 @@ class UbicacionesListPage extends StatelessWidget {
                 padding: const EdgeInsets.only(right: 8.0),
                 child: Tag(
                   label: loc.name,
-                  onRemove: () async {
-                    await TechnicalLocationService.delete(loc.technicalCode);
-                    onRemoveLocation(loc);
-                  },
+                  onRemove: () => onRemoveLocation(loc),
                 ),
               ),
             ),

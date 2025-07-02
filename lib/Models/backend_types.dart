@@ -200,7 +200,7 @@ class TechnicalLocation {
   final String technicalCode;
   final String name;
   final int type;
-  final String parentTechnicalCode;
+  final String? parentTechnicalCode;
 
   TechnicalLocation({
     required this.technicalCode,
