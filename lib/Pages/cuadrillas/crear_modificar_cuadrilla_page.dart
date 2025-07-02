@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../Services/technical_team_service.dart';
 import '../../Services/technician_service.dart';
+import '../../Models/backend_types.dart';
 
 class CrearModificarCuadrillaPage extends StatefulWidget {
   final Map<String, dynamic>? cuadrillaData;
@@ -18,9 +19,9 @@ class _CrearModificarCuadrillaPageState
   List<Map<String, String>> miembros = [];
   List<TextEditingController> _nombreControllers = [];
   List<TextEditingController> _ciControllers = [];
-  
+
   // Listas para cargar datos desde la API
-  List<dynamic> technicalTeams = [];
+  List<TechnicalTeam> technicalTeams = [];
   List<dynamic> technicians = [];
   bool isLoading = false;
 
@@ -33,14 +34,16 @@ class _CrearModificarCuadrillaPageState
     _especialidadController = TextEditingController(
       text: widget.cuadrillaData?["especialidad"] ?? "",
     );
-    
+
     // Inicializar miembros vacíos o con datos existentes
     if (widget.cuadrillaData?["miembros"] != null) {
-      miembros = List<Map<String, String>>.from(widget.cuadrillaData!["miembros"]);
+      miembros = List<Map<String, String>>.from(
+        widget.cuadrillaData!["miembros"],
+      );
     } else {
       miembros = [];
     }
-    
+
     _initControllers();
     _loadDataFromAPI();
   }
@@ -50,16 +53,16 @@ class _CrearModificarCuadrillaPageState
     setState(() {
       isLoading = true;
     });
-    
+
     try {
       // Cargar equipos técnicos y técnicos en paralelo
       final teamsFuture = TechnicalTeamService.getAll();
       final techniciansFuture = TechnicianService.getAll();
-      
+
       final results = await Future.wait([teamsFuture, techniciansFuture]);
-      
+
       setState(() {
-        technicalTeams = results[0];
+        technicalTeams = results[0] as List<TechnicalTeam>;
         technicians = results[1];
         isLoading = false;
       });
@@ -67,9 +70,9 @@ class _CrearModificarCuadrillaPageState
       setState(() {
         isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al cargar datos: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al cargar datos: $e')));
     }
   }
 
@@ -103,7 +106,9 @@ class _CrearModificarCuadrillaPageState
   Future<void> _onGuardar() async {
     if (_liderController.text.isEmpty || _especialidadController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor complete todos los campos requeridos')),
+        const SnackBar(
+          content: Text('Por favor complete todos los campos requeridos'),
+        ),
       );
       return;
     }
@@ -117,14 +122,26 @@ class _CrearModificarCuadrillaPageState
       final crewData = {
         'leader': _liderController.text,
         'speciality': _especialidadController.text,
-        'members': miembros.where((m) => m['nombre']?.isNotEmpty == true && m['ci']?.isNotEmpty == true).toList(),
+        'members':
+            miembros
+                .where(
+                  (m) =>
+                      m['nombre']?.isNotEmpty == true &&
+                      m['ci']?.isNotEmpty == true,
+                )
+                .toList(),
       };
 
       if (widget.cuadrillaData?['id'] != null) {
         // Actualizar equipo técnico existente
-        await TechnicalTeamService.update(widget.cuadrillaData!['id'], crewData);
+        await TechnicalTeamService.update(
+          widget.cuadrillaData!['id'],
+          crewData,
+        );
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Equipo técnico actualizado exitosamente')),
+          const SnackBar(
+            content: Text('Equipo técnico actualizado exitosamente'),
+          ),
         );
       } else {
         // Crear nuevo equipo técnico
@@ -133,13 +150,13 @@ class _CrearModificarCuadrillaPageState
           const SnackBar(content: Text('Equipo técnico creado exitosamente')),
         );
       }
-      
+
       // Regresar a la página anterior
       Navigator.of(context).pop();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       setState(() {
         isLoading = false;
@@ -150,7 +167,9 @@ class _CrearModificarCuadrillaPageState
   Future<void> _onEliminar() async {
     if (widget.cuadrillaData?['id'] == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se puede eliminar una cuadrilla que no existe')),
+        const SnackBar(
+          content: Text('No se puede eliminar una cuadrilla que no existe'),
+        ),
       );
       return;
     }
@@ -158,20 +177,23 @@ class _CrearModificarCuadrillaPageState
     // Mostrar diálogo de confirmación
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirmar eliminación'),
-        content: const Text('¿Está seguro de que desea eliminar esta cuadrilla?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Confirmar eliminación'),
+            content: const Text(
+              '¿Está seguro de que desea eliminar esta cuadrilla?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Eliminar'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
     );
 
     if (confirm == true) {
@@ -182,13 +204,15 @@ class _CrearModificarCuadrillaPageState
       try {
         await TechnicalTeamService.delete(widget.cuadrillaData!['id']);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Equipo técnico eliminado exitosamente')),
+          const SnackBar(
+            content: Text('Equipo técnico eliminado exitosamente'),
+          ),
         );
         Navigator.of(context).pop();
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al eliminar: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error al eliminar: $e')));
       } finally {
         setState(() {
           isLoading = false;
@@ -213,11 +237,7 @@ class _CrearModificarCuadrillaPageState
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return SingleChildScrollView(
@@ -234,14 +254,14 @@ class _CrearModificarCuadrillaPageState
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child:         const Text(
-          'Crear/Modificar Equipo Técnico',
-          style: TextStyle(
-            fontSize: 44,
-            fontWeight: FontWeight.w400,
-            fontFamily: "Arial",
-          ),
-        ),
+              child: const Text(
+                'Crear/Modificar Equipo Técnico',
+                style: TextStyle(
+                  fontSize: 44,
+                  fontWeight: FontWeight.w400,
+                  fontFamily: "Arial",
+                ),
+              ),
             ),
             const SizedBox(height: 32),
             // Campo líder
@@ -416,7 +436,8 @@ class _CrearModificarCuadrillaPageState
                     ),
                     child: const Text('Eliminar'),
                   ),
-                if (widget.cuadrillaData?['id'] != null) const SizedBox(width: 20),
+                if (widget.cuadrillaData?['id'] != null)
+                  const SizedBox(width: 20),
                 ElevatedButton(
                   onPressed: isLoading ? null : _onGuardar,
                   style: ElevatedButton.styleFrom(
@@ -430,16 +451,19 @@ class _CrearModificarCuadrillaPageState
                       borderRadius: BorderRadius.circular(7),
                     ),
                   ),
-                  child: isLoading 
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : const Text('Guardar'),
+                  child:
+                      isLoading
+                          ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          )
+                          : const Text('Guardar'),
                 ),
               ],
             ),

@@ -1,6 +1,8 @@
 // Generated from backend schema.ts and validationSchema.ts
 // Do not edit by hand. Update via backend schema changes.
 
+// ignore_for_file: constant_identifier_names
+
 import 'package:meta/meta.dart';
 
 // Enums
@@ -8,14 +10,14 @@ import 'package:meta/meta.dart';
 enum UserRole { user, technician, coordinator, admin }
 
 enum EquipmentState {
-  installed,
-  inMaintenance,
-  maintenancePending,
-  inRepair,
-  repairPending,
-  inStock,
-  decommissioned,
-  transferPending,
+  instalado,
+  en_mantenimiento,
+  mantenimiento_pendiente,
+  en_reparaciones,
+  reparaciones_pendientes,
+  en_inventario,
+  descomisionado,
+  transferencia_pendiente,
 }
 
 enum ReportOriginSource { email, managementSystem, chat, GEMA }

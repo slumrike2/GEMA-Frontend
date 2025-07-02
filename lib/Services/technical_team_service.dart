@@ -1,17 +1,21 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../Models/backend_types.dart';
 
 class TechnicalTeamService {
   static const String baseUrl = 'http://localhost:3000/api/technical-teams';
 
   // Obtener todos los equipos técnicos
-  static Future<List<dynamic>> getAll() async {
+  static Future<List<TechnicalTeam>> getAll() async {
     try {
       final response = await http.get(Uri.parse(baseUrl));
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((e) => TechnicalTeam.fromJson(e)).toList();
       } else {
-        throw Exception('Error al obtener equipos técnicos: ${response.statusCode} - ${response.body}');
+        throw Exception(
+          'Error al obtener equipos técnicos: \\${response.statusCode} - \\${response.body}',
+        );
       }
     } catch (e) {
       throw Exception('Error al obtener equipos técnicos: $e');
@@ -19,13 +23,15 @@ class TechnicalTeamService {
   }
 
   // Obtener un equipo técnico por ID
-  static Future<Map<String, dynamic>> getById(String id) async {
+  static Future<TechnicalTeam> getById(String id) async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/$id'));
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        return TechnicalTeam.fromJson(jsonDecode(response.body));
       } else {
-        throw Exception('Error al obtener el equipo técnico: ${response.statusCode} - ${response.body}');
+        throw Exception(
+          'Error al obtener el equipo técnico: \\${response.statusCode} - \\${response.body}',
+        );
       }
     } catch (e) {
       throw Exception('Error al obtener el equipo técnico: $e');
@@ -41,7 +47,9 @@ class TechnicalTeamService {
         body: jsonEncode(data),
       );
       if (response.statusCode != 201) {
-        throw Exception('Error al crear el equipo técnico: ${response.statusCode} - ${response.body}');
+        throw Exception(
+          'Error al crear el equipo técnico: \\${response.statusCode} - \\${response.body}',
+        );
       }
     } catch (e) {
       throw Exception('Error al crear el equipo técnico: $e');
@@ -57,7 +65,9 @@ class TechnicalTeamService {
         body: jsonEncode(data),
       );
       if (response.statusCode != 200) {
-        throw Exception('Error al actualizar el equipo técnico: ${response.statusCode} - ${response.body}');
+        throw Exception(
+          'Error al actualizar el equipo técnico: \\${response.statusCode} - \\${response.body}',
+        );
       }
     } catch (e) {
       throw Exception('Error al actualizar el equipo técnico: $e');
@@ -69,7 +79,9 @@ class TechnicalTeamService {
     try {
       final response = await http.delete(Uri.parse('$baseUrl/$id'));
       if (response.statusCode != 200) {
-        throw Exception('Error al eliminar el equipo técnico: ${response.statusCode} - ${response.body}');
+        throw Exception(
+          'Error al eliminar el equipo técnico: \\${response.statusCode} - \\${response.body}',
+        );
       }
     } catch (e) {
       throw Exception('Error al eliminar el equipo técnico: $e');
@@ -77,13 +89,18 @@ class TechnicalTeamService {
   }
 
   // Obtener equipos técnicos por especialidad
-  static Future<List<dynamic>> getBySpeciality(String speciality) async {
+  static Future<List<TechnicalTeam>> getBySpeciality(String speciality) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/speciality/$speciality'));
+      final response = await http.get(
+        Uri.parse('$baseUrl/speciality/$speciality'),
+      );
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((e) => TechnicalTeam.fromJson(e)).toList();
       } else {
-        throw Exception('Error al obtener equipos por especialidad: ${response.statusCode} - ${response.body}');
+        throw Exception(
+          'Error al obtener equipos por especialidad: \\${response.statusCode} - \\${response.body}',
+        );
       }
     } catch (e) {
       throw Exception('Error al obtener equipos por especialidad: $e');
@@ -91,13 +108,16 @@ class TechnicalTeamService {
   }
 
   // Obtener equipos técnicos por líder
-  static Future<List<dynamic>> getByLeader(String leaderId) async {
+  static Future<List<TechnicalTeam>> getByLeader(String leaderId) async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/leader/$leaderId'));
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((e) => TechnicalTeam.fromJson(e)).toList();
       } else {
-        throw Exception('Error al obtener equipos por líder: ${response.statusCode} - ${response.body}');
+        throw Exception(
+          'Error al obtener equipos por líder: \\${response.statusCode} - \\${response.body}',
+        );
       }
     } catch (e) {
       throw Exception('Error al obtener equipos por líder: $e');

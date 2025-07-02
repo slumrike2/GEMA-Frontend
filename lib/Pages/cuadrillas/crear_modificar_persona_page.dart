@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../Services/technician_service.dart';
 import '../../Services/technical_team_service.dart';
 import '../../Services/technician_speciality_service.dart';
+import '../../Models/backend_types.dart';
 
 class CrearModificarPersonaPage extends StatefulWidget {
   final Map<String, dynamic>? personaData;
@@ -17,9 +18,9 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
   final TextEditingController nombreController = TextEditingController();
   final TextEditingController cuadrillaController = TextEditingController();
   final TextEditingController contactController = TextEditingController();
-  
+
   // Listas para cargar datos desde la API
-  List<dynamic> technicalTeams = [];
+  List<TechnicalTeam> technicalTeams = [];
   List<String> specialities = [];
   String? selectedSpeciality;
   bool isLoading = false;
@@ -27,7 +28,7 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
   @override
   void initState() {
     super.initState();
-    
+
     // Inicializar con datos existentes si se proporcionan
     if (widget.personaData != null) {
       cedulaController.text = widget.personaData!['personalId'] ?? '';
@@ -36,7 +37,7 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
       contactController.text = widget.personaData!['contact'] ?? '';
       selectedSpeciality = widget.personaData!['speciality'];
     }
-    
+
     _loadDataFromAPI();
   }
 
@@ -45,16 +46,12 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
     setState(() {
       isLoading = true;
     });
-    
     try {
-      // Cargar equipos técnicos y especialidades en paralelo
       final teamsFuture = TechnicalTeamService.getAll();
       final specialitiesFuture = TechnicianSpecialityService.getAll();
-      
       final results = await Future.wait([teamsFuture, specialitiesFuture]);
-      
       setState(() {
-        technicalTeams = results[0];
+        technicalTeams = results[0] as List<TechnicalTeam>;
         specialities = List<String>.from(results[1]);
         isLoading = false;
       });
@@ -62,16 +59,18 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
       setState(() {
         isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al cargar datos: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al cargar datos: $e')));
     }
   }
 
   Future<void> _onBuscar() async {
     if (cedulaController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor ingrese una cédula para buscar')),
+        const SnackBar(
+          content: Text('Por favor ingrese una cédula para buscar'),
+        ),
       );
       return;
     }
@@ -81,7 +80,9 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
     });
 
     try {
-      final technician = await TechnicianService.getByUuid(cedulaController.text);
+      final technician = await TechnicianService.getByUuid(
+        cedulaController.text,
+      );
       setState(() {
         nombreController.text = technician['name'] ?? '';
         cuadrillaController.text = technician['technicalTeam'] ?? '';
@@ -89,23 +90,25 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
         selectedSpeciality = technician['speciality'];
         isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Técnico encontrado')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Técnico encontrado')));
     } catch (e) {
       setState(() {
         isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al buscar técnico: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al buscar técnico: $e')));
     }
   }
 
   Future<void> _onGuardar() async {
     if (cedulaController.text.isEmpty || nombreController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor complete todos los campos requeridos')),
+        const SnackBar(
+          content: Text('Por favor complete todos los campos requeridos'),
+        ),
       );
       return;
     }
@@ -126,7 +129,10 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
 
       if (widget.personaData?['uuid'] != null) {
         // Actualizar técnico existente
-        await TechnicianService.update(widget.personaData!['uuid'], technicianData);
+        await TechnicianService.update(
+          widget.personaData!['uuid'],
+          technicianData,
+        );
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Técnico actualizado exitosamente')),
         );
@@ -137,13 +143,13 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
           const SnackBar(content: Text('Técnico creado exitosamente')),
         );
       }
-      
+
       // Regresar a la página anterior
       Navigator.of(context).pop();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       setState(() {
         isLoading = false;
@@ -154,7 +160,9 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
   Future<void> _onEliminar() async {
     if (widget.personaData?['uuid'] == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se puede eliminar un técnico que no existe')),
+        const SnackBar(
+          content: Text('No se puede eliminar un técnico que no existe'),
+        ),
       );
       return;
     }
@@ -162,20 +170,23 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
     // Mostrar diálogo de confirmación
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirmar eliminación'),
-        content: const Text('¿Está seguro de que desea eliminar este técnico?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Confirmar eliminación'),
+            content: const Text(
+              '¿Está seguro de que desea eliminar este técnico?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Eliminar'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
     );
 
     if (confirm == true) {
@@ -190,9 +201,9 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
         );
         Navigator.of(context).pop();
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al eliminar: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error al eliminar: $e')));
       } finally {
         setState(() {
           isLoading = false;
@@ -213,11 +224,7 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return SingleChildScrollView(
@@ -289,16 +296,19 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: isLoading 
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          )
-                        : const Text('Buscar'),
+                      child:
+                          isLoading
+                              ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                              : const Text('Buscar'),
                     ),
                   ),
                 ],
@@ -388,12 +398,13 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
                       ),
                     ),
                     hint: const Text('Seleccione una especialidad'),
-                    items: specialities.map((String speciality) {
-                      return DropdownMenuItem<String>(
-                        value: speciality,
-                        child: Text(speciality),
-                      );
-                    }).toList(),
+                    items:
+                        specialities.map((String speciality) {
+                          return DropdownMenuItem<String>(
+                            value: speciality,
+                            child: Text(speciality),
+                          );
+                        }).toList(),
                     onChanged: (String? newValue) {
                       setState(() {
                         selectedSpeciality = newValue;
@@ -452,7 +463,8 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
                     ),
                     child: const Text('Eliminar'),
                   ),
-                if (widget.personaData?['uuid'] != null) const SizedBox(width: 20),
+                if (widget.personaData?['uuid'] != null)
+                  const SizedBox(width: 20),
                 ElevatedButton(
                   onPressed: isLoading ? null : _onGuardar,
                   style: ElevatedButton.styleFrom(
@@ -466,16 +478,19 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
                       borderRadius: BorderRadius.circular(7),
                     ),
                   ),
-                  child: isLoading 
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : const Text('Guardar'),
+                  child:
+                      isLoading
+                          ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          )
+                          : const Text('Guardar'),
                 ),
               ],
             ),

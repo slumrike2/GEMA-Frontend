@@ -1,17 +1,21 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../Models/backend_types.dart';
 
 class TechnicalLocationService {
   static const String baseUrl = 'http://localhost:3000/api/technical-locations';
 
   // Obtener todas las ubicaciones técnicas
-  static Future<List<dynamic>> getAll() async {
+  static Future<List<TechnicalLocation>> getAll() async {
     try {
       final response = await http.get(Uri.parse(baseUrl));
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((e) => TechnicalLocation.fromJson(e)).toList();
       } else {
-        throw Exception('Error al obtener ubicaciones técnicas: ${response.statusCode} - ${response.body}');
+        throw Exception(
+          'Error al obtener ubicaciones técnicas: \\${response.statusCode} - \\${response.body}',
+        );
       }
     } catch (e) {
       throw Exception('Error al obtener ubicaciones técnicas: $e');
@@ -19,13 +23,15 @@ class TechnicalLocationService {
   }
 
   // Obtener una ubicación técnica por código
-  static Future<Map<String, dynamic>> getByCode(String code) async {
+  static Future<TechnicalLocation> getByCode(String code) async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/$code'));
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        return TechnicalLocation.fromJson(jsonDecode(response.body));
       } else {
-        throw Exception('Error al obtener la ubicación técnica: ${response.statusCode} - ${response.body}');
+        throw Exception(
+          'Error al obtener la ubicación técnica: \\${response.statusCode} - \\${response.body}',
+        );
       }
     } catch (e) {
       throw Exception('Error al obtener la ubicación técnica: $e');
@@ -41,7 +47,9 @@ class TechnicalLocationService {
         body: jsonEncode(data),
       );
       if (response.statusCode != 201) {
-        throw Exception('Error al crear la ubicación técnica: ${response.statusCode} - ${response.body}');
+        throw Exception(
+          'Error al crear la ubicación técnica: ${response.statusCode} - ${response.body}',
+        );
       }
     } catch (e) {
       throw Exception('Error al crear la ubicación técnica: $e');
@@ -57,7 +65,9 @@ class TechnicalLocationService {
         body: jsonEncode(data),
       );
       if (response.statusCode != 200) {
-        throw Exception('Error al actualizar la ubicación técnica: ${response.statusCode} - ${response.body}');
+        throw Exception(
+          'Error al actualizar la ubicación técnica: ${response.statusCode} - ${response.body}',
+        );
       }
     } catch (e) {
       throw Exception('Error al actualizar la ubicación técnica: $e');
@@ -69,7 +79,9 @@ class TechnicalLocationService {
     try {
       final response = await http.delete(Uri.parse('$baseUrl/$code'));
       if (response.statusCode != 200) {
-        throw Exception('Error al eliminar la ubicación técnica: ${response.statusCode} - ${response.body}');
+        throw Exception(
+          'Error al eliminar la ubicación técnica: ${response.statusCode} - ${response.body}',
+        );
       }
     } catch (e) {
       throw Exception('Error al eliminar la ubicación técnica: $e');
@@ -83,7 +95,9 @@ class TechnicalLocationService {
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
-        throw Exception('Error al obtener hijos: ${response.statusCode} - ${response.body}');
+        throw Exception(
+          'Error al obtener hijos: ${response.statusCode} - ${response.body}',
+        );
       }
     } catch (e) {
       throw Exception('Error al obtener hijos: $e');
