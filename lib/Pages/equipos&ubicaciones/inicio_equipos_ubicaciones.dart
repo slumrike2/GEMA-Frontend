@@ -9,10 +9,12 @@ import '../../Services/technical_location_type_service.dart';
 class InicioEquiposUbicaciones extends StatefulWidget {
   final VoidCallback? onCrearEquipo;
   final VoidCallback? onCrearUbicacion;
+  final VoidCallback? onTiposUbicacion;
   const InicioEquiposUbicaciones({
     super.key,
     this.onCrearEquipo,
     this.onCrearUbicacion,
+    this.onTiposUbicacion,
   });
 
   @override
@@ -314,7 +316,16 @@ class _InicioEquiposUbicacionesState extends State<InicioEquiposUbicaciones>
                   onSelected: (_) => setState(() => selectedSection = 1),
                 ),
                 const Spacer(),
-                if (selectedSection == 0)
+                if (selectedSection == 0) ...[
+                  ElevatedButton(
+                    onPressed: widget.onTiposUbicacion,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Tipos de Ubicación'),
+                  ),
+                  const SizedBox(width: 8),
                   ElevatedButton(
                     onPressed: () {
                       showDialog(
@@ -444,6 +455,7 @@ class _InicioEquiposUbicacionesState extends State<InicioEquiposUbicaciones>
                     },
                     child: const Text('Crear Ubicación'),
                   ),
+                ],
                 if (selectedSection == 1)
                   ElevatedButton(
                     onPressed: widget.onCrearEquipo,

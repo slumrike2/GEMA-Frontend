@@ -66,4 +66,31 @@ class TechnicalLocationTypeService {
       );
     }
   }
+
+  static Future<LocationType> update(
+    String name,
+    Map<String, dynamic> data,
+  ) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/$name'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(data),
+    );
+    if (response.statusCode == 200) {
+      return LocationType.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception(
+        'Error al actualizar tipo de ubicación técnica: \\${response.statusCode}',
+      );
+    }
+  }
+
+  static Future<void> delete(String name) async {
+    final response = await http.delete(Uri.parse('$baseUrl/$name'));
+    if (response.statusCode != 200) {
+      throw Exception(
+        'Error al eliminar tipo de ubicación técnica: \\${response.statusCode}',
+      );
+    }
+  }
 }

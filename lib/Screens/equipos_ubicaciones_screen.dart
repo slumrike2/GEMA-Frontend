@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../Pages/equipos&ubicaciones/crear_equipo.dart';
 import '../Pages/equipos&ubicaciones/crear_ubicacion_tecnica.dart';
 import '../Pages/equipos&ubicaciones/inicio_equipos_ubicaciones.dart';
+import '../Pages/equipos&ubicaciones/crear_tipo_ubicacion.dart';
 
 class EquiposUbicacionesScreen extends StatefulWidget {
   final VoidCallback? onCrearEquipo;
@@ -18,7 +19,7 @@ class EquiposUbicacionesScreen extends StatefulWidget {
 }
 
 class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
-  int _pantalla = 0; // 0: inicio, 1: crear equipo, 2: crear ubicacion
+  int _pantalla = 0; // 0: inicio, 1: crear equipo, 2: crear ubicacion, 3: tipos de ubicacion
 
   void _goToCrearEquipo() {
     setState(() {
@@ -29,6 +30,12 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
   void _goToCrearUbicacion() {
     setState(() {
       _pantalla = 2;
+    });
+  }
+
+  void _goToTiposUbicacion() {
+    setState(() {
+      _pantalla = 3;
     });
   }
 
@@ -69,10 +76,18 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
           Expanded(child: CrearUbicacionTecnica(onBack: _goToInicio)),
         ],
       );
+    } else if (_pantalla == 3) {
+      child = Column(
+        children: [
+          buildBackButton(_goToInicio),
+          Expanded(child: CrearTipoUbicacion()),
+        ],
+      );
     } else {
       child = InicioEquiposUbicaciones(
         onCrearEquipo: _goToCrearEquipo,
         onCrearUbicacion: _goToCrearUbicacion,
+        onTiposUbicacion: _goToTiposUbicacion,
       );
     }
     return Container(
