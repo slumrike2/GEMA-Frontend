@@ -30,9 +30,9 @@ class _AdminScreenState extends State<AdminScreen> {
       Color(0xFF37B4E3), // Mantenimientos
     ];
     List<Image> navIcons = [
-      Image.asset('assets/images/IconCuadrillas.png'),
-      Image.asset('assets/images/IconEquiposUbicaciones.png'),
       Image.asset('assets/images/IconMantenimientos.png'),
+      Image.asset('assets/images/IconEquiposUbicaciones.png'),
+      Image.asset('assets/images/IconCuadrillas.png'),
     ];
 
     return Scaffold(

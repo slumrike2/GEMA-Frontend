@@ -1,18 +1,26 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide SearchBar;
 import '../../Models/backend_types.dart';
 import 'package:frontend/Components/tag.dart';
-import '../../Services/equipment_service.dart';
-import '../../Services/brand_service.dart';
+import 'package:frontend/Components/search_bar.dart';
+import 'package:frontend/Components/action_button.dart';
+import 'package:frontend/Services/equipment_service.dart';
+import 'package:frontend/Modals/change_equipment_state_modal.dart';
 
 class EquiposListPage extends StatefulWidget {
   final void Function(Equipment) onDeleteEquipment;
-  final void Function(Equipment, String) onAssignEquipment;
+  final void Function(
+    Equipment, {
+    required bool isOperational,
+    required String locationCode,
+  })
+  onAssignEquipment;
   final void Function(Equipment) onEditEquipment;
   final VoidCallback onCreateEquipment;
-  final TextEditingController equipmentNameController;
-  final TextEditingController equipmentLocationController;
-  final TextEditingController equipmentSerialController;
-  final TextEditingController equipmentBrandIdController;
+  final VoidCallback onCreateMarca; // NEW
+  final List<Equipment> equipments;
+  final List<Brand> brands;
+  final List<TechnicalLocation> operationalLocations;
+  final TechnicalLocation? selectedLocation;
 
   const EquiposListPage({
     super.key,
@@ -20,210 +28,235 @@ class EquiposListPage extends StatefulWidget {
     required this.onAssignEquipment,
     required this.onEditEquipment,
     required this.onCreateEquipment,
-    required this.equipmentNameController,
-    required this.equipmentLocationController,
-    required this.equipmentSerialController,
-    required this.equipmentBrandIdController,
+    required this.onCreateMarca, // NEW
+    required this.equipments,
+    required this.brands,
+    this.operationalLocations = const [],
+    this.selectedLocation,
   });
 
   @override
-  State<EquiposListPage> createState() => _EquiposListPageState();
+  _EquiposListPageState createState() => _EquiposListPageState();
 }
 
 class _EquiposListPageState extends State<EquiposListPage> {
-  List<Brand> _brands = [];
-  Brand? _selectedBrand;
-  bool _loadingBrands = false;
-  final TextEditingController _technicalCodeController =
-      TextEditingController();
-  List<Equipment> _equipmentList = [];
-  bool _loadingEquipments = false;
-  bool _showCreate = false;
+  Equipment? _changingStateEquipment;
+  bool _showChangeStateModal = false;
 
-  // --- Dependencias selector ---
-  String searchQuery = '';
-  Equipment? selectedDependency;
-  List<Equipment> get filteredEquipments {
-    return _equipmentList.where((eq) {
-      final query = searchQuery.toLowerCase();
-      return (eq.name.toLowerCase().contains(query) ||
-          eq.technicalCode.toLowerCase().contains(query));
-    }).toList();
+  void _onChangeEquipmentState(Equipment equipment) {
+    setState(() {
+      _changingStateEquipment = equipment;
+      _showChangeStateModal = true;
+    });
   }
+
+  Future<void> _handleSaveState(String newState) async {
+    if (_changingStateEquipment == null) return;
+    try {
+      await EquipmentService.updateState(
+        _changingStateEquipment!.uuid!,
+        newState,
+      );
+      setState(() {
+        _showChangeStateModal = false;
+        _changingStateEquipment = null;
+      });
+      // Refetch or update the equipment list after state change
+      widget.onEditEquipment(_changingStateEquipment!);
+    } catch (e) {
+      setState(() {
+        _showChangeStateModal = false;
+        _changingStateEquipment = null;
+      });
+    }
+  }
+
+  int? _expandedIdx;
+  String _search = '';
+  // Mapa para almacenar las ubicaciones operativas de cada equipo
+  final Map<String, List<String>> _operationalLocationsMap = {};
+  bool _loadingOperationalLocations = false;
 
   @override
   void initState() {
     super.initState();
-    _fetchBrands();
-    _fetchEquipments();
+    _fetchAllOperationalLocations();
   }
 
-  Future<void> _fetchBrands() async {
-    setState(() => _loadingBrands = true);
-    try {
-      final brands = await BrandService.getAll();
-      setState(() {
-        _brands = brands;
-        if (_brands.isNotEmpty) {
-          _selectedBrand = _brands.first;
+  @override
+  void didUpdateWidget(covariant EquiposListPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.equipments != widget.equipments) {
+      _fetchAllOperationalLocations();
+    }
+  }
+
+  Future<void> _fetchAllOperationalLocations() async {
+    setState(() {
+      _loadingOperationalLocations = true;
+    });
+    final Map<String, List<String>> newMap = {};
+    for (final equipment in widget.equipments) {
+      if (equipment.uuid != null) {
+        try {
+          final locations = await EquipmentService.getOperationalLocations(
+            equipment.uuid!,
+          );
+          newMap[equipment.uuid!] = locations;
+        } catch (_) {
+          newMap[equipment.uuid!] = [];
         }
-      });
-    } catch (e) {
-      // Manejo de error opcional
-    } finally {
-      setState(() => _loadingBrands = false);
+      }
     }
-  }
-
-  Future<void> _fetchEquipments() async {
-    setState(() => _loadingEquipments = true);
-    try {
-      final equipments = await EquipmentService.getAll();
-      setState(() {
-        _equipmentList = equipments;
-      });
-    } catch (e) {
-      print(e);
-    } finally {
-      setState(() => _loadingEquipments = false);
-    }
-  }
-
-  void _handleCreateEquipment() async {
-    await _fetchEquipments();
-    widget.onCreateEquipment();
-  }
-
-  void _handleDeleteEquipment(Equipment e) async {
-    await EquipmentService.delete(e.technicalCode);
-    await _fetchEquipments();
-    widget.onDeleteEquipment(e);
-  }
-
-  void _handleShowCreate() {
     setState(() {
-      _showCreate = true;
-    });
-  }
-
-  void _handleCancelCreate() {
-    setState(() {
-      _showCreate = false;
+      _operationalLocationsMap.clear();
+      _operationalLocationsMap.addAll(newMap);
+      _loadingOperationalLocations = false;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_showCreate) {
-      return EquipmentCreateWidget(
-        brands: _brands,
-        initialBrand: _selectedBrand,
-        allEquipments: _equipmentList,
-        onCreated: () {
-          _handleCreateEquipment();
-          _handleCancelCreate();
-        },
-        onCancel: _handleCancelCreate,
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    final filteredEquipments =
+        widget.equipments.where((e) {
+          final q = _search.toLowerCase();
+          return e.name.toLowerCase().contains(q) ||
+              e.technicalCode.toLowerCase().contains(q) ||
+              e.serialNumber.toLowerCase().contains(q);
+        }).toList();
+    final bool hasLocation = widget.selectedLocation != null;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Stack(
           children: [
-            const Text(
-              'Gestión de Equipos',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (_brands.isEmpty || _equipmentList.isEmpty) {
-                  await Future.wait([_fetchBrands(), _fetchEquipments()]);
-                }
-                if (!mounted) return;
-                _handleShowCreate();
-              },
-              child: const Text('Crear Equipo'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        _loadingEquipments
-            ? const Center(child: CircularProgressIndicator())
-            : ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _equipmentList.length,
-              itemBuilder: (context, idx) {
-                final e = _equipmentList[idx];
-                return _EquipmentTile(
-                  equipment: e,
-                  onDelete: () => _handleDeleteEquipment(e),
-                  onEdit: () => widget.onEditEquipment(e),
-                );
-              },
-            ),
-      ],
-    );
-  }
-}
-
-class _EquipmentTile extends StatefulWidget {
-  final Equipment equipment;
-  final VoidCallback onDelete;
-  final VoidCallback onEdit;
-  const _EquipmentTile({
-    required this.equipment,
-    required this.onDelete,
-    required this.onEdit,
-  });
-
-  @override
-  State<_EquipmentTile> createState() => _EquipmentTileState();
-}
-
-class _EquipmentTileState extends State<_EquipmentTile> {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.black12),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Row(
+            Container(
+              width: double.infinity,
+              height: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 40.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    widget.equipment.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
+                  SearchBar(
+                    hintText: 'Buscar por nombre, código técnico o serie...',
+                    onChanged: (v) => setState(() => _search = v),
+                    initialValue: _search,
+                  ),
+                  const SizedBox(height: 12),
+                  if (!hasLocation)
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.yellow[100],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Colors.yellow[700]!,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: const [
+                          Icon(Icons.info_outline, color: Colors.orange),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Selecciona una ubicación en el panel izquierdo para habilitar la asignación de equipos.',
+                              style: TextStyle(fontSize: 14),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                  Expanded(
+                    child:
+                        filteredEquipments.isEmpty
+                            ? const Center(child: Text('No hay equipos.'))
+                            : ListView.separated(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 4,
+                              ),
+                              itemCount: filteredEquipments.length,
+                              separatorBuilder:
+                                  (context, idx) => const SizedBox(height: 18),
+                              itemBuilder: (context, idx) {
+                                final equipment = filteredEquipments[idx];
+                                final operationalCodes =
+                                    _operationalLocationsMap[equipment.uuid] ??
+                                    [];
+                                return _EquipmentTile(
+                                  equipment: equipment,
+                                  isExpanded: _expandedIdx == idx,
+                                  onTap:
+                                      () => setState(() {
+                                        _expandedIdx =
+                                            _expandedIdx == idx ? null : idx;
+                                      }),
+                                  onDelete:
+                                      () => widget.onDeleteEquipment(equipment),
+                                  onEdit:
+                                      () => widget.onEditEquipment(equipment),
+                                  operationalLocationCodes: operationalCodes,
+                                  dependants:
+                                      widget.equipments
+                                          .where(
+                                            (eq) =>
+                                                eq.dependsOn == equipment.uuid,
+                                          )
+                                          .toList(),
+                                  dependsOf:
+                                      widget.equipments
+                                          .where(
+                                            (eq) =>
+                                                eq.uuid == equipment.dependsOn,
+                                          )
+                                          .toList(),
+                                  selectedLocation: widget.selectedLocation,
+                                  onAssignTechnical:
+                                      hasLocation &&
+                                              (equipment.technicalLocation ==
+                                                      null ||
+                                                  equipment
+                                                      .technicalLocation!
+                                                      .isEmpty)
+                                          ? () {
+                                            widget.onAssignEquipment(
+                                              equipment,
+                                              isOperational: false,
+                                              locationCode:
+                                                  widget
+                                                      .selectedLocation
+                                                      ?.technicalCode ??
+                                                  '',
+                                            );
+                                          }
+                                          : null,
+                                  onAssignOperational:
+                                      hasLocation
+                                          ? () {
+                                            widget.onAssignEquipment(
+                                              equipment,
+                                              isOperational: true,
+                                              locationCode:
+                                                  widget
+                                                      .selectedLocation
+                                                      ?.technicalCode ??
+                                                  '',
+                                            );
+                                          }
+                                          : null,
+                                  onChangeEquipmentState:
+                                      _onChangeEquipmentState,
+                                );
+                              },
+                            ),
                   ),
-                  const SizedBox(width: 12),
-                  widget.equipment.technicalLocation == null ||
-                          widget.equipment.technicalLocation!.isEmpty
-                      ? Tag(label: 'Sin ubicación', color: Colors.red)
-                      : Tag(label: widget.equipment.technicalLocation!),
-                  const SizedBox(width: 8),
-                  Tag(
-                    label:
-                        widget.equipment.state != null
-                            ? widget.equipment.state!.name.replaceAll('_', ' ')
-                            : '',
-                  ),
-                  const Spacer(),
+
+                  const SizedBox(height: 8),
                   ElevatedButton.icon(
-                    icon: const Icon(Icons.edit, color: Colors.white),
-                    label: const Text('Editar'),
+                    icon: const Icon(Icons.add, color: Colors.white),
+                    label: const Text('Crear Equipo'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green[600],
                       foregroundColor: Colors.white,
@@ -232,375 +265,299 @@ class _EquipmentTileState extends State<_EquipmentTile> {
                         vertical: 8,
                       ),
                     ),
-                    onPressed: widget.onEdit,
+                    onPressed: widget.onCreateEquipment,
                   ),
-                  const SizedBox(width: 8),
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.delete, color: Colors.white),
-                    label: const Text('Eliminar'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.add_business, color: Colors.blue),
+                    label: const Text('Crear Marca'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.blue,
+                      side: const BorderSide(color: Colors.blue),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 8,
                       ),
                     ),
-                    onPressed: widget.onDelete,
+                    onPressed: widget.onCreateMarca,
                   ),
                 ],
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Widget para visualizar dependencias en forma de árbol
-class _DependencyTreeView extends StatelessWidget {
-  final Equipment root;
-  final List<Equipment> allEquipments;
-  const _DependencyTreeView({required this.root, required this.allEquipments});
-
-  @override
-  Widget build(BuildContext context) {
-    List<Equipment> children =
-        allEquipments.where((e) => e.dependsOn == root.uuid).toList();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Icon(Icons.device_hub, size: 18, color: Colors.blueGrey),
-            const SizedBox(width: 6),
-            Text(
-              root.name,
-              style: const TextStyle(fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              '(${root.technicalCode})',
-              style: const TextStyle(color: Colors.grey),
-            ),
+            if (_showChangeStateModal && _changingStateEquipment != null)
+              ChangeEquipmentStateModal(
+                currentState: _changingStateEquipment!.state?.name ?? '',
+                possibleStates:
+                    EquipmentState.values.map((e) => e.name).toList(),
+                onSave: _handleSaveState,
+                onCancel:
+                    () => setState(() {
+                      _showChangeStateModal = false;
+                      _changingStateEquipment = null;
+                    }),
+              ),
           ],
-        ),
-        if (children.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(left: 18, top: 4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children:
-                  children
-                      .map(
-                        (child) => _DependencyTreeView(
-                          root: child,
-                          allEquipments: allEquipments,
-                        ),
-                      )
-                      .toList(),
-            ),
-          ),
-      ],
+        );
+      },
     );
   }
 }
 
-// EquipmentCreateWidget: not a full page, but a widget to embed in your page layout
-class EquipmentCreateWidget extends StatefulWidget {
-  final List<Brand> brands;
-  final Brand? initialBrand;
-  final List<Equipment> allEquipments;
-  final VoidCallback onCreated;
-  final VoidCallback onCancel;
-
-  const EquipmentCreateWidget({
-    super.key,
-    required this.brands,
-    required this.initialBrand,
-    required this.allEquipments,
-    required this.onCreated,
-    required this.onCancel,
+class _EquipmentTile extends StatelessWidget {
+  final Equipment equipment;
+  final VoidCallback onDelete;
+  final VoidCallback onEdit;
+  final VoidCallback onTap;
+  final bool isExpanded;
+  final List<String> operationalLocationCodes;
+  final List<Equipment> dependants;
+  final List<Equipment> dependsOf;
+  final TechnicalLocation? selectedLocation;
+  final VoidCallback? onAssignTechnical;
+  final VoidCallback? onAssignOperational;
+  final void Function(Equipment) onChangeEquipmentState;
+  const _EquipmentTile({
+    required this.equipment,
+    required this.onDelete,
+    required this.onEdit,
+    required this.onTap,
+    required this.isExpanded,
+    required this.operationalLocationCodes,
+    required this.dependants,
+    required this.dependsOf,
+    required this.selectedLocation,
+    this.onAssignTechnical,
+    this.onAssignOperational,
+    required this.onChangeEquipmentState,
   });
 
   @override
-  State<EquipmentCreateWidget> createState() => _EquipmentCreateWidgetState();
-}
-
-class _EquipmentCreateWidgetState extends State<EquipmentCreateWidget> {
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _serialController = TextEditingController();
-  final TextEditingController _technicalCodeController =
-      TextEditingController();
-  Brand? _selectedBrand;
-  String searchQuery = '';
-  Equipment? selectedDependency;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedBrand = widget.initialBrand;
-  }
-
-  List<Equipment> get filteredEquipments {
-    final query = searchQuery.toLowerCase();
-    return widget.allEquipments.where((eq) {
-      return eq.name.toLowerCase().contains(query) ||
-          eq.technicalCode.toLowerCase().contains(query);
-    }).toList();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final double availableHeight = MediaQuery.of(context).size.height - 120;
-    // Construir la cadena de dependencias horizontal
-    List<Equipment> dependencyChain = [];
-    Equipment? current = selectedDependency;
-    while (current != null) {
-      dependencyChain.add(current);
-      final nextUuid = current.dependsOn;
-      if (nextUuid == null) break;
-      Equipment? next;
-      for (final e in widget.allEquipments) {
-        if (e.uuid == nextUuid) {
-          next = e;
-          break;
-        }
-      }
-      if (next == null) break;
-      current = next;
-    }
-    return Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        children: [
-          SizedBox(
-            height: availableHeight > 400 ? availableHeight : 400,
-            child: Row(
-              children: [
-                // Left: Form fields
-                Expanded(
-                  flex: 3,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.arrow_back),
-                            onPressed: widget.onCancel,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'Crear Nuevo Equipo',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.symmetric(vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.black12),
+            boxShadow:
+                isExpanded
+                    ? [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 8,
+                        spreadRadius: 1,
                       ),
-                      const SizedBox(height: 24),
-                      TextField(
-                        controller: _nameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Nombre',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _serialController,
-                        decoration: const InputDecoration(
-                          labelText: 'Número de Serie',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _technicalCodeController,
-                        decoration: const InputDecoration(
-                          labelText: 'Código Técnico',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<Brand>(
-                        value: _selectedBrand,
-                        items:
-                            widget.brands
-                                .map(
-                                  (b) => DropdownMenuItem<Brand>(
-                                    value: b,
-                                    child: Text(b.name),
-                                  ),
-                                )
-                                .toList(),
-                        onChanged: (brand) {
-                          setState(() {
-                            _selectedBrand = brand;
-                          });
-                        },
-                        decoration: const InputDecoration(
-                          labelText: 'Marca',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            onPressed: widget.onCancel,
-                            child: const Text('Cancelar'),
-                          ),
-                          const SizedBox(width: 16),
-                          ElevatedButton(
-                            onPressed: () async {
-                              if (_technicalCodeController.text.isEmpty ||
-                                  _nameController.text.isEmpty ||
-                                  _serialController.text.isEmpty ||
-                                  _selectedBrand == null) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Por favor, complete todos los campos.',
-                                    ),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
-                                return;
-                              }
-                              final newEquipment = Equipment(
-                                technicalCode: _technicalCodeController.text,
-                                name: _nameController.text,
-                                serialNumber: _serialController.text,
-                                brandId: _selectedBrand!.id!,
-                                dependsOn: selectedDependency?.uuid,
-                              );
-                              await EquipmentService.create(
-                                newEquipment.toJson(),
-                              );
-                              widget.onCreated();
-                            },
-                            child: const Text('Crear'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 32),
-                // Right: Dependency selector
-                Expanded(
-                  flex: 1,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Depende de:',
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        decoration: const InputDecoration(
-                          hintText: 'Buscar por nombre o código...',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.search),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            searchQuery = value;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 8),
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.black12),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: ListView.builder(
-                            itemCount: filteredEquipments.length + 1,
-                            itemBuilder: (context, idx) {
-                              if (idx == 0) {
-                                return ListTile(
-                                  title: const Text(
-                                    'Sin dependencia',
-                                    style: TextStyle(color: Colors.grey),
-                                  ),
-                                  trailing:
-                                      selectedDependency == null
-                                          ? const Icon(
-                                            Icons.check_circle,
-                                            color: Colors.green,
-                                          )
-                                          : null,
-                                  onTap: () {
-                                    setState(() {
-                                      selectedDependency = null;
-                                    });
-                                  },
-                                );
-                              }
-                              final eq = filteredEquipments[idx - 1];
-                              return ListTile(
-                                title: Text(eq.name),
-                                subtitle: Text('Código: ${eq.technicalCode}'),
-                                trailing:
-                                    selectedDependency?.uuid == eq.uuid
-                                        ? const Icon(
-                                          Icons.check_circle,
-                                          color: Colors.green,
-                                        )
-                                        : null,
-                                onTap: () {
-                                  setState(() {
-                                    selectedDependency = eq;
-                                  });
-                                },
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+                    ]
+                    : [],
           ),
-          // Árbol de dependencias horizontal
-          if (selectedDependency != null && dependencyChain.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 32),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+          child: Column(
+            children: [
+              Row(
                 children: [
-                  for (int i = 0; i < dependencyChain.length; i++) ...[
-                    Text(
-                      dependencyChain[i].name,
-                      style: const TextStyle(fontWeight: FontWeight.w500),
-                    ),
-                    if (i < dependencyChain.length - 1)
-                      Row(
-                        children: const [
-                          SizedBox(width: 8),
-                          Text(
-                            '<- depende',
-                            style: TextStyle(color: Colors.grey),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                equipment.name,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              equipment.technicalLocation == null ||
+                                      equipment.technicalLocation!.isEmpty
+                                  ? Tag(
+                                    label: 'Sin ubicación',
+                                    color: Colors.red,
+                                  )
+                                  : Tag(label: equipment.technicalLocation!),
+                              const SizedBox(width: 8),
+                              Tag(
+                                label:
+                                    equipment.state != null
+                                        ? equipment.state!.name.replaceAll(
+                                          '_',
+                                          ' ',
+                                        )
+                                        : '',
+                              ),
+                              const SizedBox(width: 8),
+
+                              Expanded(
+                                child: Container(),
+                              ), // Push buttons to the right
+
+                              if (onAssignTechnical != null)
+                                MouseRegion(
+                                  cursor: SystemMouseCursors.click,
+                                  child: Tooltip(
+                                    message:
+                                        'Asignar este equipo a la ubicación actual',
+                                    child: GestureDetector(
+                                      onTap: onAssignTechnical,
+                                      child: Tag(
+                                        label: '',
+                                        iconData: Icons.location_on,
+                                        color: Colors.blue,
+                                        onTap: onAssignTechnical,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              const SizedBox(width: 8),
+
+                              if (equipment.technicalLocation != null &&
+                                  equipment.technicalLocation!.isNotEmpty)
+                                MouseRegion(
+                                  cursor: SystemMouseCursors.click,
+                                  child: Tooltip(
+                                    message: 'Mudar equipo a otra ubicación',
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        //!TODO: Implementar lógica de mudanza
+                                      },
+                                      child: Tag(
+                                        label: '',
+                                        iconData: Icons.local_shipping,
+                                        color: Colors.blue,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              if (onAssignOperational != null)
+                                MouseRegion(
+                                  cursor: SystemMouseCursors.click,
+                                  child: Tooltip(
+                                    message:
+                                        'Asignar este equipo como operativo en la ubicación actual',
+                                    child: GestureDetector(
+                                      onTap: onAssignOperational,
+                                      child: Tag(
+                                        label: '',
+                                        iconData: Icons.link,
+                                        color: Colors.blue,
+                                        onTap: onAssignOperational,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              const Spacer(),
+                              Icon(
+                                isExpanded
+                                    ? Icons.expand_less
+                                    : Icons.expand_more,
+                                color: Colors.grey,
+                              ),
+                            ],
                           ),
-                          SizedBox(width: 8),
+                          const SizedBox(height: 8),
                         ],
                       ),
-                  ],
+                    ),
+                  ),
                 ],
               ),
-            ),
-        ],
+              if (isExpanded)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Nombre: ${equipment.name}',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text('Código técnico: ${equipment.technicalCode}'),
+                        Text(
+                          'Ubicación principal: ${equipment.technicalLocation ?? "Sin ubicación"}',
+                        ),
+                        Text(
+                          'Código ubicación: ${equipment.technicalLocation ?? "-"}',
+                        ),
+                        const SizedBox(height: 4),
+                        Text('Ubicaciones operativas:'),
+                        Wrap(
+                          spacing: 8,
+                          children: [
+                            for (final code in operationalLocationCodes)
+                              Chip(label: Text(code)),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text('Dependientes:'),
+                        Wrap(
+                          spacing: 8,
+                          children: [
+                            for (int i = 0; i < dependants.length; i++)
+                              Chip(
+                                label: Text(
+                                  '${dependants[i].name} (${dependants[i].technicalCode})',
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text('Depende de:'),
+                        Wrap(
+                          spacing: 8,
+                          children: [
+                            for (final dep in dependsOf)
+                              Chip(
+                                label: Text(
+                                  '${dep.name} (${dep.technicalCode})',
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Estado: ${equipment.state != null ? equipment.state!.name.replaceAll('_', ' ') : "-"}',
+                        ),
+
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            ActionButton(
+                              icon: Icons.edit,
+                              label: 'Editar',
+                              backgroundColor: Colors.green[600]!,
+                              onPressed: onEdit,
+                            ),
+                            const SizedBox(width: 8),
+                            ActionButton(
+                              icon: Icons.delete,
+                              label: 'Eliminar',
+                              backgroundColor: Colors.red,
+                              onPressed: onDelete,
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

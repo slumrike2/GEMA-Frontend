@@ -16,7 +16,6 @@ class MainApp extends StatelessWidget {
       home: AdminScreen(),
       routes: {
         AdminScreen.routeName: (context) =>  AdminScreen(),
-        CrearEquipo.routeName: (context) => const CrearEquipo(),
 
       },
     );

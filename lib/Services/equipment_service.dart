@@ -87,4 +87,76 @@ class EquipmentService {
       throw Exception('Error al eliminar el equipo: $e');
     }
   }
+
+  // Cambiar el estado de un equipo
+  static Future<void> updateState(String uuid, String newState) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$baseUrl/$uuid/state'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'state': newState}),
+      );
+      if (response.statusCode != 200) {
+        throw Exception(
+          'Error al cambiar el estado: \\${response.statusCode} - \\${response.body}',
+        );
+      }
+    } catch (e) {
+      throw Exception('Error al cambiar el estado: $e');
+    }
+  }
+
+  // Asociar ubicación técnica a un equipo
+  static Future<void> assignTechnicalLocation(
+    String equipmentId,
+    String technicalLocationId,
+  ) async {
+    final response = await http.put(
+      Uri.parse(
+        '$baseUrl/assign/technicalLocation/$equipmentId/$technicalLocationId',
+      ),
+      headers: {'Content-Type': 'application/json'},
+    );
+    if (response.statusCode != 200) {
+      throw Exception(
+        'No se pudo asociar la ubicación técnica, '
+        ' código de estado: ${response.statusCode}, ${response.body}',
+      );
+    }
+  }
+
+  // Asociar ubicación operativa a un equipo
+  static Future<void> assignOperationalLocation(
+    String equipmentId,
+    String operationalLocationId,
+  ) async {
+    final response = await http.put(
+      Uri.parse(
+        '$baseUrl/assign/operationalLocation/$equipmentId/$operationalLocationId',
+      ),
+      headers: {'Content-Type': 'application/json'},
+    );
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('No se pudo asociar la ubicación operativa');
+    }
+  }
+
+  // Obtener ubicaciones operativas de un equipo
+  static Future<List<String>> getOperationalLocations(
+    String equipmentId,
+  ) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/operationalLocation/$equipmentId'),
+      headers: {'Content-Type': 'application/json'},
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.cast<String>();
+    } else {
+      throw Exception(
+        'No se pudieron obtener las ubicaciones operativas: '
+        '\${response.statusCode} - \${response.body}',
+      );
+    }
+  }
 }
