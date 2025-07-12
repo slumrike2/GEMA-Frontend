@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/Pages/equipos&ubicaciones/crear_equipo.dart';
 import 'Screens/admin_screen.dart';
+import 'Screens/login_screen.dart';
 
 void main() {
   runApp(const MainApp());
@@ -16,7 +16,7 @@ class MainApp extends StatelessWidget {
       home: AdminScreen(),
       routes: {
         AdminScreen.routeName: (context) =>  AdminScreen(),
-
+        LoginScreen.routeName: (context) => const LoginScreen(),
       },
     );
   }
