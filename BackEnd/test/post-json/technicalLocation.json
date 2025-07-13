@@ -1,0 +1,6 @@
+{
+	"technicalCode": "LOC-001",
+	"name": "Main Warehouse",
+	"type": 1,
+	"parentTechnicalCode": "LOC-001"
+}

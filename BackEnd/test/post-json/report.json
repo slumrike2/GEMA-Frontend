@@ -1,0 +1,8 @@
+{
+	"title": "Broken Equipment",
+	"description": "The compressor is not working.",
+	"priority": "high",
+	"state": "pending",
+	"type": "active",
+	"notes": "Needs urgent attention"
+}

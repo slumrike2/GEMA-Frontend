@@ -1,0 +1,8 @@
+{
+	"technicalCode": "EQ-001",
+	"name": "Compressor",
+	"serialNumber": "SN-0001",
+	"description": "Air compressor",
+	"state": "in_stock",
+	"brandId": 1
+}

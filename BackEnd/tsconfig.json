@@ -1,0 +1,55 @@
+{
+	/**
+	 * Configuración del compilador de TypeScript para GEMA Backend
+	 * 
+	 * Este archivo define las opciones de compilación y configuración
+	 * del proyecto TypeScript, incluyendo la versión de JavaScript
+	 * objetivo, el sistema de módulos y otras opciones de compilación.
+	 */
+	"compilerOptions": {
+		/**
+		 * Versión de JavaScript objetivo
+		 * 
+		 * Define la versión de JavaScript que se generará al compilar
+		 * el código TypeScript. ES2016 proporciona un buen balance
+		 * entre compatibilidad y características modernas.
+		 */
+		"target": "es2016" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
+
+		/**
+		 * Sistema de módulos
+		 * 
+		 * Especifica el sistema de módulos que se usará para generar
+		 * el código JavaScript. CommonJS es compatible con Node.js.
+		 */
+		"module": "commonjs" /* Specify what module code is generated. */,
+		
+		/**
+		 * Interoperabilidad de módulos ES
+		 * 
+		 * Permite importar módulos CommonJS como si fueran módulos ES6,
+		 * facilitando la compatibilidad entre diferentes sistemas de módulos.
+		 */
+		/* Allow 'import x from y' when a module doesn't have a default export. */
+		"esModuleInterop": true /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */,
+		
+		// "preserveSymlinks": true,                         /* Disable resolving symlinks to their realpath. This correlates to the same flag in node. */
+		
+		/**
+		 * Consistencia en nombres de archivos
+		 * 
+		 * Asegura que las importaciones respeten las mayúsculas y minúsculas
+		 * correctas en los nombres de archivos, importante para sistemas
+		 * que distinguen entre mayúsculas y minúsculas.
+		 */
+		"forceConsistentCasingInFileNames": true /* Ensure that casing is correct in imports. */,
+
+		/**
+		 * Omitir verificación de tipos en archivos de declaración
+		 * 
+		 * Salta la verificación de tipos en todos los archivos .d.ts
+		 * para mejorar el rendimiento de la compilación.
+		 */
+		"skipLibCheck": true /* Skip type checking all .d.ts files. */
+	}
+}
