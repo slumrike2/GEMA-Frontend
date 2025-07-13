@@ -14,10 +14,8 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: AdminScreen(),
-      routes: {
-        AdminScreen.routeName: (context) =>  AdminScreen(),
-
-      },
+      routes: {AdminScreen.routeName: (context) => AdminScreen()},
     );
   }
 }
+
