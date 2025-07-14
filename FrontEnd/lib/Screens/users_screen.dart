@@ -57,16 +57,12 @@ class _UserManagerState extends State<UserManager> {
     }
   }
 
-  Future<void> _addUser(String name, String email, String password) async {
+  Future<void> _addUser(String email, String role) async {
     setState(() {
       errorText = null;
     });
     try {
-      await UserService.create({
-        'name': name,
-        'email': email,
-        'password': password,
-      });
+      await UserService.create({'email': email, 'role': role});
       await _fetchUsers();
     } catch (e) {
       setState(() {
@@ -75,21 +71,12 @@ class _UserManagerState extends State<UserManager> {
     }
   }
 
-  Future<void> _updateUser(
-    User user,
-    String name,
-    String email,
-    String password,
-  ) async {
+  Future<void> _updateUser(User user, String email, String role) async {
     setState(() {
       errorText = null;
     });
     try {
-      await UserService.update(user.uuid ?? '', {
-        'name': name,
-        'email': email,
-        'password': password,
-      });
+      await UserService.update(user.uuid ?? '', {'email': email, 'role': role});
       await _fetchUsers();
     } catch (e) {
       setState(() {
@@ -146,13 +133,12 @@ class _UserManagerState extends State<UserManager> {
       context: context,
       builder:
           (context) => CreateUserModal(
-            onCreate: (name, email, password) {
-              _updateUser(user, name, email, password);
+            onCreate: (email, role) {
+              _updateUser(user, email, role);
             },
-            initialUsername: user.name,
-            initialEmail: user.email,
-            initialPassword: '',
             isEdit: true,
+            initialEmail: user.email,
+            initialRole: user.role?.name,
           ),
     );
   }
@@ -251,8 +237,8 @@ class _UserManagerState extends State<UserManager> {
                     context: context,
                     builder:
                         (context) => CreateUserModal(
-                          onCreate: (username, email, password) {
-                            _addUser(username, email, password);
+                          onCreate: (email, role) {
+                            _addUser(email, role);
                           },
                         ),
                   );
@@ -260,6 +246,48 @@ class _UserManagerState extends State<UserManager> {
               ),
             ),
           ],
+        ),
+
+        const SizedBox(height: 32),
+        Text(
+          'Por registrar',
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: Colors.orange,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Builder(
+          builder: (context) {
+            final unregistered =
+                users
+                    .where((u) => (u.name == null || u.name.trim().isEmpty))
+                    .toList();
+            if (unregistered.isEmpty) {
+              return const Text(
+                'No hay usuarios por registrar.',
+                style: TextStyle(color: Colors.grey),
+              );
+            }
+            return ListView.separated(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: unregistered.length,
+              separatorBuilder: (_, __) => Divider(),
+              itemBuilder: (context, i) {
+                final user = unregistered[i];
+                return ListTile(
+                  leading: Icon(Icons.person_outline, color: Colors.orange),
+                  title: Text(user.email, style: TextStyle(fontSize: 18)),
+                  subtitle: Text(
+                    'Sin nombre asociado',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                );
+              },
+            );
+          },
         ),
       ],
     );

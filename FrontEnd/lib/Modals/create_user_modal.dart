@@ -1,41 +1,31 @@
 import 'package:flutter/material.dart';
 
 class CreateUserModal extends StatefulWidget {
-  final void Function(String username, String email, String password) onCreate;
-  final String? initialUsername;
+  final void Function(String email, String role) onCreate;
   final String? initialEmail;
-  final String? initialPassword;
+  final String? initialRole;
   final bool isEdit;
   const CreateUserModal({
     super.key,
     required this.onCreate,
-    this.initialUsername,
     this.initialEmail,
-    this.initialPassword,
+    this.initialRole,
     this.isEdit = false,
   });
 
   @override
-  State<CreateUserModal> createState() => _CreateUserModalState();
+  State<CreateUserModal> createState() => CreateUserModalState();
 }
 
-class _CreateUserModalState extends State<CreateUserModal> {
+class CreateUserModalState extends State<CreateUserModal> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _usernameController;
-  late final TextEditingController _emailController;
-  late final TextEditingController _passwordController;
-  bool _showPassword = false;
+  late TextEditingController _emailController;
+  String _selectedRole = 'user';
 
   @override
   void initState() {
     super.initState();
-    _usernameController = TextEditingController(
-      text: widget.initialUsername ?? '',
-    );
     _emailController = TextEditingController(text: widget.initialEmail ?? '');
-    _passwordController = TextEditingController(
-      text: widget.initialPassword ?? '',
-    );
   }
 
   @override
@@ -48,21 +38,12 @@ class _CreateUserModalState extends State<CreateUserModal> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextFormField(
-              controller: _usernameController,
-              decoration: const InputDecoration(labelText: 'Nombre de usuario'),
-              validator:
-                  (value) =>
-                      value == null || value.trim().isEmpty
-                          ? 'Campo requerido'
-                          : null,
-            ),
-
-            TextFormField(
               controller: _emailController,
               decoration: const InputDecoration(
                 labelText: 'Correo electrónico',
               ),
               keyboardType: TextInputType.emailAddress,
+
               validator: (value) {
                 if (value == null || value.trim().isEmpty)
                   return 'Campo requerido';
@@ -74,27 +55,21 @@ class _CreateUserModalState extends State<CreateUserModal> {
                 return null;
               },
             ),
-            TextFormField(
-              controller: _passwordController,
-              decoration: InputDecoration(
-                labelText: 'Contraseña',
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _showPassword ? Icons.visibility_off : Icons.visibility,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _showPassword = !_showPassword;
-                    });
-                  },
-                ),
-              ),
-              obscureText: !_showPassword,
-              validator:
-                  (value) =>
-                      value == null || value.length < 6
-                          ? 'Mínimo 6 caracteres'
-                          : null,
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              value: _selectedRole,
+              decoration: const InputDecoration(labelText: 'Rol'),
+              items: [
+                DropdownMenuItem(value: 'user', child: Text('Usuario')),
+                DropdownMenuItem(value: 'admin', child: Text('Administrador')),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _selectedRole = value;
+                  });
+                }
+              },
             ),
           ],
         ),
@@ -107,11 +82,7 @@ class _CreateUserModalState extends State<CreateUserModal> {
         ElevatedButton(
           onPressed: () {
             if (_formKey.currentState!.validate()) {
-              widget.onCreate(
-                _usernameController.text.trim(),
-                _emailController.text.trim(),
-                _passwordController.text,
-              );
+              widget.onCreate(_emailController.text.trim(), _selectedRole);
               Navigator.of(context).pop();
             }
           },
