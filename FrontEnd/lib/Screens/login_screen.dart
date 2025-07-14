@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../Components/action_button.dart';
 
+/// Pantalla de inicio de sesión para la aplicación GEMA.
+///
+/// Permite al usuario ingresar su correo y contraseña para autenticarse
+/// mediante Supabase Auth. Muestra mensajes de error en caso de fallo y
+/// redirige a la pantalla de administración si el login es exitoso.
 class LoginScreen extends StatefulWidget {
+  /// Ruta estática para navegación con [Navigator].
   static const routeName = '/login';
 
+  /// Crea una instancia constante de [LoginScreen].
   const LoginScreen({super.key});
 
   @override
@@ -11,22 +19,52 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  /// Controlador para el campo de correo electrónico.
   final _emailController = TextEditingController();
+
+  /// Controlador para el campo de contraseña.
   final _passwordController = TextEditingController();
+
+  /// Indica si la aplicación está procesando el login (mostrar spinner).
   bool _loading = false;
 
-  void _handleLogin() async {
+  /// Maneja el proceso de inicio de sesión usando Supabase Auth.
+  ///
+  /// Obtiene los valores de email y password, los envía a Supabase para autenticación,
+  /// maneja errores específicos y redirige a la pantalla de administración si es exitoso.
+  Future<void> _handleLogin() async {
     setState(() => _loading = true);
     try {
-      print('Email: ${_emailController.text.trim()}');
-      print('Password: ${_passwordController.text.trim()}');
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/admin');
+      final supabase = Supabase.instance.client;
+
+      final response = await supabase.auth.signInWithPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      if (response.session != null) {
+        // Login exitoso: navegar a pantalla admin.
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/admin');
+        }
+      } else {
+        // Login fallido: lanzar excepción para mostrar error.
+        throw Exception(response.user == null
+            ? 'Usuario no encontrado.'
+            : 'Credenciales incorrectas.');
       }
-    } catch (e) {
+    } on AuthException catch (e) {
+      // Error específico de autenticación
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
+          SnackBar(content: Text('Error: ${e.message}')),
+        );
+      }
+    } catch (e) {
+      // Error inesperado
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error inesperado: $e')),
         );
       }
     } finally {
