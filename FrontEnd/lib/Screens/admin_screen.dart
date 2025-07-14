@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/Screens/create_users.dart';
+import 'package:frontend/Screens/users_screen.dart';
 import 'package:frontend/Screens/equipos_ubicaciones_screen.dart';
 import 'mantenimientos_screen.dart';
 import 'cuadrillas_screen.dart';
@@ -108,7 +108,7 @@ class _AdminScreenState extends State<AdminScreen> {
                 const MantenimientosScreen(),
                 const EquiposUbicacionesScreen(),
                 const CuadrillasScreen(),
-                const CreateUserScreen(), // Assuming this is the user creation screen
+                const UsersScreen(), // Assuming this is the user creation screen
               ],
             ),
           ),

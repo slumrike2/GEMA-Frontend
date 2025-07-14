@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import '../modals/create_user_modal.dart';
+import '../Services/user_service.dart';
+import '../Models/backend_types.dart';
 
-class CreateUserScreen extends StatelessWidget {
-  const CreateUserScreen({super.key});
+class UsersScreen extends StatefulWidget {
+  const UsersScreen({super.key});
 
+  @override
+  State<UsersScreen> createState() => _UsersScreenState();
+}
+
+class _UsersScreenState extends State<UsersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,38 +31,82 @@ class UserManager extends StatefulWidget {
 }
 
 class _UserManagerState extends State<UserManager> {
-  final List<Map<String, String>> users = [
-    {'username': 'admin', 'email': 'admin@email.com', 'password': 'admin123'},
-    {'username': 'jose', 'email': 'jose@email.com', 'password': 'jose123'},
-    {'username': 'maria', 'email': 'maria@email.com', 'password': 'maria123'},
-  ];
-  int? editingIndex;
-  final TextEditingController _editController = TextEditingController();
-  final TextEditingController _editEmailController = TextEditingController();
-  final TextEditingController _editPasswordController = TextEditingController();
+  List<User> users = [];
+  bool isLoading = false;
   String? errorText;
 
-  void _addUser(String username, String email, String password) {
-    if (users.any((u) => u['username'] == username)) {
-      setState(() {
-        errorText = 'El usuario ya existe.';
-      });
-      return;
-    }
-    setState(() {
-      users.add({'username': username, 'email': email, 'password': password});
-      errorText = null;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _fetchUsers();
   }
 
-  void _deleteUser(int index) {
+  Future<void> _fetchUsers() async {
+    setState(() {
+      isLoading = true;
+      errorText = null;
+    });
+    try {
+      users = await UserService.getAll();
+    } catch (e) {
+      errorText = e.toString();
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _addUser(String name, String email, String password) async {
+    setState(() {
+      errorText = null;
+    });
+    try {
+      await UserService.create({
+        'name': name,
+        'email': email,
+        'password': password,
+      });
+      await _fetchUsers();
+    } catch (e) {
+      setState(() {
+        errorText = e.toString();
+      });
+    }
+  }
+
+  Future<void> _updateUser(
+    User user,
+    String name,
+    String email,
+    String password,
+  ) async {
+    setState(() {
+      errorText = null;
+    });
+    try {
+      await UserService.update(user.uuid ?? '', {
+        'name': name,
+        'email': email,
+        'password': password,
+      });
+      await _fetchUsers();
+    } catch (e) {
+      setState(() {
+        errorText = e.toString();
+      });
+    }
+  }
+
+  Future<void> _deleteUser(int index) async {
+    final user = users[index];
     showDialog(
       context: context,
       builder:
           (context) => AlertDialog(
             title: const Text('Confirmar eliminación'),
             content: Text(
-              '¿Seguro que deseas eliminar el usuario "${users[index]['username']}"?',
+              '¿Seguro que deseas eliminar el usuario "${user.name}"?',
             ),
             actions: [
               TextButton(
@@ -64,17 +115,23 @@ class _UserManagerState extends State<UserManager> {
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                onPressed: () {
-                  setState(() {
-                    users.removeAt(index);
-                    if (editingIndex == index) {
-                      editingIndex = null;
-                      _editController.clear();
-                      _editEmailController.clear();
-                      _editPasswordController.clear();
-                    }
-                  });
+                onPressed: () async {
                   Navigator.of(context).pop();
+                  setState(() {
+                    isLoading = true;
+                  });
+                  try {
+                    await UserService.delete(user.uuid ?? '');
+                    await _fetchUsers();
+                  } catch (e) {
+                    setState(() {
+                      errorText = e.toString();
+                    });
+                  } finally {
+                    setState(() {
+                      isLoading = false;
+                    });
+                  }
                 },
                 child: const Text('Eliminar'),
               ),
@@ -84,59 +141,20 @@ class _UserManagerState extends State<UserManager> {
   }
 
   void _startEditUser(int index) {
+    final user = users[index];
     showDialog(
       context: context,
       builder:
           (context) => CreateUserModal(
-            onCreate: (username, email, password) {
-              setState(() {
-                users[index] = {
-                  'username': username,
-                  'email': email,
-                  'password': password,
-                };
-              });
+            onCreate: (name, email, password) {
+              _updateUser(user, name, email, password);
             },
-            initialUsername: users[index]['username'] ?? '',
-            initialEmail: users[index]['email'] ?? '',
-            initialPassword: users[index]['password'] ?? '',
+            initialUsername: user.name,
+            initialEmail: user.email,
+            initialPassword: '',
             isEdit: true,
           ),
     );
-  }
-
-  void _saveEditUser() {
-    final username = _editController.text.trim();
-    final email = _editEmailController.text.trim();
-    final password = _editPasswordController.text;
-    if (username.isEmpty || email.isEmpty || password.isEmpty) {
-      setState(() {
-        errorText = 'Todos los campos son obligatorios.';
-      });
-      return;
-    }
-    if (users.any(
-      (u) =>
-          u['username'] == username &&
-          users[editingIndex!]['username'] != username,
-    )) {
-      setState(() {
-        errorText = 'El usuario ya existe.';
-      });
-      return;
-    }
-    setState(() {
-      users[editingIndex!] = {
-        'username': username,
-        'email': email,
-        'password': password,
-      };
-      editingIndex = null;
-      _editController.clear();
-      _editEmailController.clear();
-      _editPasswordController.clear();
-      errorText = null;
-    });
   }
 
   @override
@@ -149,31 +167,43 @@ class _UserManagerState extends State<UserManager> {
           style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
+        if (errorText != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: Text(errorText!, style: TextStyle(color: Colors.red)),
+          ),
         Expanded(
           child:
-              users.isEmpty
+              isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : users.isEmpty
                   ? const Center(child: Text('No hay usuarios registrados.'))
                   : ListView.separated(
                     itemCount: users.length,
                     separatorBuilder: (_, __) => Divider(),
                     itemBuilder: (context, i) {
+                      final user = users[i];
                       return ListTile(
                         leading: CircleAvatar(
-                          child: Text(users[i]['username']![0].toUpperCase()),
+                          child: Text(
+                            user.name.isNotEmpty
+                                ? user.name[0].toUpperCase()
+                                : '?',
+                          ),
                           radius: 32,
                         ),
                         title: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              users[i]['username'] ?? '',
+                              user.name,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 22,
                               ),
                             ),
                             Text(
-                              users[i]['email'] ?? '',
+                              user.email,
                               style: TextStyle(
                                 color: Colors.grey,
                                 fontSize: 18,
@@ -181,7 +211,6 @@ class _UserManagerState extends State<UserManager> {
                             ),
                           ],
                         ),
-                        // No mostrar la contraseña en la vista normal
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -202,7 +231,6 @@ class _UserManagerState extends State<UserManager> {
                   ),
         ),
         const SizedBox(height: 16),
-
         Row(
           children: [
             Spacer(),
