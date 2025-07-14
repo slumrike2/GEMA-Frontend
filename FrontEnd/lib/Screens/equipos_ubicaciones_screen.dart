@@ -389,7 +389,19 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
                           child: Padding(
                             padding: const EdgeInsets.all(16.0),
                                   child: EquiposListPage(
-                                    onDeleteEquipment: (_) => _fetchAll(),
+                                    onDeleteEquipment: (equipment) async {
+                                      try {
+                                        await EquipmentService.delete(equipment.uuid!);
+                                        await _fetchAll();
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('Equipo eliminado correctamente.')),
+                                        );
+                                      } catch (e) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Error al eliminar el equipo: $e')),
+                                        );
+                                      }
+                                    },
                                     onAssignEquipment: (
                                       equipment, {
                                       required bool isOperational,
