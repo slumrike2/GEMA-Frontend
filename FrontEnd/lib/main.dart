@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'Screens/admin_screen.dart';
-import 'Screens/login_screen.dart';
 
 void main() {
   runApp(const MainApp());
@@ -14,10 +13,8 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: AdminScreen(),
-      routes: {
-        AdminScreen.routeName: (context) =>  AdminScreen(),
-        LoginScreen.routeName: (context) => const LoginScreen(),
-      },
+      routes: {AdminScreen.routeName: (context) => AdminScreen()},
     );
   }
 }
+

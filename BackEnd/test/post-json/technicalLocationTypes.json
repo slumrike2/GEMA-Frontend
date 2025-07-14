@@ -1,0 +1,6 @@
+{
+	"name": "Warehouse",
+	"description": "Storage area",
+	"nameTemplate": "WH-{number}",
+	"codeTemplate": "WHT-{number}"
+}
