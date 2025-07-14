@@ -169,12 +169,13 @@ export const TechnicalLocation = pgTable('Technical_location', {
 			onDelete: 'cascade', // Si se elimina el tipo, se eliminan las ubicaciones
 			onUpdate: 'cascade' // Si se actualiza el ID del tipo, se actualiza aquí
 		}),
-	parentTechnicalCode: text()
-		.notNull()
-		.references(() => TechnicalLocation.technicalCode, {
+	parentTechnicalCode: text().references(
+		() => TechnicalLocation.technicalCode,
+		{
 			onDelete: 'cascade', // Si se elimina la ubicación padre, se eliminan las hijas
 			onUpdate: 'cascade' // Si se actualiza el código del padre, se actualiza aquí
-		})
+		}
+	)
 });
 
 /**
@@ -356,6 +357,7 @@ export const reportStateEnum = pgEnum('report_state', [
  * Almacena todos los reportes del sistema con su información
  * básica, prioridad, estado y tipo.
  */
+
 export const Report = pgTable('Report', {
 	id: serial().primaryKey(), // Identificador único del reporte
 	title: text().notNull(), // Título del reporte
@@ -366,6 +368,58 @@ export const Report = pgTable('Report', {
 	notes: text(), // Notas adicionales opcionales
 	...timestamps // Timestamps automáticos
 });
+
+/**
+ * Tabla de relación muchos a muchos entre reportes y ubicaciones técnicas
+ * Permite asociar múltiples ubicaciones a un reporte y viceversa
+ */
+export const ReportTechnicalLocation = pgTable(
+	'Report_Technical_Location',
+	{
+		reportId: serial()
+			.notNull()
+			.references(() => Report.id, {
+				onDelete: 'cascade',
+				onUpdate: 'cascade'
+			}),
+		technicalCode: text()
+			.notNull()
+			.references(() => TechnicalLocation.technicalCode, {
+				onDelete: 'cascade',
+				onUpdate: 'cascade'
+			}),
+		...timestamps
+	},
+	(table) => ({
+		pk: primaryKey(table.reportId, table.technicalCode)
+	})
+);
+
+/**
+ * Tabla de relación muchos a muchos entre reportes y equipos
+ * Permite asociar múltiples equipos a un reporte y viceversa
+ */
+export const ReportEquipment = pgTable(
+	'Report_Equipment',
+	{
+		reportId: serial()
+			.notNull()
+			.references(() => Report.id, {
+				onDelete: 'cascade',
+				onUpdate: 'cascade'
+			}),
+		equipmentUuid: uuid()
+			.notNull()
+			.references(() => Equipment.uuid, {
+				onDelete: 'cascade',
+				onUpdate: 'cascade'
+			}),
+		...timestamps
+	},
+	(table) => ({
+		pk: primaryKey(table.reportId, table.equipmentUuid)
+	})
+);
 
 /**
  * Tabla de actualizaciones de reportes

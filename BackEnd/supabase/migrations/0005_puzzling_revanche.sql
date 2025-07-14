@@ -1,0 +1,1 @@
+ALTER TABLE "Technical_location" ALTER COLUMN "parentTechnicalCode" DROP NOT NULL;
