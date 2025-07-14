@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/Screens/create_users.dart';
 import 'package:frontend/Screens/equipos_ubicaciones_screen.dart';
 import 'mantenimientos_screen.dart';
 import 'cuadrillas_screen.dart';
@@ -14,11 +15,17 @@ class _AdminScreenState extends State<AdminScreen> {
   int selectedIndex = 0;
   // bool _railExtended = true; // No longer needed
 
-  final List<IconData> _navIcons = [Icons.build, Icons.devices, Icons.group];
+  final List<IconData> _navIcons = [
+    Icons.build,
+    Icons.devices,
+    Icons.group,
+    Icons.person,
+  ];
   final List<String> _navLabels = [
     'Mantenimientos',
     'Equipos y Ubicaciones',
     'Cuadrillas',
+    'Usuarios',
   ];
 
   @override
@@ -28,6 +35,7 @@ class _AdminScreenState extends State<AdminScreen> {
       Color(0xFFFCC430), // Cuadrillas
       Color(0xFF007934), // Equipos y Ubicaciones
       Color(0xFF37B4E3), // Mantenimientos
+      Color.fromARGB(255, 97, 97, 97), // Usuarios
     ];
     List<Image> navIcons = [
       Image.asset('assets/images/IconMantenimientos.png'),
@@ -51,7 +59,9 @@ class _AdminScreenState extends State<AdminScreen> {
               padding: const EdgeInsets.only(top: 24.0),
               child: Column(
                 children: [
-                  navIcons[selectedIndex],
+                  navIcons.isNotEmpty
+                      ? navIcons[selectedIndex.clamp(0, navIcons.length - 1)]
+                      : Image.asset('assets/images/IconMantenimientos.png'),
                   SizedBox(height: 8),
                   Text(
                     'Panel',
@@ -94,10 +104,11 @@ class _AdminScreenState extends State<AdminScreen> {
           Expanded(
             child: IndexedStack(
               index: selectedIndex,
-              children: const [
-                MantenimientosScreen(),
-                EquiposUbicacionesScreen(),
-                CuadrillasScreen(),
+              children: [
+                const MantenimientosScreen(),
+                const EquiposUbicacionesScreen(),
+                const CuadrillasScreen(),
+                const CreateUserScreen(), // Assuming this is the user creation screen
               ],
             ),
           ),
