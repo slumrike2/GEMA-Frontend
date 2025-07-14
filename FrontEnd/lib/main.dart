@@ -12,6 +12,8 @@ void main() async {
   // Asegura que los bindings de Flutter estén inicializados antes de ejecutar código asíncrono
   WidgetsFlutterBinding.ensureInitialized();
 
+  await dotenv.load(fileName: ".env");
+
   // Inicializa Supabase con la URL y la clave pública (anonKey)
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL']!,
@@ -33,9 +35,10 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Comprueba si hay una sesión activa para definir la pantalla inicial
-    final initialRoute = Supabase.instance.client.auth.currentSession != null
-        ? AdminScreen.routeName
-        : LoginScreen.routeName;
+    final initialRoute =
+        Supabase.instance.client.auth.currentSession != null
+            ? AdminScreen.routeName
+            : LoginScreen.routeName;
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
