@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'Screens/login_screen.dart';
 import 'Screens/admin_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Punto de entrada principal de la aplicación.
 ///
@@ -13,9 +14,8 @@ void main() async {
 
   // Inicializa Supabase con la URL y la clave pública (anonKey)
   await Supabase.initialize(
-    url: 'https://qxvbydzewskwmywzdnvi.supabase.co',
-    anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4dmJ5ZHpld3Nrd215d3pkbnZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA4ODI3MTIsImV4cCI6MjA2NjQ1ODcxMn0.tEGoee-SE1VRse7MJbTjCN31-KeD2p3quxFz7eGYPMI',
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
 
   // Ejecuta la aplicación Flutter con la clase MainApp
