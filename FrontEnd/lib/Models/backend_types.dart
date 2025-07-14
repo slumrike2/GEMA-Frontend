@@ -481,3 +481,75 @@ class ReportUpdate {
     if (deletedAt != null) 'deletedAt': deletedAt!.toIso8601String(),
   };
 }
+
+class ReportTechnicalLocation {
+  final int reportId;
+  final String technicalCode;
+  final DateTime? updatedAt;
+  final DateTime? createdAt;
+  final DateTime? deletedAt;
+
+  ReportTechnicalLocation({
+    required this.reportId,
+    required this.technicalCode,
+    this.updatedAt,
+    this.createdAt,
+    this.deletedAt,
+  });
+
+  factory ReportTechnicalLocation.fromJson(
+    Map<String, dynamic> json,
+  ) => ReportTechnicalLocation(
+    reportId: json['reportId'],
+    technicalCode: json['technicalCode'],
+    updatedAt:
+        json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
+    createdAt:
+        json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
+    deletedAt:
+        json['deletedAt'] != null ? DateTime.parse(json['deletedAt']) : null,
+  );
+  Map<String, dynamic> toJson() => {
+    'reportId': reportId,
+    'technicalCode': technicalCode,
+    if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
+    if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
+    if (deletedAt != null) 'deletedAt': deletedAt!.toIso8601String(),
+  };
+}
+
+class ReportEquipment {
+  final int reportId;
+  final String equipmentUuid;
+  final DateTime? updatedAt;
+  final DateTime? createdAt;
+  final DateTime? deletedAt;
+
+  ReportEquipment({
+    required this.reportId,
+    required this.equipmentUuid,
+    this.updatedAt,
+    this.createdAt,
+    this.deletedAt,
+  });
+
+  factory ReportEquipment.fromJson(
+    Map<String, dynamic> json,
+  ) => ReportEquipment(
+    reportId: json['reportId'],
+    equipmentUuid: json['equipmentUuid'],
+    updatedAt:
+        json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
+    createdAt:
+        json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
+    deletedAt:
+        json['deletedAt'] != null ? DateTime.parse(json['deletedAt']) : null,
+  );
+  Map<String, dynamic> toJson() => {
+    'reportId': reportId,
+    'equipmentUuid': equipmentUuid,
+    if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
+    if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
+    if (deletedAt != null) 'deletedAt': deletedAt!.toIso8601String(),
+  };
+}

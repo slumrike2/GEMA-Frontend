@@ -1,6 +1,185 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1752523566431" clover="3.2.0">
-  <project timestamp="1752523566431" name="All files">
-    <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0" elements="0" coveredelements="0" complexity="0" loc="0" ncloc="0" packages="0" files="0" classes="0"/>
+<coverage generated="1752525054651" clover="3.2.0">
+  <project timestamp="1752525054651" name="All files">
+    <metrics statements="161" coveredstatements="92" conditionals="23" coveredconditionals="4" methods="35" coveredmethods="9" elements="219" coveredelements="105" complexity="0" loc="161" ncloc="161" packages="2" files="4" classes="4"/>
+    <package name="controllers">
+      <metrics statements="101" coveredstatements="51" conditionals="23" coveredconditionals="4" methods="16" coveredmethods="9"/>
+      <file name="crudFactory.ts" path="C:\Users\edwin\Desktop\Programs\Proyectos\GEMA-Frontend\BackEnd\src\controllers\crudFactory.ts">
+        <metrics statements="59" coveredstatements="9" conditionals="19" coveredconditionals="0" methods="8" coveredmethods="1"/>
+        <line num="15" count="1" type="stmt"/>
+        <line num="16" count="1" type="stmt"/>
+        <line num="18" count="1" type="stmt"/>
+        <line num="20" count="1" type="stmt"/>
+        <line num="21" count="1" type="stmt"/>
+        <line num="35" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="36" count="0" type="stmt"/>
+        <line num="37" count="0" type="stmt"/>
+        <line num="40" count="0" type="stmt"/>
+        <line num="41" count="0" type="stmt"/>
+        <line num="60" count="1" type="stmt"/>
+        <line num="66" count="1" type="stmt"/>
+        <line num="87" count="1" type="stmt"/>
+        <line num="92" count="2" type="stmt"/>
+        <line num="106" count="0" type="stmt"/>
+        <line num="107" count="0" type="stmt"/>
+        <line num="109" count="0" type="stmt"/>
+        <line num="112" count="0" type="stmt"/>
+        <line num="114" count="0" type="stmt"/>
+        <line num="115" count="0" type="stmt"/>
+        <line num="117" count="0" type="stmt"/>
+        <line num="120" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="121" count="0" type="stmt"/>
+        <line num="127" count="0" type="stmt"/>
+        <line num="148" count="0" type="stmt"/>
+        <line num="149" count="0" type="stmt"/>
+        <line num="150" count="0" type="stmt"/>
+        <line num="153" count="0" type="stmt"/>
+        <line num="158" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="159" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="161" count="0" type="stmt"/>
+        <line num="162" count="0" type="stmt"/>
+        <line num="181" count="0" type="stmt"/>
+        <line num="182" count="0" type="stmt"/>
+        <line num="184" count="0" type="stmt"/>
+        <line num="186" count="0" type="stmt"/>
+        <line num="187" count="0" type="stmt"/>
+        <line num="189" count="0" type="stmt"/>
+        <line num="190" count="0" type="stmt"/>
+        <line num="210" count="0" type="stmt"/>
+        <line num="211" count="0" type="stmt"/>
+        <line num="212" count="0" type="stmt"/>
+        <line num="215" count="0" type="stmt"/>
+        <line num="218" count="0" type="stmt"/>
+        <line num="219" count="0" type="stmt"/>
+        <line num="225" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="226" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="228" count="0" type="stmt"/>
+        <line num="231" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="232" count="0" type="stmt"/>
+        <line num="238" count="0" type="stmt"/>
+        <line num="259" count="0" type="stmt"/>
+        <line num="260" count="0" type="stmt"/>
+        <line num="262" count="0" type="stmt"/>
+        <line num="263" count="0" type="stmt"/>
+        <line num="265" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="266" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="268" count="0" type="stmt"/>
+        <line num="269" count="0" type="stmt"/>
+      </file>
+      <file name="report.controller.ts" path="C:\Users\edwin\Desktop\Programs\Proyectos\GEMA-Frontend\BackEnd\src\controllers\report.controller.ts">
+        <metrics statements="42" coveredstatements="42" conditionals="4" coveredconditionals="4" methods="8" coveredmethods="8"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="9" count="1" type="stmt"/>
+        <line num="10" count="1" type="stmt"/>
+        <line num="12" count="1" type="stmt"/>
+        <line num="18" count="1" type="stmt"/>
+        <line num="33" count="5" type="stmt"/>
+        <line num="34" count="5" type="stmt"/>
+        <line num="35" count="5" type="stmt"/>
+        <line num="39" count="1002" type="stmt"/>
+        <line num="40" count="4" type="stmt"/>
+        <line num="41" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="42" count="2" type="stmt"/>
+        <line num="47" count="4" type="stmt"/>
+        <line num="49" count="1" type="stmt"/>
+        <line num="68" count="5" type="stmt"/>
+        <line num="69" count="5" type="stmt"/>
+        <line num="70" count="5" type="stmt"/>
+        <line num="74" count="501" type="stmt"/>
+        <line num="75" count="4" type="stmt"/>
+        <line num="76" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="77" count="2" type="stmt"/>
+        <line num="82" count="4" type="stmt"/>
+        <line num="84" count="1" type="stmt"/>
+        <line num="106" count="5" type="stmt"/>
+        <line num="107" count="5" type="stmt"/>
+        <line num="108" count="5" type="stmt"/>
+        <line num="109" count="5" type="stmt"/>
+        <line num="110" count="4" type="stmt"/>
+        <line num="114" count="3" type="stmt"/>
+        <line num="118" count="3" type="stmt"/>
+        <line num="120" count="2" type="stmt"/>
+        <line num="142" count="4" type="stmt"/>
+        <line num="143" count="4" type="stmt"/>
+        <line num="144" count="4" type="stmt"/>
+        <line num="145" count="4" type="stmt"/>
+        <line num="146" count="4" type="stmt"/>
+        <line num="150" count="3" type="stmt"/>
+        <line num="154" count="3" type="stmt"/>
+        <line num="156" count="1" type="stmt"/>
+      </file>
+    </package>
+    <package name="db.schema">
+      <metrics statements="60" coveredstatements="41" conditionals="0" coveredconditionals="0" methods="19" coveredmethods="0"/>
+      <file name="schema.ts" path="C:\Users\edwin\Desktop\Programs\Proyectos\GEMA-Frontend\BackEnd\src\db\schema\schema.ts">
+        <metrics statements="42" coveredstatements="23" conditionals="0" coveredconditionals="0" methods="19" coveredmethods="0"/>
+        <line num="12" count="1" type="stmt"/>
+        <line num="22" count="1" type="stmt"/>
+        <line num="31" count="1" type="stmt"/>
+        <line num="46" count="1" type="stmt"/>
+        <line num="59" count="1" type="stmt"/>
+        <line num="84" count="1" type="stmt"/>
+        <line num="99" count="1" type="stmt"/>
+        <line num="102" count="0" type="stmt"/>
+        <line num="114" count="0" type="stmt"/>
+        <line num="127" count="1" type="stmt"/>
+        <line num="136" count="0" type="stmt"/>
+        <line num="149" count="1" type="stmt"/>
+        <line num="163" count="1" type="stmt"/>
+        <line num="168" count="0" type="stmt"/>
+        <line num="173" count="0" type="stmt"/>
+        <line num="194" count="1" type="stmt"/>
+        <line num="210" count="1" type="stmt"/>
+        <line num="221" count="1" type="stmt"/>
+        <line num="230" count="0" type="stmt"/>
+        <line num="236" count="0" type="stmt"/>
+        <line num="240" count="0" type="stmt"/>
+        <line num="244" count="0" type="stmt"/>
+        <line num="257" count="1" type="stmt"/>
+        <line num="262" count="0" type="stmt"/>
+        <line num="268" count="0" type="stmt"/>
+        <line num="276" count="0" type="stmt"/>
+        <line num="291" count="1" type="stmt"/>
+        <line num="304" count="1" type="stmt"/>
+        <line num="307" count="0" type="stmt"/>
+        <line num="321" count="1" type="stmt"/>
+        <line num="334" count="1" type="stmt"/>
+        <line num="346" count="1" type="stmt"/>
+        <line num="361" count="1" type="stmt"/>
+        <line num="376" count="1" type="stmt"/>
+        <line num="381" count="0" type="stmt"/>
+        <line num="387" count="0" type="stmt"/>
+        <line num="393" count="0" type="stmt"/>
+        <line num="402" count="1" type="stmt"/>
+        <line num="407" count="0" type="stmt"/>
+        <line num="413" count="0" type="stmt"/>
+        <line num="419" count="0" type="stmt"/>
+        <line num="430" count="1" type="stmt"/>
+      </file>
+      <file name="validationSchema.ts" path="C:\Users\edwin\Desktop\Programs\Proyectos\GEMA-Frontend\BackEnd\src\db\schema\validationSchema.ts">
+        <metrics statements="18" coveredstatements="18" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="13" count="1" type="stmt"/>
+        <line num="24" count="1" type="stmt"/>
+        <line num="41" count="1" type="stmt"/>
+        <line num="66" count="1" type="stmt"/>
+        <line num="84" count="1" type="stmt"/>
+        <line num="104" count="1" type="stmt"/>
+        <line num="122" count="1" type="stmt"/>
+        <line num="142" count="1" type="stmt"/>
+        <line num="160" count="1" type="stmt"/>
+        <line num="181" count="1" type="stmt"/>
+        <line num="206" count="1" type="stmt"/>
+        <line num="224" count="1" type="stmt"/>
+        <line num="242" count="1" type="stmt"/>
+        <line num="261" count="1" type="stmt"/>
+        <line num="262" count="1" type="stmt"/>
+        <line num="263" count="1" type="stmt"/>
+        <line num="284" count="1" type="stmt"/>
+        <line num="305" count="1" type="stmt"/>
+      </file>
+    </package>
   </project>
 </coverage>
