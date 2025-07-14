@@ -1,77 +1,170 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../Components/action_button.dart';
 
-/// Pantalla de inicio de sesión para la aplicación GEMA.
+/// ------------------------------------------------------------
+/// Pantalla de Login: LoginScreen
+/// ------------------------------------------------------------
+/// Descripción:
+/// - Interfaz para que los usuarios inicien sesión.
+/// - Valida credenciales localmente (correo, contraseña).
+/// - Integra autenticación mediante Supabase.
+/// - Maneja errores y muestra feedback visual.
 ///
-/// Permite al usuario ingresar su correo y contraseña para autenticarse
-/// mediante Supabase Auth. Muestra mensajes de error en caso de fallo y
-/// redirige a la pantalla de administración si el login es exitoso.
-class LoginScreen extends StatefulWidget {
-  /// Ruta estática para navegación con [Navigator].
-  static const routeName = '/login';
+/// Funcionalidad:
+/// - Si el login es exitoso → Navega a '/admin'.
+/// - Si el login falla o la validación local no es válida → 
+///   Muestra modal inferior con mensaje.
+///
+/// Parámetros opcionales:
+/// - injectedClient: Permite inyectar un SupabaseClient mock para pruebas.
+/// 
+/// Autor: Juan Quijada
+/// Fecha: Julio 2025
+/// ------------------------------------------------------------
 
-  /// Crea una instancia constante de [LoginScreen].
-  const LoginScreen({super.key});
+class LoginScreen extends StatefulWidget {
+  static const routeName = '/login';
+  final SupabaseClient? injectedClient;
+
+  const LoginScreen({super.key, this.injectedClient});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  /// Controlador para el campo de correo electrónico.
   final _emailController = TextEditingController();
-
-  /// Controlador para el campo de contraseña.
   final _passwordController = TextEditingController();
-
-  /// Indica si la aplicación está procesando el login (mostrar spinner).
   bool _loading = false;
 
-  /// Maneja el proceso de inicio de sesión usando Supabase Auth.
-  ///
-  /// Obtiene los valores de email y password, los envía a Supabase para autenticación,
-  /// maneja errores específicos y redirige a la pantalla de administración si es exitoso.
+  /// Método principal de login.
+  /// - Realiza validación local.
+  /// - Llama a Supabase para autenticar.
+  /// - Muestra mensajes de error o navega según el caso.
   Future<void> _handleLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    final validationMessage = _validateCredentials(email, password);
+    if (validationMessage != null) {
+      _showErrorModal(validationMessage);
+      return;
+    }
+
     setState(() => _loading = true);
     try {
-      final supabase = Supabase.instance.client;
-
+      final supabase = widget.injectedClient ?? Supabase.instance.client;
       final response = await supabase.auth.signInWithPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+        email: email,
+        password: password,
       );
 
       if (response.session != null) {
-        // Login exitoso: navegar a pantalla admin.
         if (mounted) {
           Navigator.pushReplacementNamed(context, '/admin');
         }
       } else {
-        // Login fallido: lanzar excepción para mostrar error.
         throw Exception(response.user == null
             ? 'Usuario no encontrado.'
             : 'Credenciales incorrectas.');
       }
     } on AuthException catch (e) {
-      // Error específico de autenticación
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.message}')),
-        );
+        final errorMessage = _mapAuthError(e.message);
+        _showErrorModal(errorMessage);
+      }
+    } on SocketException {
+      if (mounted) {
+        _showErrorModal('No se pudo conectar con el servidor. Verifica tu conexión a internet.');
+      }
+    } on ClientException {
+      if (mounted) {
+        _showErrorModal('Error de cliente. Por favor intenta más tarde.');
       }
     } catch (e) {
-      // Error inesperado
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error inesperado: $e')),
-        );
+        _showErrorModal('Error inesperado: $e');
       }
     } finally {
       setState(() => _loading = false);
     }
   }
 
+  /// Validación local de las credenciales antes de llamar a Supabase.
+  /// Devuelve un mensaje de error si es inválido, o null si es válido.
+  String? _validateCredentials(String email, String password) {
+    final emailRegex = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$");
+    if (!emailRegex.hasMatch(email)) {
+      return 'Por favor ingresa un correo electrónico válido.';
+    }
+    if (password.length < 6) {
+      return 'La contraseña debe tener al menos 6 caracteres.';
+    }
+    return null;
+  }
+
+  /// Mapea errores de Supabase a mensajes entendibles para el usuario final.
+  String _mapAuthError(String? error) {
+    if (error == null) return 'Error desconocido.';
+
+    final msg = error.toLowerCase();
+
+    if (msg.contains('invalid login credentials')) {
+      return 'Credenciales inválidas. Verifica tu correo y contraseña.';
+    }
+    if (msg.contains('user not found')) {
+      return 'Usuario no encontrado. Por favor verifica el correo.';
+    }
+    if (msg.contains('email not confirmed')) {
+      return 'Correo no confirmado. Revisa tu email para activar la cuenta.';
+    }
+    if (msg.contains('too many requests')) {
+      return 'Demasiados intentos. Por favor intenta más tarde.';
+    }
+    if (msg.contains('password strength')) {
+      return 'La contraseña no cumple con los requisitos de seguridad.';
+    }
+    if (msg.contains('network error') || msg.contains('failed to connect')) {
+      return 'No se pudo conectar con el servidor. Verifica tu conexión a internet.';
+    }
+    return 'Error: $error';
+  }
+
+  /// Muestra un modal tipo BottomSheet con el mensaje de error.
+  void _showErrorModal(String message) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(message, style: const TextStyle(fontSize: 16)),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cerrar'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// Construye la interfaz de la pantalla de login.
+  /// Incluye:
+  /// - Logo.
+  /// - Inputs de correo y contraseña.
+  /// - Botón de login con spinner si está cargando.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -97,10 +190,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const SizedBox(height: 60),
-                    Image.asset(
-                      'assets/images/IconLogin.png',
-                      height: 100,
-                    ),
+                    Image.asset('assets/images/IconLogin.png', height: 100),
                     const SizedBox(height: 24),
                     const Text(
                       'Bienvenido a GEMA',
