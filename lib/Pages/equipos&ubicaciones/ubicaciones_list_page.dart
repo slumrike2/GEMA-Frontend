@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:frontend/Components/search_bar.dart' as custom;
 import '../../Models/backend_types.dart';
 import 'package:frontend/Components/tag.dart';
-import 'package:frontend/Components/action_button.dart';
 
 class UbicacionesListPage extends StatelessWidget {
   final List<TechnicalLocation> currentPossibleLocations;
@@ -62,25 +61,26 @@ class UbicacionesListPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Expanded(
-                child: ListView(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black26),
-                        borderRadius: BorderRadius.circular(6),
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black26),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Center(
+                        child: Text(
+                          'Ubicaciones Hijas',
+                          style: TextStyle(fontWeight: FontWeight.w500),
+                        ),
                       ),
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Center(
-                            child: Text(
-                              'Ubicaciones Hijas',
-                              style: TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Wrap(
+                      const SizedBox(height: 8),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Wrap(
                             spacing: 8,
                             runSpacing: 8,
                             children: [
@@ -92,38 +92,11 @@ class UbicacionesListPage extends StatelessWidget {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 16),
-                          Center(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Equipos',
-                                  style: TextStyle(fontWeight: FontWeight.w500),
-                                ),
-                                const SizedBox(width: 12),
-                              ],
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              ActionButton(
-                icon: Icons.add,
-                label: 'Crear Ubicación',
-                backgroundColor: Colors.green,
-                onPressed: onCreateLocation,
-              ),
-              const SizedBox(height: 8),
-              ActionButton(
-                icon: Icons.category,
-                label: 'Crear Tipo de Ubicación',
-                backgroundColor: Colors.blue,
-                onPressed: onCreateLocationType,
               ),
             ],
           ),

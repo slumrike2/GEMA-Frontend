@@ -159,4 +159,41 @@ class EquipmentService {
       );
     }
   }
+
+  // Actualizar la dependencia de un equipo específico
+  static Future<void> updateEquipmentDependency(
+    String equipmentUuid,
+    String? dependsOnUuid,
+  ) async {
+    try {
+      // Primero obtener el equipo actual
+      final equipment = await getByUuid(equipmentUuid);
+      
+      // Crear el objeto de actualización con todos los campos
+      final updateData = {
+        'technicalCode': equipment.technicalCode,
+        'name': equipment.name,
+        'serialNumber': equipment.serialNumber,
+        'brandId': equipment.brandId,
+        if (equipment.description != null) 'description': equipment.description,
+        if (equipment.state != null) 'state': equipment.state!.name,
+        if (equipment.technicalLocation != null) 'technicalLocation': equipment.technicalLocation,
+        if (equipment.transferLocation != null) 'transferLocation': equipment.transferLocation,
+        'dependsOn': dependsOnUuid, // Agregar el campo dependsOn
+      };
+      
+      final response = await http.put(
+        Uri.parse('$baseUrl/$equipmentUuid'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(updateData),
+      );
+      if (response.statusCode != 200) {
+        throw Exception(
+          'Error al actualizar la dependencia: \${response.statusCode} - \${response.body}',
+        );
+      }
+    } catch (e) {
+      throw Exception('Error al actualizar la dependencia: $e');
+    }
+  }
 }

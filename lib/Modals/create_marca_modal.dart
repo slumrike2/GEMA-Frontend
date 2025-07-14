@@ -20,72 +20,94 @@ class _CreateMarcaModalState extends State<CreateMarcaModal> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.blueGrey.shade100, width: 2),
-      ),
-      elevation: 8,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: const [
-                  Icon(Icons.add_business, color: Colors.blue, size: 28),
-                  SizedBox(width: 10),
-                  Text(
-                    'Crear Marca',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'Nombre de la marca',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  filled: true,
-                  fillColor: Colors.blue[50],
+    return Material(
+      color: Colors.transparent,
+      child: GestureDetector(
+        onTap: () => widget.onCancel(),
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          color: Colors.black54,
+          child: GestureDetector(
+            onTap: () {}, // Prevent closing when tapping inside the modal
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: 500,
+                  maxHeight: 600,
                 ),
-                onChanged: (v) => setState(() => _name = v),
-                validator: (v) => v == null || v.isEmpty ? 'Ingrese un nombre' : null,
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: widget.onCancel,
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.grey[700],
-                      textStyle: const TextStyle(fontWeight: FontWeight.w500),
-                    ),
-                    child: const Text('Cancelar'),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.blueGrey.shade100, width: 2),
                   ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        widget.onCreate(_name);
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue[700],
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: const [
+                              Icon(Icons.add_business, color: Colors.blue, size: 28),
+                              SizedBox(width: 10),
+                              Text(
+                                'Crear Marca',
+                                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 18),
+                          TextFormField(
+                            decoration: InputDecoration(
+                              labelText: 'Nombre de la marca',
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                              filled: true,
+                              fillColor: Colors.blue[50],
+                            ),
+                            onChanged: (v) => setState(() => _name = v),
+                            validator: (v) => v == null || v.isEmpty ? 'Ingrese un nombre' : null,
+                          ),
+                          const SizedBox(height: 24),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton(
+                                onPressed: widget.onCancel,
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Colors.grey[700],
+                                  textStyle: const TextStyle(fontWeight: FontWeight.w500),
+                                ),
+                                child: const Text('Cancelar'),
+                              ),
+                              const SizedBox(width: 8),
+                              ElevatedButton(
+                                onPressed: () {
+                                  if (_formKey.currentState!.validate()) {
+                                    widget.onCreate(_name);
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue[700],
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                  textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                child: const Text('Crear'),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                    child: const Text('Crear'),
                   ),
-                ],
+                ),
               ),
-            ],
+            ),
           ),
         ),
       ),

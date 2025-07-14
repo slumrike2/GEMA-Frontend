@@ -59,11 +59,16 @@ class _SearchableComboBoxState<T> extends State<SearchableComboBox<T>> {
 
   void _onSearchChanged(String value) {
     setState(() {
-      _search = value;
-      _filteredItems = widget.items.where((item) {
-        final label = item.child is Text ? (item.child as Text).data ?? '' : '';
-        return label.toLowerCase().contains(_search.toLowerCase());
-      }).toList();
+      _search = value.trim(); // Eliminar espacios en blanco
+      if (_search.isEmpty) {
+        _filteredItems = widget.items;
+      } else {
+        final searchLower = _search.toLowerCase();
+        _filteredItems = widget.items.where((item) {
+          final label = item.child is Text ? (item.child as Text).data ?? '' : '';
+          return label.toLowerCase().contains(searchLower);
+        }).toList();
+      }
     });
   }
 
@@ -95,7 +100,7 @@ class _SearchableComboBoxState<T> extends State<SearchableComboBox<T>> {
               hintText: widget.hintText,
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
               filled: true,
-              fillColor: Colors.blue[50],
+              fillColor: Colors.grey[50],
               suffixIcon: Icon(_dropdownOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down),
             ),
             onChanged: (v) {

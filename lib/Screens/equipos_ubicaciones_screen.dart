@@ -40,21 +40,10 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
 
   Equipment? _editingEquipment;
 
-  // Move pane state to class fields for persistence
-  double leftPaneFraction = 0.4;
-  double rightPaneFraction = 0.6;
-  bool leftMinimized = false;
-  bool rightMinimized = false;
-
   @override
   void initState() {
     super.initState();
     _fetchAll();
-    // Initialize pane state
-    leftPaneFraction = 0.4;
-    rightPaneFraction = 0.6;
-    leftMinimized = false;
-    rightMinimized = false;
   }
 
   Future<void> _fetchAll() async {
@@ -119,8 +108,6 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // --- SPLIT VIEW LAYOUT ---
-    // Use persistent state fields for pane sizes/minimized/maximized
     return Stack(
       children: [
         Container(
@@ -132,194 +119,275 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
               horizontal: 32.0,
               vertical: 24.0,
             ),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final totalWidth = constraints.maxWidth;
-                double leftWidth;
-                double rightWidth;
-                if (leftMinimized && !rightMinimized) {
-                  leftWidth = 48.0;
-                  rightWidth = totalWidth - leftWidth;
-                } else if (!leftMinimized && rightMinimized) {
-                  rightWidth = 48.0;
-                  leftWidth = totalWidth - rightWidth;
-                } else if (leftMinimized && rightMinimized) {
-                  // Both minimized: split equally (shouldn't happen, but fallback)
-                  leftWidth = totalWidth / 2;
-                  rightWidth = totalWidth / 2;
-                } else {
-                  // Both visible: default split
-                  leftWidth = totalWidth * 0.4;
-                  rightWidth = totalWidth * 0.6;
-                }
-                return Row(
+            child: SingleChildScrollView(
+              child: Column(
                   children: [
-                    // --- LEFT PANE: UBICACIONES ---
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: leftWidth,
-                      child: Stack(
+                  // --- SECCIÓN UBICACIONES ---
+                  Container(
+                    height: 300, // Altura fija para la sección de ubicaciones
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
                         children: [
-                          Column(
+                        // Header de Ubicaciones
+                        Container(
+                          height: 48,
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          decoration: const BoxDecoration(
+                            color: Colors.deepPurple,
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(12),
+                              topRight: Radius.circular(12),
+                            ),
+                          ),
+                          child: Row(
                             children: [
-                              SizedBox(
-                                height: 48,
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    IconButton(
-                                      icon: Icon(
-                                        leftMinimized
-                                            ? Icons.chevron_right
-                                            : Icons.chevron_left,
-                                      ),
-                                      onPressed: () {
-                                        setState(() {
-                                          leftMinimized = !leftMinimized;
-                                          if (leftMinimized)
-                                            rightMinimized = false;
-                                        });
-                                      },
+                              const Icon(
+                                Icons.location_on,
+                                color: Colors.white,
+                                size: 20,
                                     ),
-                                    if (!leftMinimized)
-                                      const Padding(
-                                        padding: EdgeInsets.only(left: 8.0),
-                                        child: Text(
-                                          'Ubicaciones',
+                              const SizedBox(width: 8),
+                              const Text(
+                                'Filtro de Ubicaciones',
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 18,
+                                  color: Colors.white,
                                           ),
                                         ),
-                                      ),
-                                    if (leftMinimized) const SizedBox(width: 0),
+                              const Spacer(),
+                              PopupMenuButton<String>(
+                                icon: const Icon(
+                                  Icons.more_vert,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                                onSelected: (value) {
+                                  switch (value) {
+                                    case 'create_location':
+                                      setState(() {
+                                        _showCreateUbicacion = true;
+                                        _showCreateEquipo = false;
+                                      });
+                                      break;
+                                    case 'create_location_type':
+                                      setState(() {
+                                        _showCreateLocationType = true;
+                                        _showCreateUbicacion = false;
+                                        _showCreateEquipo = false;
+                                      });
+                                      break;
+                                    case 'delete_location':
+                                      // TODO: Implementar funcionalidad de borrar ubicación
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Funcionalidad de borrar ubicación no implementada'),
+                                        ),
+                                      );
+                                      break;
+                                    case 'delete_location_type':
+                                      // TODO: Implementar funcionalidad de borrar tipo de ubicación
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Funcionalidad de borrar tipo de ubicación no implementada'),
+                                        ),
+                                      );
+                                      break;
+                                  }
+                                },
+                                itemBuilder: (BuildContext context) => [
+                                  const PopupMenuItem<String>(
+                                    value: 'create_location',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.add, color: Colors.green),
+                                        SizedBox(width: 8),
+                                        Text('Crear Ubicación'),
                                   ],
                                 ),
                               ),
-                              if (!leftMinimized)
+                                  const PopupMenuItem<String>(
+                                    value: 'create_location_type',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.category, color: Colors.blue),
+                                        SizedBox(width: 8),
+                                        Text('Crear Tipo de Ubicación'),
+                                      ],
+                                    ),
+                                  ),
+                                  const PopupMenuItem<String>(
+                                    value: 'delete_location',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.delete, color: Colors.red),
+                                        SizedBox(width: 8),
+                                        Text('Borrar Ubicación'),
+                                      ],
+                                    ),
+                                  ),
+                                  const PopupMenuItem<String>(
+                                    value: 'delete_location_type',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.delete_sweep, color: Colors.red),
+                                        SizedBox(width: 8),
+                                        Text('Borrar Tipo de Ubicación'),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Contenido de Ubicaciones
                                 Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
                                   child: UbicacionesListPage(
-                                    currentPossibleLocations:
-                                        _currentPossibleLocations,
+                              currentPossibleLocations: _currentPossibleLocations,
                                     selectedLocations: _selectedLocations,
                                     onSelectLocation: _onSelectLocation,
                                     onRemoveLocation: _onRemoveLocation,
                                     currentEquipments: _currentEquipments,
                                     allEquipments: _equipments,
-                                    onCreateLocation:
-                                        () => setState(() {
-                                          _showCreateUbicacion = true;
-                                          _showCreateEquipo = false;
-                                        }),
-                                    // Add button for creating location type
-                                    onCreateLocationType:
-                                        () => setState(() {
-                                          _showCreateLocationType = true;
-                                          _showCreateUbicacion = false;
-                                          _showCreateEquipo = false;
-                                        }),
+                              onCreateLocation: () {}, // Ya no se usa
+                              onCreateLocationType: () {}, // Ya no se usa
+                            ),
                                   ),
                                 ),
                             ],
                           ),
-                          if (leftMinimized)
-                            Positioned.fill(
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      leftMinimized = false;
-                                      rightMinimized = false;
-                                    });
-                                  },
-                                  child: MouseRegion(
-                                    cursor: SystemMouseCursors.click,
-                                    child: Container(
-                                      width: 36,
-                                      margin: const EdgeInsets.symmetric(
-                                        vertical: 8,
-                                      ),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // --- SECCIÓN EQUIPOS ---
+                  Container(
+                    height: 500, // Altura fija para la sección de equipos
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.85),
-                                        borderRadius: const BorderRadius.only(
-                                          topRight: Radius.circular(12),
-                                          bottomRight: Radius.circular(12),
-                                        ),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black12,
-                                            blurRadius: 6,
-                                            offset: Offset(2, 0),
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                                           ),
                                         ],
                                       ),
-                                      alignment: Alignment.center,
-                                      child: RotatedBox(
-                                        quarterTurns: 1,
-                                        child: Text(
-                                          'Ubicaciones',
+                    child: Column(
+                      children: [
+                        // Header de Equipos
+                        Container(
+                          height: 48,
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          decoration: const BoxDecoration(
+                            color: Colors.deepPurple,
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(12),
+                              topRight: Radius.circular(12),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.build,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'Equipos en la Ubicación',
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                            color: Colors.deepPurple,
-                                            letterSpacing: 1.2,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+                                  fontSize: 18,
+                                  color: Colors.white,
                                 ),
                               ),
-                            ),
+                              const Spacer(),
+                              PopupMenuButton<String>(
+                                icon: const Icon(
+                                  Icons.more_vert,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                                onSelected: (value) {
+                                  switch (value) {
+                                    case 'create_equipment':
+                                      setState(() {
+                                        _showCreateEquipo = true;
+                                        _showCreateUbicacion = false;
+                                      });
+                                      break;
+                                    case 'create_marca':
+                                      setState(() {
+                                        _showCreateMarca = true;
+                                        _showCreateEquipo = false;
+                                        _showCreateUbicacion = false;
+                                      });
+                                      break;
+                                    case 'delete_marca':
+                                      // TODO: Implementar funcionalidad de borrar marca
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Funcionalidad de borrar marca no implementada'),
+                                        ),
+                                      );
+                                      break;
+                                  }
+                                },
+                                itemBuilder: (BuildContext context) => [
+                                  const PopupMenuItem<String>(
+                                    value: 'create_equipment',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.add, color: Colors.green),
+                                        SizedBox(width: 8),
+                                        Text('Crear Equipo'),
+                                      ],
+                                    ),
+                                  ),
+                                  const PopupMenuItem<String>(
+                                    value: 'create_marca',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.add_business, color: Colors.blue),
+                                        SizedBox(width: 8),
+                                        Text('Crear Marca'),
                         ],
                       ),
                     ),
-                    // --- RIGHT PANE: EQUIPOS ---
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: rightWidth,
-                      child: Stack(
-                        children: [
-                          Column(
-                            children: [
-                              SizedBox(
-                                height: 48,
+                                  const PopupMenuItem<String>(
+                                    value: 'delete_marca',
                                 child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    IconButton(
-                                      icon: Icon(
-                                        rightMinimized
-                                            ? Icons.chevron_left
-                                            : Icons.chevron_right,
-                                      ),
-                                      onPressed: () {
-                                        setState(() {
-                                          rightMinimized = !rightMinimized;
-                                          if (rightMinimized)
-                                            leftMinimized = false;
-                                        });
-                                      },
-                                    ),
-                                    if (!rightMinimized)
-                                      const Padding(
-                                        padding: EdgeInsets.only(left: 8.0),
-                                        child: Text(
-                                          'Equipos',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 18,
+                                        Icon(Icons.delete, color: Colors.red),
+                                        SizedBox(width: 8),
+                                        Text('Borrar Marca'),
+                                      ],
                                           ),
                                         ),
-                                      ),
-                                    if (rightMinimized)
-                                      const SizedBox(width: 0),
+                                ],
+                              ),
                                   ],
                                 ),
                               ),
-                              if (!rightMinimized)
+                        // Contenido de Equipos
                                 Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
                                   child: EquiposListPage(
                                     onDeleteEquipment: (_) => _fetchAll(),
                                     onAssignEquipment: (
@@ -333,15 +401,11 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
                                               : null;
                                       if (selectedLocation != null &&
                                           equipment.uuid != null &&
-                                          selectedLocation.technicalCode !=
-                                              null) {
+                                    selectedLocation.technicalCode != null) {
                                         final confirm = await showDialog<bool>(
                                           context: context,
-                                          builder:
-                                              (context) => AlertDialog(
-                                                title: Text(
-                                                  'Confirmar asociación',
-                                                ),
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('Confirmar asociación'),
                                                 content: Text(
                                                   isOperational == true
                                                       ? '¿Deseas asociar el equipo "${equipment.name}" a la ubicación operativa "${selectedLocation.name}"?'
@@ -349,22 +413,12 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
                                                 ),
                                                 actions: [
                                                   TextButton(
-                                                    onPressed:
-                                                        () => Navigator.of(
-                                                          context,
-                                                        ).pop(false),
-                                                    child: const Text(
-                                                      'Cancelar',
-                                                    ),
+                                          onPressed: () => Navigator.of(context).pop(false),
+                                          child: const Text('Cancelar'),
                                                   ),
                                                   ElevatedButton(
-                                                    onPressed:
-                                                        () => Navigator.of(
-                                                          context,
-                                                        ).pop(true),
-                                                    child: const Text(
-                                                      'Confirmar',
-                                                    ),
+                                          onPressed: () => Navigator.of(context).pop(true),
+                                          child: const Text('Confirmar'),
                                                   ),
                                                 ],
                                               ),
@@ -384,13 +438,9 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
                                             }
                                             _fetchAll();
                                           } catch (e) {
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
+                                      ScaffoldMessenger.of(context).showSnackBar(
                                               SnackBar(
-                                                content: Text(
-                                                  'Error al asociar: $e',
-                                                ),
+                                          content: Text('Error al asociar: $e'),
                                               ),
                                             );
                                           }
@@ -402,98 +452,35 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
                                         _editingEquipment = equipment;
                                       });
                                     },
-                                    onCreateEquipment: () {
-                                      setState(() {
-                                        _showCreateEquipo = true;
-                                        _showCreateUbicacion = false;
-                                      });
-                                    },
-                                    onCreateMarca: () {
-                                      setState(() {
-                                        _showCreateMarca = true;
-                                        _showCreateEquipo = false;
-                                        _showCreateUbicacion = false;
-                                      });
-                                    },
+                              onCreateEquipment: () {}, // Ya no se usa
+                              onCreateMarca: () {}, // Ya no se usa
                                     equipments: _equipments,
                                     brands: _brands,
                                     operationalLocations: _locations,
-                                    selectedLocation:
-                                        _selectedLocations.isNotEmpty
+                              selectedLocation: _selectedLocations.isNotEmpty
                                             ? _selectedLocations.last
                                             : null,
-                                  ),
-                                ),
-                            ],
-                          ),
-                          if (rightMinimized)
-                            Positioned.fill(
-                              child: Align(
-                                alignment: Alignment.centerRight,
-                                child: GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      rightMinimized = false;
-                                      leftMinimized = false;
-                                    });
-                                  },
-                                  child: MouseRegion(
-                                    cursor: SystemMouseCursors.click,
-                                    child: Container(
-                                      width: 36,
-                                      margin: const EdgeInsets.symmetric(
-                                        vertical: 8,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.85),
-                                        borderRadius: const BorderRadius.only(
-                                          topLeft: Radius.circular(12),
-                                          bottomLeft: Radius.circular(12),
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black12,
-                                            blurRadius: 6,
-                                            offset: Offset(-2, 0),
-                                          ),
-                                        ],
-                                      ),
-                                      alignment: Alignment.center,
-                                      child: RotatedBox(
-                                        quarterTurns: 3,
-                                        child: Text(
-                                          'Equipos',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                            color: Colors.deepPurple,
-                                            letterSpacing: 1.2,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
                                 ),
                               ),
                             ),
                         ],
                       ),
                     ),
+                  const SizedBox(height: 32), // Espacio adicional al final para scroll
                   ],
-                );
-              },
+              ),
             ),
           ),
         ),
+        // Modales
         if (_showCreateUbicacion)
           Center(
             child: CreateUbicacionModal(
               locationTypes: _locationTypes,
               parentLocations: _locations,
-              selectedLocation:
-                  _selectedLocations.isNotEmpty
+              selectedLocation: _selectedLocations.isNotEmpty
                       ? _selectedLocations.last
-                      : null, // Pass selected location
+                  : null,
               onCreate: (data) async {
                 setState(() => _showCreateUbicacion = false);
                 await TechnicalLocationService.create(data);
@@ -544,9 +531,41 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
             child: EditEquipoModal(
               equipment: _editingEquipment!,
               brands: _brands,
+              allEquipments: _equipments,
+              technicalLocations: _locations,
               onUpdate: (data) async {
                 setState(() => _editingEquipment = null);
-                await EquipmentService.update(data['uuid'], data);
+                
+                // Actualizar información básica del equipo (sin dependencias)
+                final basicData = Map<String, dynamic>.from(data);
+                basicData.remove('dependentEquipments');
+                await EquipmentService.update(data['uuid'], basicData);
+                
+                // Actualizar dependencias si están presentes
+                if (data.containsKey('dependentEquipments')) {
+                  final dependentEquipments = data['dependentEquipments'] as List<String>;
+                  
+                  // Obtener equipos que actualmente dependen de este equipo
+                  final currentDependents = _equipments
+                      .where((eq) => eq.dependsOn == data['uuid'])
+                      .map((eq) => eq.uuid!)
+                      .toList();
+                  
+                  // Remover dependencias de equipos que ya no deben depender
+                  for (final equipmentUuid in currentDependents) {
+                    if (!dependentEquipments.contains(equipmentUuid)) {
+                      await EquipmentService.updateEquipmentDependency(equipmentUuid, null);
+                    }
+                  }
+                  
+                  // Agregar dependencias a equipos que deben depender
+                  for (final equipmentUuid in dependentEquipments) {
+                    if (!currentDependents.contains(equipmentUuid)) {
+                      await EquipmentService.updateEquipmentDependency(equipmentUuid, data['uuid']);
+                    }
+                  }
+                }
+                
                 _fetchAll();
               },
               onCancel: () => setState(() => _editingEquipment = null),

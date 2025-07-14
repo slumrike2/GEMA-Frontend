@@ -71,8 +71,79 @@ class _EquiposListPageState extends State<EquiposListPage> {
     }
   }
 
+  // Función para construir la jerarquía de ubicaciones padre
+  String _buildLocationHierarchy(String? locationCode) {
+    if (locationCode == null || locationCode.isEmpty) return "-";
+    
+    List<String> hierarchy = [];
+    String? currentCode = locationCode;
+    
+    while (currentCode != null && currentCode.isNotEmpty) {
+      hierarchy.add(currentCode);
+      // Buscar el padre de la ubicación actual
+      final parentLocation = widget.operationalLocations.firstWhere(
+        (loc) => loc.technicalCode == currentCode,
+        orElse: () => TechnicalLocation(
+          technicalCode: '',
+          name: '',
+          type: 0,
+          parentTechnicalCode: null,
+        ),
+      );
+      currentCode = parentLocation.parentTechnicalCode;
+    }
+    
+    // Invertir la lista para mostrar desde la raíz hasta la ubicación actual
+    hierarchy = hierarchy.reversed.toList();
+    return hierarchy.join(" > ");
+  }
+
+  // Función para obtener el orden de prioridad de los estados
+  int _getStatePriority(EquipmentState? state) {
+    if (state == null) return 999; // Estados nulos al final
+    
+    switch (state) {
+      case EquipmentState.instalado:
+        return 0;
+      case EquipmentState.en_mantenimiento:
+        return 1;
+      case EquipmentState.mantenimiento_pendiente:
+        return 2;
+      case EquipmentState.en_reparaciones:
+        return 3;
+      case EquipmentState.reparaciones_pendientes:
+        return 4;
+      case EquipmentState.en_inventario:
+        return 5;
+      case EquipmentState.descomisionado:
+        return 6;
+      case EquipmentState.transferencia_pendiente:
+        return 7;
+    }
+  }
+
+  // Función para ordenar equipos por estado y luego alfabéticamente
+  List<Equipment> _sortEquipments(List<Equipment> equipments) {
+    final sorted = List<Equipment>.from(equipments);
+    sorted.sort((a, b) {
+      // Primero ordenar por estado
+      final stateA = _getStatePriority(a.state);
+      final stateB = _getStatePriority(b.state);
+      
+      if (stateA != stateB) {
+        return stateA.compareTo(stateB);
+      }
+      
+      // Si tienen el mismo estado, ordenar alfabéticamente por nombre
+      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+    });
+    
+    return sorted;
+  }
+
   int? _expandedIdx;
   String _search = '';
+  bool _showAllEquipments = false; // Nuevo: controla si mostrar todos los equipos
   // Mapa para almacenar las ubicaciones operativas de cada equipo
   final Map<String, List<String>> _operationalLocationsMap = {};
   bool _loadingOperationalLocations = false;
@@ -88,6 +159,10 @@ class _EquiposListPageState extends State<EquiposListPage> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.equipments != widget.equipments) {
       _fetchAllOperationalLocations();
+      // Cerrar cualquier equipo expandido cuando se actualiza la lista
+      setState(() {
+        _expandedIdx = null;
+      });
     }
   }
 
@@ -117,13 +192,28 @@ class _EquiposListPageState extends State<EquiposListPage> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredEquipments =
-        widget.equipments.where((e) {
+    // Filtrar equipos por ubicación seleccionada (si no se muestra todo)
+    List<Equipment> locationFilteredEquipments = _showAllEquipments 
+        ? widget.equipments 
+        : widget.equipments.where((e) {
+            if (widget.selectedLocation == null) {
+              // Si no hay ubicación seleccionada, mostrar equipos sin ubicación
+              return e.technicalLocation == null || e.technicalLocation!.isEmpty;
+            }
+            return e.technicalLocation == widget.selectedLocation!.technicalCode;
+          }).toList();
+    
+    // Filtrar por búsqueda
+    final filteredEquipments = locationFilteredEquipments.where((e) {
           final q = _search.toLowerCase();
           return e.name.toLowerCase().contains(q) ||
               e.technicalCode.toLowerCase().contains(q) ||
               e.serialNumber.toLowerCase().contains(q);
         }).toList();
+    
+    // Ordenar equipos por estado y luego alfabéticamente
+    final sortedEquipments = _sortEquipments(filteredEquipments);
+    
     final bool hasLocation = widget.selectedLocation != null;
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -136,13 +226,36 @@ class _EquiposListPageState extends State<EquiposListPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SearchBar(
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SearchBar(
                     hintText: 'Buscar por nombre, código técnico o serie...',
                     onChanged: (v) => setState(() => _search = v),
                     initialValue: _search,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: _showAllEquipments,
+                            onChanged: (value) {
+                              setState(() {
+                                _showAllEquipments = value ?? false;
+                              });
+                            },
+                          ),
+                          const Text(
+                            'Mostrar todo',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 12),
-                  if (!hasLocation)
+                  if (!hasLocation && !_showAllEquipments)
                     Container(
                       width: double.infinity,
                       margin: const EdgeInsets.only(bottom: 12),
@@ -161,7 +274,7 @@ class _EquiposListPageState extends State<EquiposListPage> {
                           SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Selecciona una ubicación en el panel izquierdo para habilitar la asignación de equipos.',
+                              'Selecciona una ubicación en el panel superior para habilitar la asignación de equipos.',
                               style: TextStyle(fontSize: 14),
                             ),
                           ),
@@ -170,18 +283,41 @@ class _EquiposListPageState extends State<EquiposListPage> {
                     ),
                   Expanded(
                     child:
-                        filteredEquipments.isEmpty
-                            ? const Center(child: Text('No hay equipos.'))
+                        sortedEquipments.isEmpty
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.build,
+                                      size: 64,
+                                      color: Colors.grey[400],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      _showAllEquipments 
+                                          ? 'No hay equipos en el sistema.'
+                                          : hasLocation
+                                              ? 'No hay equipos en esta ubicación.'
+                                              : 'No hay equipos sin ubicación asignada.',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
                             : ListView.separated(
                               padding: const EdgeInsets.symmetric(
                                 vertical: 8,
                                 horizontal: 4,
                               ),
-                              itemCount: filteredEquipments.length,
+                              itemCount: sortedEquipments.length,
                               separatorBuilder:
                                   (context, idx) => const SizedBox(height: 18),
                               itemBuilder: (context, idx) {
-                                final equipment = filteredEquipments[idx];
+                                final equipment = sortedEquipments[idx];
                                 final operationalCodes =
                                     _operationalLocationsMap[equipment.uuid] ??
                                     [];
@@ -246,41 +382,33 @@ class _EquiposListPageState extends State<EquiposListPage> {
                                             );
                                           }
                                           : null,
+                                  onMoveEquipment:
+                                      hasLocation &&
+                                              equipment.technicalLocation != null &&
+                                              equipment.technicalLocation!.isNotEmpty &&
+                                              widget.selectedLocation != null &&
+                                              equipment.technicalLocation != widget.selectedLocation!.technicalCode
+                                          ? () {
+                                            widget.onAssignEquipment(
+                                              equipment,
+                                              isOperational: false,
+                                              locationCode:
+                                                  widget
+                                                      .selectedLocation
+                                                      ?.technicalCode ??
+                                                  '',
+                                            );
+                                          }
+                                          : null,
                                   onChangeEquipmentState:
                                       _onChangeEquipmentState,
+                                  buildLocationHierarchy: _buildLocationHierarchy,
                                 );
                               },
                             ),
                   ),
 
-                  const SizedBox(height: 8),
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.add, color: Colors.white),
-                    label: const Text('Crear Equipo'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green[600],
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                    ),
-                    onPressed: widget.onCreateEquipment,
-                  ),
-                  const SizedBox(height: 8),
-                  OutlinedButton.icon(
-                    icon: const Icon(Icons.add_business, color: Colors.blue),
-                    label: const Text('Crear Marca'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.blue,
-                      side: const BorderSide(color: Colors.blue),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                    ),
-                    onPressed: widget.onCreateMarca,
-                  ),
+
                 ],
               ),
             ),
@@ -315,7 +443,9 @@ class _EquipmentTile extends StatelessWidget {
   final TechnicalLocation? selectedLocation;
   final VoidCallback? onAssignTechnical;
   final VoidCallback? onAssignOperational;
+  final VoidCallback? onMoveEquipment; // Nuevo parámetro para mudar equipo
   final void Function(Equipment) onChangeEquipmentState;
+  final String Function(String?) buildLocationHierarchy;
   const _EquipmentTile({
     required this.equipment,
     required this.onDelete,
@@ -328,7 +458,9 @@ class _EquipmentTile extends StatelessWidget {
     required this.selectedLocation,
     this.onAssignTechnical,
     this.onAssignOperational,
+    this.onMoveEquipment, // Nuevo parámetro
     required this.onChangeEquipmentState,
+    required this.buildLocationHierarchy,
   });
 
   @override
@@ -370,6 +502,10 @@ class _EquipmentTile extends StatelessWidget {
                         children: [
                           Row(
                             children: [
+                              // Información del equipo (izquierda)
+                              Expanded(
+                                child: Row(
+                            children: [
                               Text(
                                 equipment.name,
                                 style: const TextStyle(
@@ -395,12 +531,14 @@ class _EquipmentTile extends StatelessWidget {
                                         )
                                         : '',
                               ),
-                              const SizedBox(width: 8),
-
-                              Expanded(
-                                child: Container(),
-                              ), // Push buttons to the right
-
+                                  ],
+                                ),
+                              ),
+                              
+                              // Botones de acción (derecha)
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
                               if (onAssignTechnical != null)
                                 MouseRegion(
                                   cursor: SystemMouseCursors.click,
@@ -418,26 +556,34 @@ class _EquipmentTile extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                              const SizedBox(width: 8),
+                                  if (onAssignTechnical != null) const SizedBox(width: 8),
 
                               if (equipment.technicalLocation != null &&
-                                  equipment.technicalLocation!.isNotEmpty)
+                                      equipment.technicalLocation!.isNotEmpty &&
+                                      selectedLocation != null &&
+                                      equipment.technicalLocation != selectedLocation!.technicalCode &&
+                                      onMoveEquipment != null)
                                 MouseRegion(
                                   cursor: SystemMouseCursors.click,
                                   child: Tooltip(
-                                    message: 'Mudar equipo a otra ubicación',
+                                        message: 'Mudar equipo a esta ubicación',
                                     child: GestureDetector(
-                                      onTap: () {
-                                        //!TODO: Implementar lógica de mudanza
-                                      },
+                                          onTap: onMoveEquipment,
                                       child: Tag(
                                         label: '',
                                         iconData: Icons.local_shipping,
                                         color: Colors.blue,
+                                            onTap: onMoveEquipment,
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ),
+                                  if (equipment.technicalLocation != null &&
+                                      equipment.technicalLocation!.isNotEmpty &&
+                                      selectedLocation != null &&
+                                      equipment.technicalLocation != selectedLocation!.technicalCode &&
+                                      onMoveEquipment != null) const SizedBox(width: 8),
+
                               if (onAssignOperational != null)
                                 MouseRegion(
                                   cursor: SystemMouseCursors.click,
@@ -455,12 +601,16 @@ class _EquipmentTile extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                              const Spacer(),
+                                  if (onAssignOperational != null) const SizedBox(width: 8),
+
+                                  // Icono de expandir
                               Icon(
                                 isExpanded
                                     ? Icons.expand_less
                                     : Icons.expand_more,
                                 color: Colors.grey,
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -490,7 +640,7 @@ class _EquipmentTile extends StatelessWidget {
                           'Ubicación principal: ${equipment.technicalLocation ?? "Sin ubicación"}',
                         ),
                         Text(
-                          'Código ubicación: ${equipment.technicalLocation ?? "-"}',
+                          'Código ubicación: ${buildLocationHierarchy(equipment.technicalLocation)}',
                         ),
                         const SizedBox(height: 4),
                         Text('Ubicaciones operativas:'),

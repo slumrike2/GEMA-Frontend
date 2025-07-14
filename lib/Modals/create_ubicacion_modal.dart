@@ -114,220 +114,242 @@ class _CreateUbicacionModalState extends State<CreateUbicacionModal> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.blueGrey.shade100, width: 2),
-      ),
-      elevation: 8,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.location_on, color: Colors.blue, size: 28),
-                    const SizedBox(width: 10),
-                    const Text(
-                      'Crear Ubicación',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+    return Material(
+      color: Colors.transparent,
+      child: GestureDetector(
+        onTap: () => widget.onCancel(),
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          color: Colors.black54,
+          child: GestureDetector(
+            onTap: () {}, // Prevent closing when tapping inside the modal
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: 500,
+                  maxHeight: 600,
                 ),
-                const SizedBox(height: 18),
-                TextFormField(
-                  controller: _nameController,
-                  decoration: InputDecoration(
-                    labelText: 'Nombre',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    filled: true,
-                    fillColor: Colors.blue[50],
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.blueGrey.shade100, width: 2),
                   ),
-                  onChanged: (v) {}, // allow manual edit
-                  validator:
-                      (v) =>
-                          v == null || v.isEmpty ? 'Ingrese un nombre' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _codeController,
-                  decoration: InputDecoration(
-                    labelText: 'Código Técnico',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    filled: true,
-                    fillColor: Colors.blue[50],
-                  ),
-                  onChanged: (v) {}, // allow manual edit
-                  validator:
-                      (v) =>
-                          v == null || v.isEmpty ? 'Ingrese un código' : null,
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<int>(
-                  decoration: InputDecoration(
-                    labelText: 'Tipo',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    filled: true,
-                    fillColor: Colors.blue[50],
-                  ),
-                  value: _typeId,
-                  items:
-                      widget.locationTypes
-                          .map(
-                            (t) => DropdownMenuItem(
-                              value:
-                                  widget.locationTypes.indexOf(t) +
-                                  1, // assuming id is index+1
-                              child: Text(t.name),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+                    child: Form(
+                      key: _formKey,
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.location_on, color: Colors.blue, size: 28),
+                                const SizedBox(width: 10),
+                                const Text(
+                                  'Crear Ubicación',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
-                          )
-                          .toList(),
-                  onChanged: (v) {
-                    setState(() {
-                      _typeId = v;
-                      _generateNameAndCode();
-                    });
-                  },
-                  validator: (v) => v == null ? 'Seleccione un tipo' : null,
-                ),
-                const SizedBox(height: 16),
-                if (widget.selectedLocation != null)
-                  Row(
-                    children: [
-                      Checkbox(
-                        value: _lockToCurrent,
-                        onChanged: (val) {
-                          setState(() {
-                            _lockToCurrent = val ?? false;
-                            if (_lockToCurrent) {
-                              _parentCode =
-                                  widget.selectedLocation!.technicalCode;
-                            } else {
-                              _parentCode = null;
-                            }
-                            _generateNameAndCode();
-                          });
-                        },
-                      ),
-                      Flexible(
-                        child: Text(
-                          'Crear ubicación dentro de la ubicación actual: '
-                          '${widget.selectedLocation!.name} (${widget.selectedLocation!.technicalCode})',
-                        ),
-                      ),
-                    ],
-                  ),
-                if (_lockToCurrent && widget.selectedLocation != null)
-                  TextFormField(
-                    enabled: false,
-                    initialValue:
-                        widget.selectedLocation!.name +
-                        ' (' +
-                        widget.selectedLocation!.technicalCode +
-                        ')',
-                    decoration: InputDecoration(
-                      labelText: 'Ubicación Padre',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      filled: true,
-                      fillColor: Colors.blue[50],
-                    ),
-                  )
-                else
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Ubicación Padre'),
-                      const SizedBox(height: 6),
-                      SearchableComboBox<String>(
-                        items:
-                            _filteredParents
-                                .map(
-                                  (l) => DropdownMenuItem(
-                                    value: l.technicalCode,
+                            const SizedBox(height: 18),
+                            TextFormField(
+                              controller: _nameController,
+                              decoration: InputDecoration(
+                                labelText: 'Nombre',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                filled: true,
+                                fillColor: Colors.blue[50],
+                              ),
+                              onChanged: (v) {}, // allow manual edit
+                              validator:
+                                  (v) =>
+                                      v == null || v.isEmpty ? 'Ingrese un nombre' : null,
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _codeController,
+                              decoration: InputDecoration(
+                                labelText: 'Código Técnico',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                filled: true,
+                                fillColor: Colors.blue[50],
+                              ),
+                              onChanged: (v) {}, // allow manual edit
+                              validator:
+                                  (v) =>
+                                      v == null || v.isEmpty ? 'Ingrese un código' : null,
+                            ),
+                            const SizedBox(height: 16),
+                            DropdownButtonFormField<int>(
+                              decoration: InputDecoration(
+                                labelText: 'Tipo',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                filled: true,
+                                fillColor: Colors.blue[50],
+                              ),
+                              value: _typeId,
+                              items:
+                                  widget.locationTypes
+                                      .map(
+                                        (t) => DropdownMenuItem(
+                                          value:
+                                              widget.locationTypes.indexOf(t) +
+                                              1, // assuming id is index+1
+                                          child: Text(t.name),
+                                        ),
+                                      )
+                                      .toList(),
+                              onChanged: (v) {
+                                setState(() {
+                                  _typeId = v;
+                                  _generateNameAndCode();
+                                });
+                              },
+                              validator: (v) => v == null ? 'Seleccione un tipo' : null,
+                            ),
+                            const SizedBox(height: 16),
+                            if (widget.selectedLocation != null)
+                              Row(
+                                children: [
+                                  Checkbox(
+                                    value: _lockToCurrent,
+                                    onChanged: (val) {
+                                      setState(() {
+                                        _lockToCurrent = val ?? false;
+                                        if (_lockToCurrent) {
+                                          _parentCode =
+                                              widget.selectedLocation!.technicalCode;
+                                        } else {
+                                          _parentCode = null;
+                                        }
+                                        _generateNameAndCode();
+                                      });
+                                    },
+                                  ),
+                                  Flexible(
                                     child: Text(
-                                      l.name + ' (' + l.technicalCode + ')',
+                                      'Crear ubicación dentro de la ubicación actual: '
+                                      '${widget.selectedLocation!.name} (${widget.selectedLocation!.technicalCode})',
                                     ),
                                   ),
-                                )
-                                .toList(),
-                        value: _parentCode,
-                        onChanged: (v) {
-                          setState(() {
-                            _parentCode = v;
-                            _generateNameAndCode();
-                          });
-                        },
-                        hintText: 'Buscar por nombre, código o tipo...',
-                        labelText: 'Seleccionar ubicación padre',
-                        validator:
-                            (v) =>
-                                v == null
-                                    ? 'Seleccione una ubicación padre'
-                                    : null,
+                                ],
+                              ),
+                            if (_lockToCurrent && widget.selectedLocation != null)
+                              TextFormField(
+                                enabled: false,
+                                initialValue:
+                                    widget.selectedLocation!.name +
+                                    ' (' +
+                                    widget.selectedLocation!.technicalCode +
+                                    ')',
+                                decoration: InputDecoration(
+                                  labelText: 'Ubicación Padre',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.blue[50],
+                                ),
+                              )
+                            else
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Ubicación Padre'),
+                                  const SizedBox(height: 6),
+                                  SearchableComboBox<String>(
+                                    items:
+                                        _filteredParents
+                                            .map(
+                                              (l) => DropdownMenuItem(
+                                                value: l.technicalCode,
+                                                child: Text(
+                                                  l.name + ' (' + l.technicalCode + ')',
+                                                ),
+                                              ),
+                                            )
+                                            .toList(),
+                                    value: _parentCode,
+                                    onChanged: (v) {
+                                      setState(() {
+                                        _parentCode = v;
+                                        _generateNameAndCode();
+                                      });
+                                    },
+                                    hintText: 'Buscar por nombre, código o tipo...',
+                                    labelText: 'Seleccionar ubicación padre',
+                                    validator:
+                                        (v) =>
+                                            v == null
+                                                ? 'Seleccione una ubicación padre'
+                                                : null,
+                                  ),
+                                ],
+                              ),
+                            const SizedBox(height: 24),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                TextButton(
+                                  onPressed: widget.onCancel,
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Colors.grey[700],
+                                    textStyle: const TextStyle(fontWeight: FontWeight.w500),
+                                  ),
+                                  child: const Text('Cancelar'),
+                                ),
+                                const SizedBox(width: 8),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    if (_formKey.currentState!.validate()) {
+                                      widget.onCreate({
+                                        'name': _nameController.text,
+                                        'technicalCode': _codeController.text,
+                                        'type': _typeId,
+                                        'parentTechnicalCode':
+                                            _lockToCurrent &&
+                                                    widget.selectedLocation != null
+                                                ? widget.selectedLocation!.technicalCode
+                                                : _parentCode,
+                                      });
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blue[700],
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                      vertical: 12,
+                                    ),
+                                    textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  child: const Text('Crear'),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ],
+                    ),
                   ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: widget.onCancel,
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.grey[700],
-                        textStyle: const TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                      child: const Text('Cancelar'),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          widget.onCreate({
-                            'name': _nameController.text,
-                            'technicalCode': _codeController.text,
-                            'type': _typeId,
-                            'parentTechnicalCode':
-                                _lockToCurrent &&
-                                        widget.selectedLocation != null
-                                    ? widget.selectedLocation!.technicalCode
-                                    : _parentCode,
-                          });
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[700],
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
-                        ),
-                        textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      child: const Text('Crear'),
-                    ),
-                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),

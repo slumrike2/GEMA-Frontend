@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class ChangeEquipmentStateModal extends StatefulWidget {
   final String currentState;
   final List<String> possibleStates;
-  final void Function(String) onSave;
+  final Future<void> Function(String newState) onSave;
   final VoidCallback onCancel;
 
   const ChangeEquipmentStateModal({
@@ -15,75 +15,122 @@ class ChangeEquipmentStateModal extends StatefulWidget {
   });
 
   @override
-  State<ChangeEquipmentStateModal> createState() =>
-      _ChangeEquipmentStateModalState();
+  State<ChangeEquipmentStateModal> createState() => _ChangeEquipmentStateModalState();
 }
 
 class _ChangeEquipmentStateModalState extends State<ChangeEquipmentStateModal> {
-  late String _selectedState;
+  String? _selectedState;
+  bool _loading = false;
 
   @override
   void initState() {
     super.initState();
-    // If currentState is not in possibleStates, use the first possible state
-    _selectedState =
-        widget.possibleStates.contains(widget.currentState)
-            ? widget.currentState
-            : (widget.possibleStates.isNotEmpty
-                ? widget.possibleStates.first
-                : '');
+    _selectedState = widget.currentState;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Cambiar estado del equipo',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: _selectedState,
-              items:
-                  widget.possibleStates
-                      .map(
-                        (state) => DropdownMenuItem(
-                          value: state,
-                          child: Text(state.replaceAll('_', ' ')),
+    return Material(
+      color: Colors.transparent,
+      child: GestureDetector(
+        onTap: () => widget.onCancel(),
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          color: Colors.black54,
+          child: GestureDetector(
+            onTap: () {}, // Prevent closing when tapping inside the modal
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: 500,
+                  maxHeight: 600,
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.blueGrey.shade100, width: 2),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Cambiar Estado del Equipo',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      )
-                      .toList(),
-              onChanged: (value) {
-                if (value != null) setState(() => _selectedState = value);
-              },
-              decoration: const InputDecoration(
-                labelText: 'Nuevo estado',
-                border: OutlineInputBorder(),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Estado actual: ${widget.currentState.replaceAll('_', ' ')}',
+                          style: const TextStyle(fontSize: 14, color: Colors.grey),
+                        ),
+                        const SizedBox(height: 16),
+                        DropdownButtonFormField<String>(
+                          decoration: const InputDecoration(
+                            labelText: 'Nuevo Estado',
+                            border: OutlineInputBorder(),
+                          ),
+                          value: _selectedState,
+                          items: widget.possibleStates
+                              .map((state) => DropdownMenuItem(
+                                    value: state,
+                                    child: Text(state.replaceAll('_', ' ')),
+                                  ))
+                              .toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedState = value;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: _loading ? null : widget.onCancel,
+                              child: const Text('Cancelar'),
+                            ),
+                            const SizedBox(width: 12),
+                            ElevatedButton(
+                              onPressed: _loading || _selectedState == null
+                                  ? null
+                                  : () async {
+                                      if (_selectedState != null) {
+                                        setState(() {
+                                          _loading = true;
+                                        });
+                                        try {
+                                          await widget.onSave(_selectedState!);
+                                        } finally {
+                                          setState(() {
+                                            _loading = false;
+                                          });
+                                        }
+                                      }
+                                    },
+                              child: _loading
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : const Text('Guardar'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: widget.onCancel,
-                  child: const Text('Cancelar'),
-                ),
-                const SizedBox(width: 12),
-                ElevatedButton(
-                  onPressed: () => widget.onSave(_selectedState),
-                  child: const Text('Guardar'),
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
       ),
     );
