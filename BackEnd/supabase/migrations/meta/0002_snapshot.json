@@ -1,0 +1,924 @@
+{
+  "id": "46f4c04f-b24c-421b-8e76-f3ac25b8d020",
+  "prevId": "78e921dd-c04f-4876-9c56-efe1d2e5b3b5",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.Brand": {
+      "name": "Brand",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "Brand_name_unique": {
+          "name": "Brand_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "name"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Equipment": {
+      "name": "Equipment",
+      "schema": "",
+      "columns": {
+        "uuid": {
+          "name": "uuid",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "technicalCode": {
+          "name": "technicalCode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "serialNumber": {
+          "name": "serialNumber",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "state": {
+          "name": "state",
+          "type": "equipment_state",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'en_inventario'"
+        },
+        "dependsOn": {
+          "name": "dependsOn",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "brandId": {
+          "name": "brandId",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "technicalLocation": {
+          "name": "technicalLocation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "transferLocation": {
+          "name": "transferLocation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "deletedAt": {
+          "name": "deletedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Equipment_dependsOn_Equipment_uuid_fk": {
+          "name": "Equipment_dependsOn_Equipment_uuid_fk",
+          "tableFrom": "Equipment",
+          "tableTo": "Equipment",
+          "columnsFrom": [
+            "dependsOn"
+          ],
+          "columnsTo": [
+            "uuid"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "cascade"
+        },
+        "Equipment_brandId_Brand_id_fk": {
+          "name": "Equipment_brandId_Brand_id_fk",
+          "tableFrom": "Equipment",
+          "tableTo": "Brand",
+          "columnsFrom": [
+            "brandId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "Equipment_technicalLocation_Technical_location_technicalCode_fk": {
+          "name": "Equipment_technicalLocation_Technical_location_technicalCode_fk",
+          "tableFrom": "Equipment",
+          "tableTo": "Technical_location",
+          "columnsFrom": [
+            "technicalLocation"
+          ],
+          "columnsTo": [
+            "technicalCode"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "cascade"
+        },
+        "Equipment_transferLocation_Technical_location_technicalCode_fk": {
+          "name": "Equipment_transferLocation_Technical_location_technicalCode_fk",
+          "tableFrom": "Equipment",
+          "tableTo": "Technical_location",
+          "columnsFrom": [
+            "transferLocation"
+          ],
+          "columnsTo": [
+            "technicalCode"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "Equipment_technicalCode_unique": {
+          "name": "Equipment_technicalCode_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "technicalCode"
+          ]
+        },
+        "Equipment_serialNumber_unique": {
+          "name": "Equipment_serialNumber_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "serialNumber"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Equipment_operational_location": {
+      "name": "Equipment_operational_location",
+      "schema": "",
+      "columns": {
+        "equipmentUuid": {
+          "name": "equipmentUuid",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "locationTechnicalCode": {
+          "name": "locationTechnicalCode",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "deletedAt": {
+          "name": "deletedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Equipment_operational_location_equipmentUuid_Equipment_uuid_fk": {
+          "name": "Equipment_operational_location_equipmentUuid_Equipment_uuid_fk",
+          "tableFrom": "Equipment_operational_location",
+          "tableTo": "Equipment",
+          "columnsFrom": [
+            "equipmentUuid"
+          ],
+          "columnsTo": [
+            "uuid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "Equipment_operational_location_locationTechnicalCode_Technical_location_technicalCode_fk": {
+          "name": "Equipment_operational_location_locationTechnicalCode_Technical_location_technicalCode_fk",
+          "tableFrom": "Equipment_operational_location",
+          "tableTo": "Technical_location",
+          "columnsFrom": [
+            "locationTechnicalCode"
+          ],
+          "columnsTo": [
+            "technicalCode"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Report": {
+      "name": "Report",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "priority": {
+          "name": "priority",
+          "type": "report_priority",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'medium'"
+        },
+        "state": {
+          "name": "state",
+          "type": "report_state",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "type": {
+          "name": "type",
+          "type": "report_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'preventive'"
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "deletedAt": {
+          "name": "deletedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Report_Origin": {
+      "name": "Report_Origin",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "emailRemitent": {
+          "name": "emailRemitent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "GEMAcreator": {
+          "name": "GEMAcreator",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source": {
+          "name": "source",
+          "type": "Report_Origin_Source",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "deletedAt": {
+          "name": "deletedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Report_Origin_GEMAcreator_User_uuid_fk": {
+          "name": "Report_Origin_GEMAcreator_User_uuid_fk",
+          "tableFrom": "Report_Origin",
+          "tableTo": "User",
+          "columnsFrom": [
+            "GEMAcreator"
+          ],
+          "columnsTo": [
+            "uuid"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Report_Update": {
+      "name": "Report_Update",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "deletedAt": {
+          "name": "deletedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Technical_location": {
+      "name": "Technical_location",
+      "schema": "",
+      "columns": {
+        "technicalCode": {
+          "name": "technicalCode",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "parentTechnicalCode": {
+          "name": "parentTechnicalCode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Technical_location_type_Technical_location_types_id_fk": {
+          "name": "Technical_location_type_Technical_location_types_id_fk",
+          "tableFrom": "Technical_location",
+          "tableTo": "Technical_location_types",
+          "columnsFrom": [
+            "type"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "Technical_location_parentTechnicalCode_Technical_location_technicalCode_fk": {
+          "name": "Technical_location_parentTechnicalCode_Technical_location_technicalCode_fk",
+          "tableFrom": "Technical_location",
+          "tableTo": "Technical_location",
+          "columnsFrom": [
+            "parentTechnicalCode"
+          ],
+          "columnsTo": [
+            "technicalCode"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Technical_location_types": {
+      "name": "Technical_location_types",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nameTemplate": {
+          "name": "nameTemplate",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "codeTemplate": {
+          "name": "codeTemplate",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "Technical_location_types_name_unique": {
+          "name": "Technical_location_types_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "name"
+          ]
+        },
+        "Technical_location_types_nameTemplate_unique": {
+          "name": "Technical_location_types_nameTemplate_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "nameTemplate"
+          ]
+        },
+        "Technical_location_types_codeTemplate_unique": {
+          "name": "Technical_location_types_codeTemplate_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "codeTemplate"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Technical_team": {
+      "name": "Technical_team",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "speciality": {
+          "name": "speciality",
+          "type": "technician_speciality",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "leaderId": {
+          "name": "leaderId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "deletedAt": {
+          "name": "deletedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Technical_team_leaderId_Technician_uuid_fk": {
+          "name": "Technical_team_leaderId_Technician_uuid_fk",
+          "tableFrom": "Technical_team",
+          "tableTo": "Technician",
+          "columnsFrom": [
+            "leaderId"
+          ],
+          "columnsTo": [
+            "uuid"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Technician": {
+      "name": "Technician",
+      "schema": "",
+      "columns": {
+        "uuid": {
+          "name": "uuid",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "personalId": {
+          "name": "personalId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contact": {
+          "name": "contact",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "speciality": {
+          "name": "speciality",
+          "type": "technician_speciality",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "technicalTeamId": {
+          "name": "technicalTeamId",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "deletedAt": {
+          "name": "deletedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Technician_uuid_User_uuid_fk": {
+          "name": "Technician_uuid_User_uuid_fk",
+          "tableFrom": "Technician",
+          "tableTo": "User",
+          "columnsFrom": [
+            "uuid"
+          ],
+          "columnsTo": [
+            "uuid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "Technician_technicalTeamId_Technical_team_id_fk": {
+          "name": "Technician_technicalTeamId_Technical_team_id_fk",
+          "tableFrom": "Technician",
+          "tableTo": "Technical_team",
+          "columnsFrom": [
+            "technicalTeamId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "Technician_personalId_unique": {
+          "name": "Technician_personalId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "personalId"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.User": {
+      "name": "User",
+      "schema": "",
+      "columns": {
+        "uuid": {
+          "name": "uuid",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "roles",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'user'"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "deletedAt": {
+          "name": "deletedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "User_email_unique": {
+          "name": "User_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.equipment_state": {
+      "name": "equipment_state",
+      "schema": "public",
+      "values": [
+        "instalado",
+        "en_mantenimiento",
+        "mantenimiento_pendiente",
+        "en_reparaciones",
+        "reparaciones_pendientes",
+        "en_inventario",
+        "descomisionado",
+        "transferencia_pendiente"
+      ]
+    },
+    "public.Report_Origin_Source": {
+      "name": "Report_Origin_Source",
+      "schema": "public",
+      "values": [
+        "email",
+        "managementSystem",
+        "chat",
+        "GEMA"
+      ]
+    },
+    "public.report_priority": {
+      "name": "report_priority",
+      "schema": "public",
+      "values": [
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "public.report_state": {
+      "name": "report_state",
+      "schema": "public",
+      "values": [
+        "pending",
+        "programmed",
+        "in_progress",
+        "solved",
+        "cancelled"
+      ]
+    },
+    "public.report_type": {
+      "name": "report_type",
+      "schema": "public",
+      "values": [
+        "preventive",
+        "active"
+      ]
+    },
+    "public.roles": {
+      "name": "roles",
+      "schema": "public",
+      "values": [
+        "user",
+        "technician",
+        "coordinator",
+        "admin"
+      ]
+    },
+    "public.technician_speciality": {
+      "name": "technician_speciality",
+      "schema": "public",
+      "values": [
+        "Electricista",
+        "Mecanica",
+        "Logistica",
+        "Electronica"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

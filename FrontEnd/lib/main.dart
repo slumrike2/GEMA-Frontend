@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/Pages/equipos&ubicaciones/crear_equipo.dart';
 import 'Screens/admin_screen.dart';
 
 void main() {
@@ -14,10 +13,8 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: AdminScreen(),
-      routes: {
-        AdminScreen.routeName: (context) =>  AdminScreen(),
-
-      },
+      routes: {AdminScreen.routeName: (context) => AdminScreen()},
     );
   }
 }
+
