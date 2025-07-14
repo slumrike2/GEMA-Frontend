@@ -5,6 +5,7 @@ import 'package:frontend/Components/search_bar.dart';
 import 'package:frontend/Components/action_button.dart';
 import 'package:frontend/Services/equipment_service.dart';
 import 'package:frontend/Modals/change_equipment_state_modal.dart';
+import 'package:frontend/Modals/confirm_delete_equipment_modal.dart';
 
 class EquiposListPage extends StatefulWidget {
   final void Function(Equipment) onDeleteEquipment;
@@ -43,6 +44,10 @@ class _EquiposListPageState extends State<EquiposListPage> {
   Equipment? _changingStateEquipment;
   bool _showChangeStateModal = false;
 
+  // Nuevo: para eliminar
+  Equipment? _deletingEquipment;
+  bool _showDeleteModal = false;
+
   void _onChangeEquipmentState(Equipment equipment) {
     setState(() {
       _changingStateEquipment = equipment;
@@ -69,6 +74,30 @@ class _EquiposListPageState extends State<EquiposListPage> {
         _changingStateEquipment = null;
       });
     }
+  }
+
+  void _onDeleteEquipmentRequest(Equipment equipment) {
+    setState(() {
+      _deletingEquipment = equipment;
+      _showDeleteModal = true;
+    });
+  }
+
+  void _confirmDeleteEquipment() {
+    if (_deletingEquipment != null) {
+      widget.onDeleteEquipment(_deletingEquipment!);
+    }
+    setState(() {
+      _showDeleteModal = false;
+      _deletingEquipment = null;
+    });
+  }
+
+  void _cancelDeleteEquipment() {
+    setState(() {
+      _showDeleteModal = false;
+      _deletingEquipment = null;
+    });
   }
 
   // Función para construir la jerarquía de ubicaciones padre
@@ -330,7 +359,7 @@ class _EquiposListPageState extends State<EquiposListPage> {
                                             _expandedIdx == idx ? null : idx;
                                       }),
                                   onDelete:
-                                      () => widget.onDeleteEquipment(equipment),
+                                      () => _onDeleteEquipmentRequest(equipment),
                                   onEdit:
                                       () => widget.onEditEquipment(equipment),
                                   operationalLocationCodes: operationalCodes,
@@ -403,6 +432,7 @@ class _EquiposListPageState extends State<EquiposListPage> {
                                   onChangeEquipmentState:
                                       _onChangeEquipmentState,
                                   buildLocationHierarchy: _buildLocationHierarchy,
+                                  onDeleteRequest: _onDeleteEquipmentRequest,
                                 );
                               },
                             ),
@@ -423,6 +453,12 @@ class _EquiposListPageState extends State<EquiposListPage> {
                       _showChangeStateModal = false;
                       _changingStateEquipment = null;
                     }),
+              ),
+            if (_showDeleteModal && _deletingEquipment != null)
+              ConfirmDeleteEquipmentModal(
+                technicalCode: _deletingEquipment!.technicalCode,
+                onConfirm: _confirmDeleteEquipment,
+                onCancel: _cancelDeleteEquipment,
               ),
           ],
         );
@@ -446,6 +482,7 @@ class _EquipmentTile extends StatelessWidget {
   final VoidCallback? onMoveEquipment; // Nuevo parámetro para mudar equipo
   final void Function(Equipment) onChangeEquipmentState;
   final String Function(String?) buildLocationHierarchy;
+  final void Function(Equipment) onDeleteRequest;
   const _EquipmentTile({
     required this.equipment,
     required this.onDelete,
@@ -461,6 +498,7 @@ class _EquipmentTile extends StatelessWidget {
     this.onMoveEquipment, // Nuevo parámetro
     required this.onChangeEquipmentState,
     required this.buildLocationHierarchy,
+    required this.onDeleteRequest,
   });
 
   @override
@@ -696,7 +734,7 @@ class _EquipmentTile extends StatelessWidget {
                               icon: Icons.delete,
                               label: 'Eliminar',
                               backgroundColor: Colors.red,
-                              onPressed: onDelete,
+                              onPressed: () => onDeleteRequest(equipment),
                             ),
                             const SizedBox(width: 8),
                           ],
