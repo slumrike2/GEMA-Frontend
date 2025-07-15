@@ -58,25 +58,6 @@ class _InitialRegisterScreenState extends State<InitialRegisterScreen> {
                 },
               ),
               const SizedBox(height: 24),
-              TextFormField(
-                controller: _passwordController,
-                decoration: const InputDecoration(
-                  labelText: 'Contraseña',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.password)
-                ),
-                keyboardType: TextInputType.visiblePassword,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'La contraseña no puede estar vacía';
-                  }
-                  if (value.length < 6) {
-                    return 'La contraseña tiene que tener por lo menos 6 carácteres';
-                  }
-                  return null;
-                }
-              ),
-              const SizedBox(height: 24),
               DropdownButtonFormField<String>(
                 value: _selectedRole,
                 decoration: const InputDecoration(
@@ -125,7 +106,6 @@ class _InitialRegisterScreenState extends State<InitialRegisterScreen> {
     try {
       await UserService.create(
         email: _emailController.text,
-        password: _passwordController.text,
         role: _selectedRole,
       );
       ScaffoldMessenger.of(context).showSnackBar(

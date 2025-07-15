@@ -1,5 +1,7 @@
 import 'package:http/http.dart' as http;
+import 'package:uuid/uuid.dart';
 import 'dart:convert';
+import 'dart:math';
 import '../Models/backend_types.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;  
 
@@ -36,18 +38,25 @@ class UserService {
   static Future<void> create( 
   {
     required String email,
-    required String password,
+    // required String password,
     required String role
   }) async {
-    final uuidResponse = await signUpUser(email, password);
-    final uuid = uuidResponse.user?.id;
+    // final uuidResponse = await signUpUser(email, password);
+    // final uuid = uuidResponse.user?.id;
+    final uuid = Uuid();
+    final randomUuid = uuid.v4();
+    final chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    final rand = Random.secure();
+    final password = List.generate(16, (index) => chars[rand.nextInt(chars.length)]).join();
+
     final response = await http.post(
       Uri.parse(baseUrl),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'uuid': uuid,
+        'uuid': randomUuid,
         'email': email,
         'role': role,
+        'password' : password
       }),
     );
 
