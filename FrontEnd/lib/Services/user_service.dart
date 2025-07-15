@@ -35,7 +35,6 @@ class UserService {
 
   static Future<void> create( 
   {
-    required String name,
     required String email,
     required String password,
     required String role
@@ -47,7 +46,6 @@ class UserService {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'uuid': uuid,
-        'name': name,
         'email': email,
         'role': role,
       }),
