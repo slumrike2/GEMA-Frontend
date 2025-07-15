@@ -5,8 +5,13 @@ import 'mantenimientos_screen.dart';
 import 'cuadrillas_screen.dart';
 
 class AdminScreen extends StatefulWidget {
-  const AdminScreen({super.key});
+  const AdminScreen({super.key, this.injectedClient});
+
+  /// Inyección de SupabaseClient para facilitar testing o configuraciones personalizadas.
+  final SupabaseClient? injectedClient;
+
   static const String routeName = '/admin';
+
   @override
   State<AdminScreen> createState() => _AdminScreenState();
 }
@@ -22,7 +27,9 @@ class _AdminScreenState extends State<AdminScreen> {
   ];
 
   void _handleLogout() async {
-    await Supabase.instance.client.auth.signOut();
+    final client = widget.injectedClient ?? Supabase.instance.client;
+
+    await client.auth.signOut();
     if (mounted) {
       Navigator.pushReplacementNamed(context, '/login');
     }
@@ -35,7 +42,8 @@ class _AdminScreenState extends State<AdminScreen> {
       const Color(0xFF007934), // Equipos y Ubicaciones
       const Color(0xFF37B4E3), // Mantenimientos
     ];
-    List<Image> navIcons = [
+
+    final List<Image> navIcons = [
       Image.asset('assets/images/IconMantenimientos.png'),
       Image.asset('assets/images/IconEquiposUbicaciones.png'),
       Image.asset('assets/images/IconCuadrillas.png'),
@@ -91,14 +99,8 @@ class _AdminScreenState extends State<AdminScreen> {
                 ),
               ),
             ),
-            selectedIconTheme: const IconThemeData(
-              color: Colors.black,
-              size: 28,
-            ),
-            unselectedIconTheme: const IconThemeData(
-              color: Colors.black,
-              size: 28,
-            ),
+            selectedIconTheme: const IconThemeData(color: Colors.black, size: 28),
+            unselectedIconTheme: const IconThemeData(color: Colors.black, size: 28),
             labelType: NavigationRailLabelType.all,
           ),
           const VerticalDivider(width: 1, thickness: 1),
