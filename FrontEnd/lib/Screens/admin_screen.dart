@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/Screens/users_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:frontend/Screens/equipos_ubicaciones_screen.dart';
 import 'mantenimientos_screen.dart';
 import 'cuadrillas_screen.dart';
@@ -13,7 +13,6 @@ class AdminScreen extends StatefulWidget {
 
 class _AdminScreenState extends State<AdminScreen> {
   int selectedIndex = 0;
-  // bool _railExtended = true; // No longer needed
 
   final List<IconData> _navIcons = [
     Icons.build,
@@ -28,14 +27,19 @@ class _AdminScreenState extends State<AdminScreen> {
     'Usuarios',
   ];
 
+  void _handleLogout() async {
+    await Supabase.instance.client.auth.signOut();
+    if (mounted) {
+      Navigator.pushReplacementNamed(context, '/login');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Color list for each index
     final List<Color> navColors = [
-      Color(0xFFFCC430), // Cuadrillas
-      Color(0xFF007934), // Equipos y Ubicaciones
-      Color(0xFF37B4E3), // Mantenimientos
-      Color.fromARGB(255, 97, 97, 97), // Usuarios
+      const Color(0xFFFCC430), // Cuadrillas
+      const Color(0xFF007934), // Equipos y Ubicaciones
+      const Color(0xFF37B4E3), // Mantenimientos
     ];
     List<Image> navIcons = [
       Image.asset('assets/images/IconMantenimientos.png'),
@@ -59,15 +63,21 @@ class _AdminScreenState extends State<AdminScreen> {
               padding: const EdgeInsets.only(top: 24.0),
               child: Column(
                 children: [
-                  navIcons.isNotEmpty
-                      ? navIcons[selectedIndex.clamp(0, navIcons.length - 1)]
-                      : Image.asset('assets/images/IconMantenimientos.png'),
-                  SizedBox(height: 8),
-                  Text(
+                  navIcons[selectedIndex],
+                  const SizedBox(height: 8),
+                  const Text(
                     'Panel',
                     style: TextStyle(color: Colors.black, fontSize: 18),
                   ),
                 ],
+              ),
+            ),
+            trailing: Padding(
+              padding: const EdgeInsets.only(bottom: 24.0),
+              child: IconButton(
+                icon: const Icon(Icons.logout, color: Colors.black, size: 28),
+                tooltip: 'Cerrar sesión',
+                onPressed: _handleLogout,
               ),
             ),
             destinations: List.generate(
@@ -75,17 +85,14 @@ class _AdminScreenState extends State<AdminScreen> {
               (i) => NavigationRailDestination(
                 icon: Icon(
                   _navIcons[i],
-                  color: i == selectedIndex ? Colors.black : Colors.black,
+                  color: Colors.black,
                 ),
                 selectedIcon: Icon(_navIcons[i], color: Colors.black),
                 label: Text(
                   _navLabels[i],
                   style: TextStyle(
                     color: Colors.black,
-                    fontWeight:
-                        i == selectedIndex
-                            ? FontWeight.bold
-                            : FontWeight.normal,
+                    fontWeight: i == selectedIndex ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
               ),
