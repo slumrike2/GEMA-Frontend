@@ -29,3 +29,4 @@ flutter:
     - assets/images/IconEquiposUbicaciones.png
     - assets/images/IconCuadrillas.png
     - assets/images/IconLogin.png
+    - .env

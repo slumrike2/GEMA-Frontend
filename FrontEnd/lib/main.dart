@@ -9,10 +9,11 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+
   // Carga las variables de entorno desde el archivo .env
   await dotenv.load(fileName: ".env");
 
-  // Inicializa Supabase usando las variables cargadas
+
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL'] ?? '',
     anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
@@ -31,6 +32,7 @@ class MainApp extends StatelessWidget {
     final bool hasSession = Supabase.instance.client.auth.currentSession != null;
 
     final initialRoute = hasSession ? AdminScreen.routeName : LoginScreen.routeName;
+
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
