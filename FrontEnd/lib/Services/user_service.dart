@@ -38,32 +38,41 @@ class UserService {
   static Future<void> create( 
   {
     required String email,
-    // required String password,
     required String role
   }) async {
-    // final uuidResponse = await signUpUser(email, password);
-    // final uuid = uuidResponse.user?.id;
-    final uuid = Uuid();
-    final randomUuid = uuid.v4();
+    // Código para generar una contraseña aleatoria de 16 carácteres
     final chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     final rand = Random.secure();
     final password = List.generate(16, (index) => chars[rand.nextInt(chars.length)]).join();
+
+    final uuidResponse = await signUpUser(email, password);
+    final uuid = uuidResponse.user?.id;
 
     final response = await http.post(
       Uri.parse(baseUrl),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'uuid': randomUuid,
+        'uuid': uuid,
         'email': email,
         'role': role,
         'password' : password
       }),
     );
 
-    if (response.statusCode == 201) {
+    if (response.statusCode == 200) {
       print('Usuario creado en backend');
     } else {
       print('Error al crear usuario en backend: ${response.body}');
+    }
+  }
+
+  // Servicio para cambiar contraseña del usuario
+  static Future<void> changeCurrentUserPassword(String newPassword) async {
+    final response = await Supabase.instance.client.auth.updateUser(
+      UserAttributes(password: newPassword)
+    );
+    if (response.user == null) {
+      throw Exception('No se pudo cambiar la contraseña del usuario.');
     }
   }
 
