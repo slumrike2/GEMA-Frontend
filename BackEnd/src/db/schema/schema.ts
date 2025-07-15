@@ -58,7 +58,7 @@ export const rolesEnum = pgEnum('roles', [
  */
 export const User = pgTable('User', {
 	uuid: uuid().primaryKey(), // Identificador único del usuario
-	name: text().notNull(), // Nombre completo del usuario
+	name: text(), // Nombre completo del usuario
 	email: text().notNull().unique(), // Email único del usuario
 	role: rolesEnum().notNull().default('user'), // Rol del usuario en el sistema
 	...timestamps // Timestamps automáticos
