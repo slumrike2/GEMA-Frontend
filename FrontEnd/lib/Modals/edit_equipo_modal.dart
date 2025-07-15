@@ -232,39 +232,34 @@ class _EditEquipoModalState extends State<EditEquipoModal> {
                 ),
                 const SizedBox(height: 16),
                             
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: _descriptionController,
-                  decoration: InputDecoration(
-                    labelText: 'Descripción (opcional)',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                    filled: true,
-                                      fillColor: Colors.orange[50],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: DropdownButtonFormField<EquipmentState>(
-                  decoration: InputDecoration(
-                    labelText: 'Estado',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                    filled: true,
-                                      fillColor: Colors.orange[50],
-                  ),
-                                    value: _state,
-                  items: EquipmentState.values
-                      .map((s) => DropdownMenuItem(
-                            value: s,
-                            child: Text(s.name.replaceAll('_', ' ')),
-                          ))
-                      .toList(),
-                  onChanged: (v) => setState(() => _state = v ?? EquipmentState.en_inventario),
-                ),
-                                ),
-                              ],
+                            TextFormField(
+                              controller: _descriptionController,
+                              decoration: InputDecoration(
+                                labelText: 'Descripción (opcional)',
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                filled: true,
+                                fillColor: Colors.orange[50],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            DropdownButtonFormField<EquipmentState>(
+                              decoration: InputDecoration(
+                                labelText: 'Estado',
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                filled: true,
+                                fillColor: Colors.orange[50],
+                              ),
+                              value: _state,
+                              items: EquipmentState.values
+                                  .map((s) => DropdownMenuItem(
+                                        value: s,
+                                        child: Text(
+                                          s.name.replaceAll('_', ' '),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ))
+                                  .toList(),
+                              onChanged: (v) => setState(() => _state = v ?? EquipmentState.en_inventario),
                             ),
                             const SizedBox(height: 24),
                             

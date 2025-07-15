@@ -1,4 +1,6 @@
-import 'package:flutter/material.dart';
+//Para Borrar
+
+/*import 'package:flutter/material.dart';
 import '../../Models/backend_types.dart';
 import '../../Services/equipment_service.dart';
 
@@ -171,3 +173,4 @@ class _CrearEquipoState extends State<CrearEquipo> {
     );
   }
 }
+*/

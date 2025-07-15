@@ -4,7 +4,7 @@ import 'package:frontend/Components/tag.dart';
 import 'package:frontend/Components/search_bar.dart';
 import 'package:frontend/Components/action_button.dart';
 import 'package:frontend/Services/equipment_service.dart';
-import 'package:frontend/Modals/change_equipment_state_modal.dart';
+//import 'package:frontend/Modals/change_equipment_state_modal.dart';
 import 'package:frontend/Modals/confirm_delete_equipment_modal.dart';
 
 class EquiposListPage extends StatefulWidget {
@@ -41,21 +41,21 @@ class EquiposListPage extends StatefulWidget {
 }
 
 class _EquiposListPageState extends State<EquiposListPage> {
-  Equipment? _changingStateEquipment;
-  bool _showChangeStateModal = false;
+  //Equipment? _changingStateEquipment;
+  //bool _showChangeStateModal = false;
 
-  // Nuevo: para eliminar
+  //Para eliminar
   Equipment? _deletingEquipment;
   bool _showDeleteModal = false;
 
-  void _onChangeEquipmentState(Equipment equipment) {
+  /*void _onChangeEquipmentState(Equipment equipment) {
     setState(() {
       _changingStateEquipment = equipment;
       _showChangeStateModal = true;
     });
-  }
+  }*/
 
-  Future<void> _handleSaveState(String newState) async {
+  /*Future<void> _handleSaveState(String newState) async {
     if (_changingStateEquipment == null) return;
     try {
       await EquipmentService.updateState(
@@ -74,7 +74,7 @@ class _EquiposListPageState extends State<EquiposListPage> {
         _changingStateEquipment = null;
       });
     }
-  }
+  }*/
 
   void _onDeleteEquipmentRequest(Equipment equipment) {
     setState(() {
@@ -429,8 +429,8 @@ class _EquiposListPageState extends State<EquiposListPage> {
                                             );
                                           }
                                           : null,
-                                  onChangeEquipmentState:
-                                      _onChangeEquipmentState,
+                                  //onChangeEquipmentState:
+                                      //_onChangeEquipmentState,
                                   buildLocationHierarchy: _buildLocationHierarchy,
                                   onDeleteRequest: _onDeleteEquipmentRequest,
                                 );
@@ -442,7 +442,7 @@ class _EquiposListPageState extends State<EquiposListPage> {
                 ],
               ),
             ),
-            if (_showChangeStateModal && _changingStateEquipment != null)
+            /*if (_showChangeStateModal && _changingStateEquipment != null)
               ChangeEquipmentStateModal(
                 currentState: _changingStateEquipment!.state?.name ?? '',
                 possibleStates:
@@ -453,7 +453,8 @@ class _EquiposListPageState extends State<EquiposListPage> {
                       _showChangeStateModal = false;
                       _changingStateEquipment = null;
                     }),
-              ),
+              ),*/
+              //Mostrar modal de eliminacion de equipos
             if (_showDeleteModal && _deletingEquipment != null)
               ConfirmDeleteEquipmentModal(
                 technicalCode: _deletingEquipment!.technicalCode,
@@ -480,7 +481,7 @@ class _EquipmentTile extends StatelessWidget {
   final VoidCallback? onAssignTechnical;
   final VoidCallback? onAssignOperational;
   final VoidCallback? onMoveEquipment; // Nuevo parámetro para mudar equipo
-  final void Function(Equipment) onChangeEquipmentState;
+  //final void Function(Equipment) onChangeEquipmentState;
   final String Function(String?) buildLocationHierarchy;
   final void Function(Equipment) onDeleteRequest;
   const _EquipmentTile({
@@ -495,8 +496,8 @@ class _EquipmentTile extends StatelessWidget {
     required this.selectedLocation,
     this.onAssignTechnical,
     this.onAssignOperational,
-    this.onMoveEquipment, // Nuevo parámetro
-    required this.onChangeEquipmentState,
+    this.onMoveEquipment,
+    //required this.onChangeEquipmentState,
     required this.buildLocationHierarchy,
     required this.onDeleteRequest,
   });

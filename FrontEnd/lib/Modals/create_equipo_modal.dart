@@ -63,9 +63,11 @@ class _CreateEquipoModalState extends State<CreateEquipoModal> {
                               children: [
                                 const Icon(Icons.precision_manufacturing, color: Colors.green, size: 28),
                                 const SizedBox(width: 10),
-                                const Text(
-                                  'Crear o Modificar Equipo',
-                                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                                Expanded(
+                                  child: const Text(
+                                    'Crear o Modificar Equipo',
+                                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                                  ),
                                 ),
                               ],
                             ),

@@ -1,4 +1,6 @@
-import 'package:flutter/material.dart';
+//Para eliminar
+
+/*import 'package:flutter/material.dart';
 
 class ChangeEquipmentStateModal extends StatefulWidget {
   final String currentState;
@@ -136,3 +138,4 @@ class _ChangeEquipmentStateModalState extends State<ChangeEquipmentStateModal> {
     );
   }
 }
+*/

@@ -170,7 +170,9 @@ class _CreateLocationTypeModalState extends State<CreateLocationTypeModal> {
                                             ),
                                           ),
                                         ),
-                                        Text(v['label']!),
+                                        Expanded(
+                                          child: Text(v['label']!),
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -307,12 +309,20 @@ class _CreateLocationTypeModalState extends State<CreateLocationTypeModal> {
                                                   'codeTemplate':
                                                       _codeTemplateController.text.trim(),
                                                 });
+                                                // Reset loading state after successful creation
+                                                if (mounted) {
+                                                  setState(() {
+                                                    _loading = false;
+                                                  });
+                                                }
                                               } catch (e) {
-                                                setState(() {
-                                                  _error =
-                                                      'Error al crear tipo de ubicación';
-                                                  _loading = false;
-                                                });
+                                                if (mounted) {
+                                                  setState(() {
+                                                    _error =
+                                                        'Error al crear tipo de ubicación';
+                                                    _loading = false;
+                                                  });
+                                                }
                                               }
                                             }
                                           },

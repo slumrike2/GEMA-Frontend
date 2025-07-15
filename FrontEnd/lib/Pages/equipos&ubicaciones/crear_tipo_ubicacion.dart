@@ -1,4 +1,6 @@
-import 'package:flutter/material.dart';
+//Para borrar
+
+/*import 'package:flutter/material.dart';
 import '../../Services/technical_location_type_service.dart';
 import '../../Models/backend_types.dart';
 
@@ -413,3 +415,4 @@ class _CrearTipoUbicacionState extends State<CrearTipoUbicacion> {
     );
   }
 }
+*/
