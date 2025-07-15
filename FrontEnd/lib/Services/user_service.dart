@@ -1,9 +1,18 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../Models/backend_types.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;  
 
 class UserService {
   static const String baseUrl = 'http://localhost:3000/api/users';
+
+  static Future<AuthResponse> signUpUser(String email, String password) async {
+    final response = await Supabase.instance.client.auth.signUp(
+      email: email,
+      password: password,
+    );
+    return response;
+  }
 
   static Future<List<User>> getAll() async {
     final response = await http.get(Uri.parse(baseUrl));
@@ -24,14 +33,30 @@ class UserService {
     }
   }
 
-  static Future<void> create(Map<String, dynamic> data) async {
+  static Future<void> create( 
+  {
+    required String name,
+    required String email,
+    required String password,
+    required String role
+  }) async {
+    final uuidResponse = await signUpUser(email, password);
+    final uuid = uuidResponse.user?.id;
     final response = await http.post(
       Uri.parse(baseUrl),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(data),
+      body: jsonEncode({
+        'uuid': uuid,
+        'name': name,
+        'email': email,
+        'role': role,
+      }),
     );
-    if (response.statusCode != 201) {
-      throw Exception('Error al crear usuario: \\${response.statusCode}');
+
+    if (response.statusCode == 201) {
+      print('Usuario creado en backend');
+    } else {
+      print('Error al crear usuario en backend: ${response.body}');
     }
   }
 
