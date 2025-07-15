@@ -74,7 +74,7 @@ router.get('/:uuid', userController.getByPk);
  * Respuesta de error (500):
  * - Mensaje de error si hay problemas con la base de datos
  */
-router.post('/', userController.insert);
+router.post('/', userController.createWithEmail);
 
 /**
  * PUT /api/users/:uuid
