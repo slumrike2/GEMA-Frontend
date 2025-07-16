@@ -46,7 +46,7 @@ export const UserSchema = z.object({
 	updatedAt: z.date().optional(),
 	createdAt: z.date().optional(),
 	deletedAt: z.date().optional()
-}).partial();
+});
 
 // Esquema comentado para especialidades de técnicos (reemplazado por enum)
 // export const TechnicianSpecialitiesSchema = z.object({
