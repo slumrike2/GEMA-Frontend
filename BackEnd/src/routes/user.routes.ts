@@ -100,7 +100,7 @@ router.post('/', userController.createWithEmail);
  * Respuesta de error (500):
  * - Mensaje de error si hay problemas con la base de datos
  */
-router.put('/:uuid', userController.update);
+router.put('/:uuid', userController.updateName);
 
 /**
  * DELETE /api/users/:uuid

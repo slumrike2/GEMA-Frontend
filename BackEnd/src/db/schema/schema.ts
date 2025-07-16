@@ -364,6 +364,10 @@ export const Report = pgTable('Report', {
 	state: reportStateEnum().notNull().default('pending'), // Estado actual del reporte
 	type: reportTypeEnum().notNull().default('preventive'), // Tipo de reporte
 	notes: text(), // Notas adicionales opcionales
+	technicalTeamId: serial().references(() => TechnicalTeam.id, {
+		onDelete: 'set null',
+		onUpdate: 'cascade'
+	}),
 	...timestamps // Timestamps automáticos
 });
 

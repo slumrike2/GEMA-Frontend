@@ -22,6 +22,7 @@ import { UserSchema } from '../db/schema/validationSchema';
 import { Request, Response } from 'express';
 import { db } from '../db';
 import { sendWelcomeEmail } from '../utils/mailer';
+import { eq } from 'drizzle-orm';
 
 /**
  * Controlador de usuarios creado usando el factory CRUD
@@ -65,6 +66,37 @@ export const userController = {
 			error: 'Error creating new user'
 			details: error.message
 		}
-	}
+	},
+
+	async updateName(req: Request, res: Response) {
+		const { uuid } = req.params;
+		const { name } = req.body;
+
+		if (!name) {
+			res.status(400).json({ error: 'El campo name es requerido.' });
+		}
+
+		try {
+			// Validar que name sea string y no vacío
+			if (typeof name !== 'string' || name.trim().length === 0) {
+				res.status(400).json({ error: 'El campo name debe ser un string no vacío.' });
+			}
+
+			const result = await db
+				.update(User)
+				.set({ name })
+				.where(eq(User.uuid, uuid))
+				.returning();
+
+			if (!result[0]) {
+				res.status(404).json({ error: 'Usuario no encontrado.' });
+			}
+
+			res.status(200).json(result[0]);
+		} catch (error) {
+			console.error('[User] updateName error:', error);
+			res.status(500).json({ error: 'Error actualizando el nombre del usuario', details: error.message });
+		}
+	},
 }
 
