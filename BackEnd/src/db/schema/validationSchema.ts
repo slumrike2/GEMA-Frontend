@@ -107,6 +107,7 @@ export const TechnicalTeamSchema = z.object({
 	id: z.number().int().optional(),
 	name: z.string().min(1),
 	speciality: technicianSpecialityEnum.optional(),
+	leaderId: z.string().uuid(),
 	updatedAt: z.date().optional(),
 	createdAt: z.date().optional(),
 	deletedAt: z.date().optional()
