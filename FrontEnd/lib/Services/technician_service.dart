@@ -5,11 +5,19 @@ class TechnicianService {
   static const String baseUrl = 'http://localhost:3000/api/technicians';
 
   // Obtener todos los técnicos
-  static Future<List<dynamic>> getAll() async {
+  static Future<List<Map<String, dynamic>>> getAll() async {
     try {
       final response = await http.get(Uri.parse(baseUrl));
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        final decoded = jsonDecode(response.body);
+        if (decoded is List) {
+          // Si es una lista directa
+          return List<Map<String, dynamic>>.from(decoded);
+        } else if (decoded is Map && decoded.containsKey('technicians')) {
+          // Si viene como { technicians: [...] }
+          return List<Map<String, dynamic>>.from(decoded['technicians']);
+        }
+        return [];
       } else {
         throw Exception('Error al obtener técnicos: ${response.statusCode} - ${response.body}');
       }
@@ -23,7 +31,7 @@ class TechnicianService {
     try {
       final response = await http.get(Uri.parse('$baseUrl/$uuid'));
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        return jsonDecode(response.body) as Map<String, dynamic>;
       } else {
         throw Exception('Error al obtener el técnico: ${response.statusCode} - ${response.body}');
       }
@@ -32,15 +40,18 @@ class TechnicianService {
     }
   }
 
-  // Crear un nuevo técnico
-  static Future<void> create(Map<String, dynamic> data) async {
+  // Crear un nuevo técnico y retorna el objeto creado
+  static Future<Map<String, dynamic>> create(Map<String, dynamic> data) async {
     try {
       final response = await http.post(
         Uri.parse(baseUrl),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(data),
       );
-      if (response.statusCode != 201) {
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        // Retorna el técnico creado para feedback inmediato
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
         throw Exception('Error al crear el técnico: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
@@ -77,11 +88,17 @@ class TechnicianService {
   }
 
   // Obtener técnicos por equipo técnico
-  static Future<List<dynamic>> getByTechnicalTeam(String technicalTeamId) async {
+  static Future<List<Map<String, dynamic>>> getByTechnicalTeam(String technicalTeamId) async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/technical-team/$technicalTeamId'));
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        final decoded = jsonDecode(response.body);
+        if (decoded is List) {
+          return List<Map<String, dynamic>>.from(decoded);
+        } else if (decoded is Map && decoded.containsKey('technicians')) {
+          return List<Map<String, dynamic>>.from(decoded['technicians']);
+        }
+        return [];
       } else {
         throw Exception('Error al obtener técnicos por equipo técnico: ${response.statusCode} - ${response.body}');
       }

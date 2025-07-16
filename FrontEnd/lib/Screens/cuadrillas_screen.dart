@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/Pages/cuadrillas/cuadrillas_inicio_page.dart';
-import '../Pages/cuadrillas/crear_modificar_cuadrilla_page.dart';
-import '../Pages/cuadrillas/crear_modificar_persona_page.dart';
+import 'package:frontend/Pages/cuadrillas/crear_modificar_cuadrilla_page.dart';
+import 'package:frontend/Pages/cuadrillas/crear_modificar_persona_page.dart';
+import 'package:frontend/Services/technical_team_service.dart';
+import 'package:frontend/Models/backend_types.dart';
 
 class CuadrillasScreen extends StatefulWidget {
   const CuadrillasScreen({super.key});
@@ -11,73 +13,75 @@ class CuadrillasScreen extends StatefulWidget {
 }
 
 class _CuadrillasScreenState extends State<CuadrillasScreen> {
-  final TextEditingController _searchController = TextEditingController();
-  String _searchType = 'Líder';
-  final List<String> _searchTypes = ['Líder', 'Especialidad', 'Nombre'];
+  List<TechnicalTeam> _cuadrillas = [];
+  bool _loading = false;
+  int _pantalla = 0; // 0: inicio, 1: crear/modificar persona
 
-  List<Map<String, dynamic>> cuadrillas = [
-    {
-      "nombre": "Cuadrilla 1: Arturo Márquez",
-      "especialidad": "Electricidad",
-      "miembros": [
-        {"nombre": "Juan Pablo Gómez", "ci": "20134586"},
-        {"nombre": "María Fernanda Fermín", "ci": "29315985"},
-        {"nombre": "Pedro Manuel Guzmán", "ci": "19874625"},
-      ],
-    },
-    {
-      "nombre": "Cuadrilla 2: Arturo Martinez",
-      "especialidad": "Aseo",
-      "miembros": [
-        {"nombre": "Hilda Martinez", "ci": "20134386"},
-        {"nombre": "Julio Millán", "ci": "29325985"},
-        {"nombre": "Miguel Silva", "ci": "18874625"},
-      ],
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadCuadrillas();
+  }
 
-  int _pantalla =
-      0; // 0: inicio, 1: crear cuadrilla, 2: crear/modificar persona, 3: modificar cuadrilla
-  Map<String, dynamic>? _cuadrillaSeleccionada;
+  Future<void> _loadCuadrillas() async {
+    setState(() => _loading = true);
+    try {
+      final cuadrillas = await TechnicalTeamService.getAll();
+      setState(() {
+        _cuadrillas = cuadrillas;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error cargando cuadrillas: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
-  //Navegación y acciones
-
-  void _goToInicio() {
+  void _refreshAndGoToInicio() async {
+    await _loadCuadrillas();
     setState(() {
       _pantalla = 0;
-      _cuadrillaSeleccionada = null;
     });
   }
 
-  void _onCrearCuadrilla() {
-    setState(() {
-      _pantalla = 1;
-      _cuadrillaSeleccionada = null;
-    });
-  }
-
-  void _onCrearOModificarPersona() {
-    setState(() {
-      _pantalla = 2;
-    });
-  }
-
-  void _onModificar(int i) {
-    setState(() {
-      _pantalla = 3;
-      _cuadrillaSeleccionada = cuadrillas[i];
-    });
-  }
-
-  void _onVerMantenimientos(int i) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Ver mantenimientos de ${cuadrillas[i]["nombre"]}'),
+  void _onCrearCuadrilla() async {
+    await showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        child: CrearModificarCuadrillaPage(
+          onSuccess: _refreshAndGoToInicio,
+        ),
       ),
     );
   }
 
-  // Navegación y acciones
+  void _onCrearOModificarPersona() {
+    setState(() {
+      _pantalla = 1;
+    });
+  }
+
+  void _onModificar(TechnicalTeam team) async {
+    await showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        child: CrearModificarCuadrillaPage(
+          cuadrillaData: team.toJson(), // tu modelo debe tener toJson()
+          onSuccess: _refreshAndGoToInicio,
+        ),
+      ),
+    );
+  }
+
+  void _onVerMantenimientos(TechnicalTeam team) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Ver mantenimientos de ${team.name}')),
+    );
+  }
 
   Widget _buildBackButton() {
     return Align(
@@ -85,7 +89,7 @@ class _CuadrillasScreenState extends State<CuadrillasScreen> {
       child: Padding(
         padding: const EdgeInsets.only(left: 24, top: 18, bottom: 8),
         child: TextButton.icon(
-          onPressed: _goToInicio,
+          onPressed: _refreshAndGoToInicio,
           icon: const Icon(Icons.arrow_back),
           label: const Text('Volver'),
         ),
@@ -100,44 +104,24 @@ class _CuadrillasScreenState extends State<CuadrillasScreen> {
       child = Column(
         children: [
           _buildBackButton(),
-          Expanded(child: CrearModificarCuadrillaPage()),
-        ],
-      );
-    } else if (_pantalla == 2) {
-      child = Column(
-        children: [
-          _buildBackButton(),
-          Expanded(child: CrearModificarPersonaPage()),
-        ],
-      );
-    } else if (_pantalla == 3) {
-      child = Column(
-        children: [
-          _buildBackButton(),
-          Expanded(
-            child: CrearModificarCuadrillaPage(
-              cuadrillaData: _cuadrillaSeleccionada,
-            ),
-          ),
+          const Expanded(child: CrearModificarPersonaPage()),
         ],
       );
     } else {
       child = CuadrillasInicioPage(
-        searchController: _searchController,
-        searchType: _searchType,
-        searchTypes: _searchTypes,
-        cuadrillas: cuadrillas,
+        cuadrillas: _cuadrillas,
         onCrearCuadrilla: _onCrearCuadrilla,
         onCrearOModificarPersona: _onCrearOModificarPersona,
-        onVerMantenimientos: _onVerMantenimientos,
         onModificar: _onModificar,
+        onVerMantenimientos: _onVerMantenimientos,
       );
     }
 
-    return Container(
-      color: const Color(0xFFD6F3FB),
-      width: double.infinity,
-      child: child,
+    return Scaffold(
+      backgroundColor: const Color(0xFFD6F3FB),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : SafeArea(child: child),
     );
   }
 }

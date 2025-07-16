@@ -1,20 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/Models/backend_types.dart';
 
 class CuadrillasInicioPage extends StatelessWidget {
-  final TextEditingController searchController;
-  final String searchType;
-  final List<String> searchTypes;
-  final List<Map<String, dynamic>> cuadrillas;
-  final void Function() onCrearCuadrilla;
-  final void Function() onCrearOModificarPersona;
-  final void Function(int) onVerMantenimientos;
-  final void Function(int) onModificar;
+  final List<TechnicalTeam> cuadrillas;
+  final VoidCallback onCrearCuadrilla;
+  final VoidCallback onCrearOModificarPersona;
+  final void Function(TechnicalTeam) onVerMantenimientos;
+  final void Function(TechnicalTeam) onModificar;
 
   const CuadrillasInicioPage({
     super.key,
-    required this.searchController,
-    required this.searchType,
-    required this.searchTypes,
     required this.cuadrillas,
     required this.onCrearCuadrilla,
     required this.onCrearOModificarPersona,
@@ -33,11 +28,11 @@ class CuadrillasInicioPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Título
-              Padding(
-                padding: const EdgeInsets.fromLTRB(35, 8, 0, 12),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(35, 8, 0, 12),
                 child: Text(
                   'Cuadrillas',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 48,
                     fontWeight: FontWeight.w400,
                     color: Colors.black,
@@ -95,70 +90,9 @@ class CuadrillasInicioPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 22),
-              // Buscador
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 36),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Buscar...',
-                        style: TextStyle(fontSize: 18, color: Colors.black87),
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          const Text('Por ', style: TextStyle(fontSize: 16)),
-                          DropdownButton<String>(
-                            value: searchType,
-                            borderRadius: BorderRadius.circular(8),
-                            items: searchTypes
-                                .map((tipo) => DropdownMenuItem(
-                                      value: tipo,
-                                      child: Text(tipo),
-                                    ))
-                                .toList(),
-                            onChanged: null, // El control lo tiene el padre
-                          ),
-                          const Text(' : ', style: TextStyle(fontSize: 16)),
-                          Expanded(
-                            child: TextField(
-                              controller: searchController,
-                              style: const TextStyle(fontSize: 16),
-                              decoration: InputDecoration(
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 3,
-                                  horizontal: 12,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: Colors.teal,
-                                  ),
-                                  borderRadius: BorderRadius.circular(3.5),
-                                ),
-                              ),
-                              enabled: false, // El control lo tiene el padre
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 26),
+
               // Cuadrillas
-              ...List.generate(cuadrillas.length, (i) {
-                final cuadrilla = cuadrillas[i];
+              ...cuadrillas.map((cuadrilla) {
                 return Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 30,
@@ -188,7 +122,7 @@ class CuadrillasInicioPage extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: Text(
-                                  cuadrilla["nombre"],
+                                  cuadrilla.name ?? 'Sin nombre',
                                   style: const TextStyle(
                                     fontSize: 20,
                                     color: Color(0xFF22356A),
@@ -196,9 +130,9 @@ class CuadrillasInicioPage extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              if (cuadrilla["especialidad"] != null)
+                              if (cuadrilla.speciality != null)
                                 Text(
-                                  "Especialidad: ${cuadrilla["especialidad"]}",
+                                  "Especialidad: ${cuadrilla.speciality}",
                                   style: const TextStyle(
                                     fontSize: 16,
                                     color: Color(0xFF22356A),
@@ -207,51 +141,15 @@ class CuadrillasInicioPage extends StatelessWidget {
                             ],
                           ),
                         ),
-                        // Miembros
-                        ...cuadrilla["miembros"].map<Widget>((m) {
-                          return Container(
-                            decoration: const BoxDecoration(
-                              border: Border(
-                                bottom: BorderSide(
-                                  color: Color(0xFF26384D),
-                                  width: 0.5,
-                                ),
-                              ),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 6,
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    m["nombre"],
-                                    style: const TextStyle(
-                                      fontSize: 17,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
-                                if (m["ci"] != null)
-                                  Text(
-                                    "CI: ${m["ci"]}",
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                        const SizedBox(height: 20),
+                        // (Opcional) Puedes mostrar miembros si tu modelo los incluye
+                        // const SizedBox(height: 10),
+
                         // Botones de acción
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             ElevatedButton(
-                              onPressed: () => onVerMantenimientos(i),
+                              onPressed: () => onVerMantenimientos(cuadrilla),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF2293B4),
                                 foregroundColor: Colors.white,
@@ -268,7 +166,7 @@ class CuadrillasInicioPage extends StatelessWidget {
                             ),
                             const SizedBox(width: 22),
                             ElevatedButton(
-                              onPressed: () => onModificar(i),
+                              onPressed: () => onModificar(cuadrilla),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF2293B4),
                                 foregroundColor: Colors.white,
@@ -290,7 +188,8 @@ class CuadrillasInicioPage extends StatelessWidget {
                     ),
                   ),
                 );
-              }),
+              }).toList(),
+
               const SizedBox(height: 30),
             ],
           ),

@@ -1,78 +1,87 @@
 import 'package:flutter/material.dart';
 import '../../Services/technical_team_service.dart';
 import '../../Services/technician_service.dart';
-import '../../Models/backend_types.dart';
+import '../../Services/technician_speciality_service.dart';
+import '../../Modals/CreateTechnicianModal.dart';
+import '../../Modals/create_speciality_modal.dart';
 
 class CrearModificarCuadrillaPage extends StatefulWidget {
   final Map<String, dynamic>? cuadrillaData;
-  const CrearModificarCuadrillaPage({super.key, this.cuadrillaData});
+  final VoidCallback? onSuccess;
+
+  const CrearModificarCuadrillaPage({
+    super.key,
+    this.cuadrillaData,
+    this.onSuccess,
+  });
 
   @override
-  State<CrearModificarCuadrillaPage> createState() =>
-      _CrearModificarCuadrillaPageState();
+  State<CrearModificarCuadrillaPage> createState() => _CrearModificarCuadrillaPageState();
 }
 
-class _CrearModificarCuadrillaPageState
-    extends State<CrearModificarCuadrillaPage> {
-  late TextEditingController _liderController;
-  late TextEditingController _especialidadController;
+class _CrearModificarCuadrillaPageState extends State<CrearModificarCuadrillaPage> {
+  late TextEditingController _nameController;
   List<Map<String, String>> miembros = [];
   List<TextEditingController> _nombreControllers = [];
   List<TextEditingController> _ciControllers = [];
 
-  // Listas para cargar datos desde la API
-  List<TechnicalTeam> technicalTeams = [];
-  List<dynamic> technicians = [];
+  List<Map<String, dynamic>> technicians = [];
+  List<String> especialidades = [];
+  String? _especialidadSeleccionada;
+  String? _liderSeleccionadoUuid;
+
   bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _liderController = TextEditingController(
-      text: widget.cuadrillaData?["nombre"]?.split(": ").last ?? "",
+    _nameController = TextEditingController(
+      text: widget.cuadrillaData?["name"] ?? "",
     );
-    _especialidadController = TextEditingController(
-      text: widget.cuadrillaData?["especialidad"] ?? "",
-    );
+    _especialidadSeleccionada = widget.cuadrillaData?["speciality"];
+    _liderSeleccionadoUuid = widget.cuadrillaData?["leader"];
 
-    // Inicializar miembros vacíos o con datos existentes
-    if (widget.cuadrillaData?["miembros"] != null) {
+    if (widget.cuadrillaData?["members"] != null) {
       miembros = List<Map<String, String>>.from(
-        widget.cuadrillaData!["miembros"],
+        widget.cuadrillaData!["members"].map((m) => {
+          "nombre": m["nombre"] ?? m["name"] ?? "",
+          "ci": m["ci"] ?? m["personalId"] ?? "",
+        }),
       );
     } else {
       miembros = [];
     }
-
     _initControllers();
     _loadDataFromAPI();
   }
 
-  // Cargar datos desde la API
   Future<void> _loadDataFromAPI() async {
-    setState(() {
-      isLoading = true;
-    });
-
+    setState(() { isLoading = true; });
     try {
-      // Cargar equipos técnicos y técnicos en paralelo
-      final teamsFuture = TechnicalTeamService.getAll();
       final techniciansFuture = TechnicianService.getAll();
-
-      final results = await Future.wait([teamsFuture, techniciansFuture]);
-
+      final especialidadesFuture = TechnicianSpecialityService.getAll();
+      final results = await Future.wait([techniciansFuture, especialidadesFuture]);
+      final techs = List<Map<String, dynamic>>.from(results[0]);
+      final especs = List<String>.from(results[1]);
       setState(() {
-        technicalTeams = results[0] as List<TechnicalTeam>;
-        technicians = results[1];
+        technicians = techs;
+        especialidades = especs;
+        if (!especialidades.contains(_especialidadSeleccionada)) {
+          _especialidadSeleccionada = null;
+        }
+        if (_liderSeleccionadoUuid != null &&
+            !technicians.any((t) => t["uuid"] == _liderSeleccionadoUuid)) {
+          _liderSeleccionadoUuid = null;
+        }
         isLoading = false;
       });
     } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error al cargar datos: $e')));
+      setState(() { isLoading = false; });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al cargar datos: $e')),
+        );
+      }
     }
   }
 
@@ -104,127 +113,160 @@ class _CrearModificarCuadrillaPageState
   }
 
   Future<void> _onGuardar() async {
-    if (_liderController.text.isEmpty || _especialidadController.text.isEmpty) {
+    if (_nameController.text.isEmpty ||
+        _especialidadSeleccionada == null ||
+        _liderSeleccionadoUuid == null ||
+        especialidades.isEmpty ||
+        technicians.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor complete todos los campos requeridos'),
-        ),
+        const SnackBar(content: Text('Complete todos los campos y asegúrese de que existan técnicos y especialidades')),
       );
       return;
     }
 
-    setState(() {
-      isLoading = true;
-    });
+    setState(() { isLoading = true; });
 
     try {
-      // Preparar datos de la cuadrilla
-      final crewData = {
-        'leader': _liderController.text,
-        'speciality': _especialidadController.text,
-        'members':
-            miembros
-                .where(
-                  (m) =>
-                      m['nombre']?.isNotEmpty == true &&
-                      m['ci']?.isNotEmpty == true,
-                )
-                .toList(),
+      final formattedMembers = List.generate(miembros.length, (i) => {
+        "name": _nombreControllers[i].text.trim(),
+        "personalId": _ciControllers[i].text.trim(),
+      }).where((m) => m["name"]!.isNotEmpty && m["personalId"]!.isNotEmpty).toList();
+
+      final teamData = {
+        "name": _nameController.text.trim(),
+        "speciality": _especialidadSeleccionada,
+        "leader": _liderSeleccionadoUuid,
+        "members": formattedMembers,
       };
 
       if (widget.cuadrillaData?['id'] != null) {
-        // Actualizar equipo técnico existente
-        await TechnicalTeamService.update(
-          widget.cuadrillaData!['id'],
-          crewData,
-        );
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Equipo técnico actualizado exitosamente'),
-          ),
-        );
+        await TechnicalTeamService.update(widget.cuadrillaData!['id'], teamData);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Equipo técnico actualizado exitosamente')),
+          );
+        }
       } else {
-        // Crear nuevo equipo técnico
-        await TechnicalTeamService.create(crewData);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Equipo técnico creado exitosamente')),
-        );
+        await TechnicalTeamService.create(teamData);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Equipo técnico creado exitosamente')),
+          );
+        }
       }
 
-      // Regresar a la página anterior
-      Navigator.of(context).pop();
+      widget.onSuccess?.call();
+      if (mounted) Navigator.of(context).pop();
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     } finally {
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) setState(() { isLoading = false; });
     }
   }
 
   Future<void> _onEliminar() async {
     if (widget.cuadrillaData?['id'] == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No se puede eliminar una cuadrilla que no existe'),
-        ),
+        const SnackBar(content: Text('No se puede eliminar una cuadrilla que no existe')),
       );
       return;
     }
-
-    // Mostrar diálogo de confirmación
     final confirm = await showDialog<bool>(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Confirmar eliminación'),
-            content: const Text(
-              '¿Está seguro de que desea eliminar esta cuadrilla?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancelar'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Eliminar'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar eliminación'),
+        content: const Text('¿Está seguro de que desea eliminar esta cuadrilla?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
           ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
     );
 
     if (confirm == true) {
-      setState(() {
-        isLoading = true;
-      });
-
+      setState(() { isLoading = true; });
       try {
         await TechnicalTeamService.delete(widget.cuadrillaData!['id']);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Equipo técnico eliminado exitosamente'),
-          ),
-        );
-        Navigator.of(context).pop();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Equipo técnico eliminado exitosamente')),
+          );
+          widget.onSuccess?.call();
+          Navigator.of(context).pop();
+        }
       } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error al eliminar: $e')));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error al eliminar: $e')),
+          );
+        }
       } finally {
-        setState(() {
-          isLoading = false;
-        });
+        if (mounted) setState(() { isLoading = false; });
       }
+    }
+  }
+
+  // ------------ MODALES DE CREACIÓN ------------
+  Future<void> _openCrearTecnicoModal() async {
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => CreateTechnicianModal(
+        onCreate: (data) async {
+          try {
+            await TechnicianService.create(data);
+            Navigator.of(context).pop(); // No necesitas devolver nada, solo cerrar
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error al crear técnico: $e')),
+            );
+          }
+        },
+        onCancel: () => Navigator.of(context).pop(),
+      ),
+    );
+    if (mounted) {
+      await _loadDataFromAPI();
+    }
+  }
+
+  Future<void> _openCrearEspecialidadModal() async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => CreateSpecialityModal(
+        onCreate: (especialidad) async {
+          try {
+            await TechnicianSpecialityService.create(especialidad);
+            Navigator.of(context).pop(especialidad);
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error al crear especialidad: $e')),
+            );
+          }
+        },
+        onCancel: () => Navigator.of(context).pop(),
+      ),
+    );
+    if (result != null && mounted) {
+      await _loadDataFromAPI();
+      setState(() {
+        _especialidadSeleccionada = result;
+      });
     }
   }
 
   @override
   void dispose() {
-    _liderController.dispose();
-    _especialidadController.dispose();
+    _nameController.dispose();
     for (var c in _nombreControllers) {
       c.dispose();
     }
@@ -239,7 +281,6 @@ class _CrearModificarCuadrillaPageState
     if (isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 32),
@@ -264,46 +305,8 @@ class _CrearModificarCuadrillaPageState
               ),
             ),
             const SizedBox(height: 32),
-            // Campo líder
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
-              margin: const EdgeInsets.only(bottom: 30),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(13),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Líder del Equipo Técnico",
-                          style: TextStyle(fontSize: 15),
-                        ),
-                        const SizedBox(height: 5),
-                        TextField(
-                          controller: _liderController,
-                          style: const TextStyle(fontSize: 17),
-                          decoration: InputDecoration(
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 8,
-                              horizontal: 9,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                ],
-              ),
-            ),
-            // Campo especialidad
+
+            // Campo Nombre
             Container(
               padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
               margin: const EdgeInsets.only(bottom: 30),
@@ -314,10 +317,10 @@ class _CrearModificarCuadrillaPageState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Especialidad", style: TextStyle(fontSize: 15)),
+                  const Text("Nombre del equipo técnico", style: TextStyle(fontSize: 15)),
                   const SizedBox(height: 5),
                   TextField(
-                    controller: _especialidadController,
+                    controller: _nameController,
                     style: const TextStyle(fontSize: 17),
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.symmetric(
@@ -332,6 +335,143 @@ class _CrearModificarCuadrillaPageState
                 ],
               ),
             ),
+
+            // Campo Especialidad reforzado con modal
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
+              margin: const EdgeInsets.only(bottom: 30),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(13),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text("Especialidad", style: TextStyle(fontSize: 15)),
+                  const SizedBox(height: 5),
+                  DropdownButtonFormField<String>(
+                    value: especialidades.contains(_especialidadSeleccionada)
+                        ? _especialidadSeleccionada
+                        : null,
+                    items: especialidades
+                        .map<DropdownMenuItem<String>>(
+                          (e) => DropdownMenuItem(
+                            value: e,
+                            child: Text(e),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: especialidades.isEmpty
+                        ? null
+                        : (v) => setState(() => _especialidadSeleccionada = v),
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 9,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                  if (especialidades.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Debe crear especialidades antes de poder asignar una.',
+                            style: TextStyle(color: Colors.red, fontSize: 14),
+                          ),
+                          const SizedBox(height: 8),
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.add),
+                            label: const Text('Crear Especialidad'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.deepPurple,
+                              foregroundColor: Colors.white,
+                              minimumSize: const Size(180, 40),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8)),
+                            ),
+                            onPressed: _openCrearEspecialidadModal,
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+
+            // Campo Líder reforzado con modal
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
+              margin: const EdgeInsets.only(bottom: 30),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(13),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text("Líder del Equipo Técnico", style: TextStyle(fontSize: 15)),
+                  const SizedBox(height: 5),
+                  DropdownButtonFormField<String>(
+                    value: technicians.any((t) => t["uuid"] == _liderSeleccionadoUuid)
+                        ? _liderSeleccionadoUuid
+                        : null,
+                    items: technicians
+                        .map<DropdownMenuItem<String>>(
+                          (t) => DropdownMenuItem<String>(
+                            value: t["uuid"] as String,
+                            child: Text(t["name"] ?? t["nombre"] ?? 'Sin nombre'),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: technicians.isEmpty
+                        ? null
+                        : (v) => setState(() => _liderSeleccionadoUuid = v),
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 9,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                  if (technicians.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Debe crear técnicos antes de poder asignar un líder.',
+                            style: TextStyle(color: Colors.red, fontSize: 14),
+                          ),
+                          const SizedBox(height: 8),
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.person_add_alt),
+                            label: const Text('Registrar Técnico'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              foregroundColor: Colors.white,
+                              minimumSize: const Size(180, 40),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8)),
+                            ),
+                            onPressed: _openCrearTecnicoModal,
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+
             // Miembros de la cuadrilla
             Container(
               padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
@@ -343,10 +483,7 @@ class _CrearModificarCuadrillaPageState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    "Miembros del Equipo Técnico",
-                    style: TextStyle(fontSize: 20),
-                  ),
+                  const Text("Miembros del Equipo Técnico", style: TextStyle(fontSize: 20)),
                   const SizedBox(height: 8),
                   ...List.generate(miembros.length, (i) {
                     return Padding(
@@ -360,6 +497,7 @@ class _CrearModificarCuadrillaPageState
                               onChanged: (val) => miembros[i]["nombre"] = val,
                               style: const TextStyle(fontSize: 15),
                               decoration: InputDecoration(
+                                hintText: "Nombre",
                                 contentPadding: const EdgeInsets.symmetric(
                                   vertical: 4,
                                   horizontal: 8,
@@ -391,10 +529,7 @@ class _CrearModificarCuadrillaPageState
                           ),
                           const SizedBox(width: 7),
                           IconButton(
-                            icon: const Icon(
-                              Icons.delete,
-                              color: Color(0xFFFA5242),
-                            ),
+                            icon: const Icon(Icons.delete, color: Color(0xFFFA5242)),
                             onPressed: () => _onEliminarMiembro(i),
                             tooltip: 'Eliminar miembro',
                           ),
@@ -404,11 +539,7 @@ class _CrearModificarCuadrillaPageState
                   }),
                   Center(
                     child: IconButton(
-                      icon: const Icon(
-                        Icons.add_circle_outline,
-                        color: Color(0xFF2293B4),
-                        size: 28,
-                      ),
+                      icon: const Icon(Icons.add_circle_outline, color: Color(0xFF2293B4), size: 28),
                       onPressed: _onAgregarMiembro,
                       tooltip: 'Agregar miembro',
                     ),
@@ -416,6 +547,7 @@ class _CrearModificarCuadrillaPageState
                 ],
               ),
             ),
+
             // Botones
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -426,44 +558,36 @@ class _CrearModificarCuadrillaPageState
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFF5443),
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 10,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(7),
                       ),
                     ),
                     child: const Text('Eliminar'),
                   ),
-                if (widget.cuadrillaData?['id'] != null)
-                  const SizedBox(width: 20),
+                if (widget.cuadrillaData?['id'] != null) const SizedBox(width: 20),
                 ElevatedButton(
-                  onPressed: isLoading ? null : _onGuardar,
+                  onPressed: (isLoading || technicians.isEmpty || especialidades.isEmpty)
+                      ? null
+                      : _onGuardar,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2293B4),
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 10,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(7),
                     ),
                   ),
-                  child:
-                      isLoading
-                          ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
-                            ),
-                          )
-                          : const Text('Guardar'),
+                  child: isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text('Guardar'),
                 ),
               ],
             ),

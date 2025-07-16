@@ -64,10 +64,13 @@ export const UserSchema = z.object({
  * - Electronica: Especialidad en trabajos electrónicos
  */
 export const technicianSpecialityEnum = z.enum([
-	'Electricista',
-	'Mecanica',
-	'Logistica',
-	'Electronica'
+	'Electricidad',
+	'Refrigeracion',
+	'Iluminacion',
+	'Pintura',
+	'Protocolo',
+	'IT'
+
 ]);
 
 /**
