@@ -7,6 +7,7 @@ import 'cuadrillas_screen.dart';
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
   static const String routeName = '/admin';
+
   @override
   State<AdminScreen> createState() => _AdminScreenState();
 }
@@ -14,8 +15,26 @@ class AdminScreen extends StatefulWidget {
 class _AdminScreenState extends State<AdminScreen> {
   int selectedIndex = 0;
 
-  final List<IconData> _navIcons = [Icons.build, Icons.devices, Icons.group];
-  final List<String> _navLabels = [
+  // Cambia el orden si quieres que el color coincida con el orden de las pantallas
+  final List<Color> navColors = [
+    const Color(0xFF37B4E3), // Mantenimientos
+    const Color(0xFF007934), // Equipos y Ubicaciones
+    const Color(0xFFFCC430), // Cuadrillas
+  ];
+
+  final List<Image> navImages = [
+    Image.asset('assets/images/IconMantenimientos.png'),
+    Image.asset('assets/images/IconEquiposUbicaciones.png'),
+    Image.asset('assets/images/IconCuadrillas.png'),
+  ];
+
+  final List<IconData> navIcons = [
+    Icons.build,
+    Icons.devices,
+    Icons.group,
+  ];
+
+  final List<String> navLabels = [
     'Mantenimientos',
     'Equipos y Ubicaciones',
     'Cuadrillas',
@@ -30,17 +49,6 @@ class _AdminScreenState extends State<AdminScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Color> navColors = [
-      const Color(0xFFFCC430), // Cuadrillas
-      const Color(0xFF007934), // Equipos y Ubicaciones
-      const Color(0xFF37B4E3), // Mantenimientos
-    ];
-    List<Image> navIcons = [
-      Image.asset('assets/images/IconMantenimientos.png'),
-      Image.asset('assets/images/IconEquiposUbicaciones.png'),
-      Image.asset('assets/images/IconCuadrillas.png'),
-    ];
-
     return Scaffold(
       body: Row(
         children: [
@@ -57,7 +65,10 @@ class _AdminScreenState extends State<AdminScreen> {
               padding: const EdgeInsets.only(top: 24.0),
               child: Column(
                 children: [
-                  navIcons[selectedIndex],
+                  SizedBox(
+                    height: 64,
+                    child: navImages[selectedIndex],
+                  ),
                   const SizedBox(height: 8),
                   const Text(
                     'Panel',
@@ -75,15 +86,12 @@ class _AdminScreenState extends State<AdminScreen> {
               ),
             ),
             destinations: List.generate(
-              _navIcons.length,
+              navIcons.length,
               (i) => NavigationRailDestination(
-                icon: Icon(
-                  _navIcons[i],
-                  color: Colors.black,
-                ),
-                selectedIcon: Icon(_navIcons[i], color: Colors.black),
+                icon: Icon(navIcons[i], color: Colors.black),
+                selectedIcon: Icon(navIcons[i], color: Colors.black),
                 label: Text(
-                  _navLabels[i],
+                  navLabels[i],
                   style: TextStyle(
                     color: Colors.black,
                     fontWeight: i == selectedIndex ? FontWeight.bold : FontWeight.normal,

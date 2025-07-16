@@ -38,14 +38,14 @@ class _CrearModificarCuadrillaPageState extends State<CrearModificarCuadrillaPag
     _nameController = TextEditingController(
       text: widget.cuadrillaData?["name"] ?? "",
     );
-    _especialidadSeleccionada = widget.cuadrillaData?["speciality"];
-    _liderSeleccionadoUuid = widget.cuadrillaData?["leader"];
+    _especialidadSeleccionada = widget.cuadrillaData?["speciality"]?.toString();
+    _liderSeleccionadoUuid = widget.cuadrillaData?["leader"]?.toString();
 
     if (widget.cuadrillaData?["members"] != null) {
       miembros = List<Map<String, String>>.from(
         widget.cuadrillaData!["members"].map((m) => {
-          "nombre": m["nombre"] ?? m["name"] ?? "",
-          "ci": m["ci"] ?? m["personalId"] ?? "",
+          "nombre": m["nombre"]?.toString() ?? m["name"]?.toString() ?? "",
+          "ci": m["ci"]?.toString() ?? m["personalId"]?.toString() ?? "",
         }),
       );
     } else {
@@ -63,6 +63,7 @@ class _CrearModificarCuadrillaPageState extends State<CrearModificarCuadrillaPag
       final results = await Future.wait([techniciansFuture, especialidadesFuture]);
       final techs = List<Map<String, dynamic>>.from(results[0]);
       final especs = List<String>.from(results[1]);
+      if (!mounted) return;
       setState(() {
         technicians = techs;
         especialidades = especs;
@@ -70,18 +71,17 @@ class _CrearModificarCuadrillaPageState extends State<CrearModificarCuadrillaPag
           _especialidadSeleccionada = null;
         }
         if (_liderSeleccionadoUuid != null &&
-            !technicians.any((t) => t["uuid"] == _liderSeleccionadoUuid)) {
+            !technicians.any((t) => t["uuid"].toString() == _liderSeleccionadoUuid)) {
           _liderSeleccionadoUuid = null;
         }
         isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() { isLoading = false; });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al cargar datos: $e')),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al cargar datos: $e')),
+      );
     }
   }
 
@@ -141,30 +141,29 @@ class _CrearModificarCuadrillaPageState extends State<CrearModificarCuadrillaPag
 
       if (widget.cuadrillaData?['id'] != null) {
         await TechnicalTeamService.update(widget.cuadrillaData!['id'], teamData);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Equipo técnico actualizado exitosamente')),
-          );
-        }
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Equipo técnico actualizado exitosamente')),
+        );
       } else {
         await TechnicalTeamService.create(teamData);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Equipo técnico creado exitosamente')),
-          );
-        }
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Equipo técnico creado exitosamente')),
+        );
       }
 
       widget.onSuccess?.call();
-      if (mounted) Navigator.of(context).pop();
+      if (!mounted) return;
+      Navigator.of(context).pop();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
     } finally {
-      if (mounted) setState(() { isLoading = false; });
+      if (!mounted) return;
+      setState(() { isLoading = false; });
     }
   }
 
@@ -197,35 +196,39 @@ class _CrearModificarCuadrillaPageState extends State<CrearModificarCuadrillaPag
       setState(() { isLoading = true; });
       try {
         await TechnicalTeamService.delete(widget.cuadrillaData!['id']);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Equipo técnico eliminado exitosamente')),
-          );
-          widget.onSuccess?.call();
-          Navigator.of(context).pop();
-        }
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Equipo técnico eliminado exitosamente')),
+        );
+        widget.onSuccess?.call();
+        Navigator.of(context).pop();
       } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error al eliminar: $e')),
-          );
-        }
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al eliminar: $e')),
+        );
       } finally {
-        if (mounted) setState(() { isLoading = false; });
+        if (!mounted) return;
+        setState(() { isLoading = false; });
       }
     }
   }
 
   // ------------ MODALES DE CREACIÓN ------------
+
   Future<void> _openCrearTecnicoModal() async {
-    final result = await showDialog<Map<String, dynamic>>(
+    await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => CreateTechnicianModal(
+        especialidades: especialidades,
         onCreate: (data) async {
           try {
             await TechnicianService.create(data);
-            Navigator.of(context).pop(); // No necesitas devolver nada, solo cerrar
+            if (!mounted) return;
+            Navigator.of(context).pop();
+            await _loadDataFromAPI();
           } catch (e) {
+            if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Error al crear técnico: $e')),
             );
@@ -234,9 +237,6 @@ class _CrearModificarCuadrillaPageState extends State<CrearModificarCuadrillaPag
         onCancel: () => Navigator.of(context).pop(),
       ),
     );
-    if (mounted) {
-      await _loadDataFromAPI();
-    }
   }
 
   Future<void> _openCrearEspecialidadModal() async {
@@ -246,8 +246,10 @@ class _CrearModificarCuadrillaPageState extends State<CrearModificarCuadrillaPag
         onCreate: (especialidad) async {
           try {
             await TechnicianSpecialityService.create(especialidad);
+            if (!mounted) return;
             Navigator.of(context).pop(especialidad);
           } catch (e) {
+            if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Error al crear especialidad: $e')),
             );
@@ -323,13 +325,8 @@ class _CrearModificarCuadrillaPageState extends State<CrearModificarCuadrillaPag
                     controller: _nameController,
                     style: const TextStyle(fontSize: 17),
                     decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 8,
-                        horizontal: 9,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 9),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
                     ),
                   ),
                 ],
@@ -361,17 +358,10 @@ class _CrearModificarCuadrillaPageState extends State<CrearModificarCuadrillaPag
                           ),
                         )
                         .toList(),
-                    onChanged: especialidades.isEmpty
-                        ? null
-                        : (v) => setState(() => _especialidadSeleccionada = v),
+                    onChanged: especialidades.isEmpty ? null : (v) => setState(() => _especialidadSeleccionada = v),
                     decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 8,
-                        horizontal: 9,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 9),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
                     ),
                   ),
                   if (especialidades.isEmpty)
@@ -380,7 +370,7 @@ class _CrearModificarCuadrillaPageState extends State<CrearModificarCuadrillaPag
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          const Text(
                             'Debe crear especialidades antes de poder asignar una.',
                             style: TextStyle(color: Colors.red, fontSize: 14),
                           ),
@@ -392,8 +382,7 @@ class _CrearModificarCuadrillaPageState extends State<CrearModificarCuadrillaPag
                               backgroundColor: Colors.deepPurple,
                               foregroundColor: Colors.white,
                               minimumSize: const Size(180, 40),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8)),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             ),
                             onPressed: _openCrearEspecialidadModal,
                           ),
@@ -418,28 +407,21 @@ class _CrearModificarCuadrillaPageState extends State<CrearModificarCuadrillaPag
                   const Text("Líder del Equipo Técnico", style: TextStyle(fontSize: 15)),
                   const SizedBox(height: 5),
                   DropdownButtonFormField<String>(
-                    value: technicians.any((t) => t["uuid"] == _liderSeleccionadoUuid)
+                    value: technicians.any((t) => t["uuid"].toString() == _liderSeleccionadoUuid)
                         ? _liderSeleccionadoUuid
                         : null,
                     items: technicians
                         .map<DropdownMenuItem<String>>(
                           (t) => DropdownMenuItem<String>(
-                            value: t["uuid"] as String,
+                            value: t["uuid"].toString(),
                             child: Text(t["name"] ?? t["nombre"] ?? 'Sin nombre'),
                           ),
                         )
                         .toList(),
-                    onChanged: technicians.isEmpty
-                        ? null
-                        : (v) => setState(() => _liderSeleccionadoUuid = v),
+                    onChanged: technicians.isEmpty ? null : (v) => setState(() => _liderSeleccionadoUuid = v),
                     decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 8,
-                        horizontal: 9,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 9),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
                     ),
                   ),
                   if (technicians.isEmpty)
@@ -448,7 +430,7 @@ class _CrearModificarCuadrillaPageState extends State<CrearModificarCuadrillaPag
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          const Text(
                             'Debe crear técnicos antes de poder asignar un líder.',
                             style: TextStyle(color: Colors.red, fontSize: 14),
                           ),
@@ -460,8 +442,7 @@ class _CrearModificarCuadrillaPageState extends State<CrearModificarCuadrillaPag
                               backgroundColor: Colors.green,
                               foregroundColor: Colors.white,
                               minimumSize: const Size(180, 40),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8)),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             ),
                             onPressed: _openCrearTecnicoModal,
                           ),
@@ -498,13 +479,8 @@ class _CrearModificarCuadrillaPageState extends State<CrearModificarCuadrillaPag
                               style: const TextStyle(fontSize: 15),
                               decoration: InputDecoration(
                                 hintText: "Nombre",
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 4,
-                                  horizontal: 8,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(3),
-                                ),
+                                contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(3)),
                               ),
                             ),
                           ),
@@ -517,13 +493,8 @@ class _CrearModificarCuadrillaPageState extends State<CrearModificarCuadrillaPag
                               style: const TextStyle(fontSize: 15),
                               decoration: InputDecoration(
                                 hintText: "CI",
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 4,
-                                  horizontal: 8,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(3),
-                                ),
+                                contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(3)),
                               ),
                             ),
                           ),

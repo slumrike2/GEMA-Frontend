@@ -93,6 +93,7 @@ class CuadrillasInicioPage extends StatelessWidget {
 
               // Cuadrillas
               ...cuadrillas.map((cuadrilla) {
+                final nombre = cuadrilla.name.isNotEmpty ? cuadrilla.name : 'Sin nombre';
                 return Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 30,
@@ -122,7 +123,7 @@ class CuadrillasInicioPage extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: Text(
-                                  cuadrilla.name ?? 'Sin nombre',
+                                  nombre,
                                   style: const TextStyle(
                                     fontSize: 20,
                                     color: Color(0xFF22356A),
@@ -130,7 +131,7 @@ class CuadrillasInicioPage extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              if (cuadrilla.speciality != null)
+                              if (cuadrilla.speciality != null && cuadrilla.speciality!.isNotEmpty)
                                 Text(
                                   "Especialidad: ${cuadrilla.speciality}",
                                   style: const TextStyle(
@@ -141,8 +142,6 @@ class CuadrillasInicioPage extends StatelessWidget {
                             ],
                           ),
                         ),
-                        // (Opcional) Puedes mostrar miembros si tu modelo los incluye
-                        // const SizedBox(height: 10),
 
                         // Botones de acción
                         Row(
@@ -188,7 +187,7 @@ class CuadrillasInicioPage extends StatelessWidget {
                     ),
                   ),
                 );
-              }).toList(),
+              }),
 
               const SizedBox(height: 30),
             ],
