@@ -3,6 +3,7 @@ import 'package:frontend/Models/backend_types.dart';
 import 'package:frontend/Models/initial_data.dart';
 import 'package:frontend/Pages/equipos&ubicaciones/widgets/equipment_details.dart';
 import 'package:frontend/Pages/equipos&ubicaciones/widgets/location_details.dart';
+import 'package:frontend/Pages/equipos&ubicaciones/widgets/tipo_details.dart';
 import 'package:frontend/Pages/equipos&ubicaciones/widgets/navigation_panel.dart';
 import 'package:frontend/constants/app_constnats.dart';
 import 'package:frontend/utils/template_processor.dart';
@@ -124,6 +125,15 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
   }
 
   Widget _buildDetailsPanel() {
+    if (activeTab == "types") {
+      return LocationTypesPage(
+        onClose: () {
+          setState(() {
+            activeTab = "locations";
+          });
+        },
+      );
+    }
     if (selectedItem == null) {
       return Container(
         height: 400,

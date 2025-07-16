@@ -295,7 +295,9 @@ class _NavigationPanelState extends State<NavigationPanel> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: InkWell(
-              onTap: () {},
+              onTap: () {
+                widget.onTabChanged('types');
+              },
               borderRadius: BorderRadius.circular(16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
