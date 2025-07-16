@@ -84,7 +84,7 @@ export const technicianSpecialityEnum = z.enum([
  * - timestamps: Campos de timestamp opcionales
  */
 export const TechnicianSchema = z.object({
-	uuid: z.string().uuid().optional(),
+	uuid: z.string().uuid(),
 	personalId: z.string().min(1),
 	contact: z.string().min(1),
 	speciality: technicianSpecialityEnum,
