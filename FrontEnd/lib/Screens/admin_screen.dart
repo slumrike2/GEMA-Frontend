@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/Screens/users_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:frontend/Screens/equipos_ubicaciones_screen.dart';
+
 import 'mantenimientos_screen.dart';
 import 'cuadrillas_screen.dart';
 
@@ -39,12 +41,14 @@ class _AdminScreenState extends State<AdminScreen> {
     final List<Color> navColors = [
       const Color(0xFFFCC430), // Cuadrillas
       const Color(0xFF007934), // Equipos y Ubicaciones
-      const Color(0xFF37B4E3), // Mantenimientos
+      const Color(0xFF37B4E3), // Cuadrillas
+      const Color.fromARGB(255, 146, 146, 146), // Mantenimientos
     ];
     List<Image> navIcons = [
       Image.asset('assets/images/IconMantenimientos.png'),
       Image.asset('assets/images/IconEquiposUbicaciones.png'),
       Image.asset('assets/images/IconCuadrillas.png'),
+      Image.asset('assets/images/IconMantenimientos.png'),
     ];
 
     return Scaffold(
@@ -83,16 +87,16 @@ class _AdminScreenState extends State<AdminScreen> {
             destinations: List.generate(
               _navIcons.length,
               (i) => NavigationRailDestination(
-                icon: Icon(
-                  _navIcons[i],
-                  color: Colors.black,
-                ),
+                icon: Icon(_navIcons[i], color: Colors.black),
                 selectedIcon: Icon(_navIcons[i], color: Colors.black),
                 label: Text(
                   _navLabels[i],
                   style: TextStyle(
                     color: Colors.black,
-                    fontWeight: i == selectedIndex ? FontWeight.bold : FontWeight.normal,
+                    fontWeight:
+                        i == selectedIndex
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                   ),
                 ),
               ),

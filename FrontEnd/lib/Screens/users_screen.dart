@@ -62,7 +62,7 @@ class _UserManagerState extends State<UserManager> {
       errorText = null;
     });
     try {
-      await UserService.create({'email': email, 'role': role});
+      await UserService.create(email: email, role: role);
       await _fetchUsers();
     } catch (e) {
       setState(() {
@@ -148,9 +148,18 @@ class _UserManagerState extends State<UserManager> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Usuarios',
-          style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+        Row(
+          children: [
+            const Text(
+              'Usuarios',
+              style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+            ),
+            IconButton(
+              icon: Icon(Icons.refresh, size: 32, color: Colors.blue),
+              tooltip: 'Refrescar',
+              onPressed: isLoading ? null : _fetchUsers,
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         if (errorText != null)
@@ -169,11 +178,13 @@ class _UserManagerState extends State<UserManager> {
                     separatorBuilder: (_, __) => Divider(),
                     itemBuilder: (context, i) {
                       final user = users[i];
+                      final userName = (user.name ?? '').trim();
+                      final userEmail = user.email;
                       return ListTile(
                         leading: CircleAvatar(
                           child: Text(
-                            user.name.isNotEmpty
-                                ? user.name[0].toUpperCase()
+                            userName.isNotEmpty
+                                ? userName[0].toUpperCase()
                                 : '?',
                           ),
                           radius: 32,
@@ -182,14 +193,18 @@ class _UserManagerState extends State<UserManager> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              user.name,
+                              userName.isNotEmpty ? userName : 'No registrado',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 22,
+                                color:
+                                    userName.isNotEmpty
+                                        ? Colors.black
+                                        : Colors.red,
                               ),
                             ),
                             Text(
-                              user.email,
+                              userEmail,
                               style: TextStyle(
                                 color: Colors.grey,
                                 fontSize: 18,
@@ -240,54 +255,13 @@ class _UserManagerState extends State<UserManager> {
                           onCreate: (email, role) {
                             _addUser(email, role);
                           },
+                          initialEmail: '', // Pass empty string for new user
                         ),
                   );
                 },
               ),
             ),
           ],
-        ),
-
-        const SizedBox(height: 32),
-        Text(
-          'Por registrar',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: Colors.orange,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Builder(
-          builder: (context) {
-            final unregistered =
-                users
-                    .where((u) => (u.name == null || u.name.trim().isEmpty))
-                    .toList();
-            if (unregistered.isEmpty) {
-              return const Text(
-                'No hay usuarios por registrar.',
-                style: TextStyle(color: Colors.grey),
-              );
-            }
-            return ListView.separated(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: unregistered.length,
-              separatorBuilder: (_, __) => Divider(),
-              itemBuilder: (context, i) {
-                final user = unregistered[i];
-                return ListTile(
-                  leading: Icon(Icons.person_outline, color: Colors.orange),
-                  title: Text(user.email, style: TextStyle(fontSize: 18)),
-                  subtitle: Text(
-                    'Sin nombre asociado',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                );
-              },
-            );
-          },
         ),
       ],
     );

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:frontend/Screens/initial_register.dart';
+import 'package:frontend/Services/user_service.dart';
 import 'package:http/http.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../Components/action_button.dart';
@@ -16,12 +17,12 @@ import '../Components/action_button.dart';
 ///
 /// Funcionalidad:
 /// - Si el login es exitoso → Navega a '/admin'.
-/// - Si el login falla o la validación local no es válida → 
+/// - Si el login falla o la validación local no es válida →
 ///   Muestra modal inferior con mensaje.
 ///
 /// Parámetros opcionales:
 /// - injectedClient: Permite inyectar un SupabaseClient mock para pruebas.
-/// 
+///
 /// Autor: Juan Quijada
 /// Fecha: Julio 2025
 /// ------------------------------------------------------------
@@ -40,6 +41,33 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _loading = false;
+
+  Future<void> _checkUserStatus() async {
+    try {
+      final supabase = widget.injectedClient ?? Supabase.instance.client;
+      final currentUser = supabase.auth.currentUser;
+      if (currentUser == null) {
+        _showErrorModal('No hay usuario autenticado.');
+        return;
+      }
+      final uuid = currentUser.id;
+      final user = await UserService.getById(uuid);
+      final hasName = user.name != null;
+      if (!mounted) return;
+      if (hasName) {
+        Navigator.pushReplacementNamed(context, '/admin');
+      } else {
+        Navigator.pushReplacementNamed(
+          context,
+          InitialRegisterScreen.routeName,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorModal('Error al verificar usuario: $e');
+      }
+    }
+  }
 
   /// Método principal de login.
   /// - Realiza validación local.
@@ -63,15 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
         password: password,
       );
 
-      if (response.session != null) {
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, '/admin');
-        }
-      } else {
-        throw Exception(response.user == null
-            ? 'Usuario no encontrado.'
-            : 'Credenciales incorrectas.');
-      }
+      _checkUserStatus();
     } on AuthException catch (e) {
       if (mounted) {
         final errorMessage = _mapAuthError(e.message);
@@ -79,7 +99,9 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } on SocketException {
       if (mounted) {
-        _showErrorModal('No se pudo conectar con el servidor. Verifica tu conexión a internet.');
+        _showErrorModal(
+          'No se pudo conectar con el servidor. Verifica tu conexión a internet.',
+        );
       }
     } on ClientException {
       if (mounted) {
@@ -184,7 +206,10 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SizedBox.expand(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 32.0,
+                vertical: 24.0,
+              ),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 400),
                 child: Column(
@@ -235,30 +260,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     _loading
                         ? const CircularProgressIndicator()
                         : SizedBox(
-                            width: double.infinity,
-                            child: ActionButton(
-                              icon: Icons.login,
-                              label: 'Entrar',
-                              backgroundColor: Colors.blue,
-                              onPressed: _handleLogin,
-                            ),
+                          width: double.infinity,
+                          child: ActionButton(
+                            icon: Icons.login,
+                            label: 'Entrar',
+                            backgroundColor: Colors.blue,
+                            onPressed: _handleLogin,
                           ),
-                    const SizedBox(height: 40),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => InitialRegisterScreen()),
-                        );
-                      },
-                      child: Text(
-                        '¿No tienes cuenta? Regístrate aquí',
-                        style: TextStyle(
-                          color: Colors.blue,
-                          decoration: TextDecoration.underline,
                         ),
-                      ),
-                    ),
+                    const SizedBox(height: 40),
                   ],
                 ),
               ),
