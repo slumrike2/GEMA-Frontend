@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/Services/user_service.dart';
 
 class CreateLocationTypeModal extends StatefulWidget {
   final Future<void> Function(Map<String, dynamic> data) onCreate;

@@ -39,8 +39,8 @@ export const LocationTypeSchema = z.object({
  * - timestamps: Campos de timestamp opcionales
  */
 export const UserSchema = z.object({
-	uuid: z.string().uuid().optional(),
-	name: z.string().min(1),
+	uuid: z.string().uuid(),
+	name: z.string().optional(),
 	email: z.string().email(),
 	role: z.enum(['user', 'technician', 'coordinator', 'admin']).optional(),
 	updatedAt: z.date().optional(),
@@ -64,10 +64,12 @@ export const UserSchema = z.object({
  * - Electronica: Especialidad en trabajos electrónicos
  */
 export const technicianSpecialityEnum = z.enum([
-	'Electricista',
-	'Mecanica',
-	'Logistica',
-	'Electronica'
+	'Electricidad',
+	'Refrigeracion',
+	'Iluminacion',
+	'Pintura',
+	'Protocolo',
+	'IT'
 ]);
 
 /**

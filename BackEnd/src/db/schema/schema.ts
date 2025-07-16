@@ -58,7 +58,7 @@ export const rolesEnum = pgEnum('roles', [
  */
 export const User = pgTable('User', {
 	uuid: uuid().primaryKey(), // Identificador único del usuario
-	name: text().notNull(), // Nombre completo del usuario
+	name: text(), // Nombre completo del usuario
 	email: text().notNull().unique(), // Email único del usuario
 	role: rolesEnum().notNull().default('user'), // Rol del usuario en el sistema
 	...timestamps // Timestamps automáticos
@@ -111,7 +111,7 @@ export const Technician = pgTable('Technician', {
 	// 	onDelete: 'cascade',
 	// 	onUpdate: 'cascade'
 	// }),
-	technicalTeamId: serial().references(() => TechnicalTeam.id, {
+	technicalTeamId: integer().references(() => TechnicalTeam.id, {
 		onDelete: 'set null', // Si se elimina el equipo, el técnico queda sin equipo
 		onUpdate: 'cascade' // Si se actualiza el ID del equipo, se actualiza aquí
 	}),
@@ -364,6 +364,10 @@ export const Report = pgTable('Report', {
 	state: reportStateEnum().notNull().default('pending'), // Estado actual del reporte
 	type: reportTypeEnum().notNull().default('preventive'), // Tipo de reporte
 	notes: text(), // Notas adicionales opcionales
+	technicalTeamId: serial().references(() => TechnicalTeam.id, {
+		onDelete: 'set null',
+		onUpdate: 'cascade'
+	}),
 	...timestamps // Timestamps automáticos
 });
 
