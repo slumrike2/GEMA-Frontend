@@ -87,6 +87,17 @@ class UserService {
     }
   }
 
+  static Future<void> updateName(String uuid, Map<String, dynamic> data) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/$uuid/name'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(data),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Error al actualizar usuario: \\${response.statusCode}');
+    }
+  }
+
   static Future<void> delete(String uuid) async {
     final response = await http.delete(Uri.parse('$baseUrl/$uuid'));
     if (response.statusCode != 200) {

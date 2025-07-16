@@ -100,7 +100,7 @@ router.post('/', userController.createWithEmail);
  * Respuesta de error (500):
  * - Mensaje de error si hay problemas con la base de datos
  */
-router.put('/:uuid', userController.updateName);
+router.put('/:uuid', userController.update);
 
 /**
  * DELETE /api/users/:uuid
@@ -117,5 +117,12 @@ router.put('/:uuid', userController.updateName);
  * - Mensaje de error si hay problemas con la base de datos
  */
 router.delete('/:uuid', userController.delete);
+
+/**
+ * PUT /api/users/:uuid/name
+ * 
+ * Actualiza el nombre de un usuario existente por su UUID.
+ */
+router.put('/:uuid/name', userController.updateName);
 
 export default router;
