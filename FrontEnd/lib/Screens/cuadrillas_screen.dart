@@ -4,8 +4,9 @@ import 'package:frontend/Pages/cuadrillas/crear_modificar_cuadrilla_page.dart';
 import 'package:frontend/Services/technical_team_service.dart';
 import 'package:frontend/Services/technician_service.dart';
 import 'package:frontend/Services/technician_speciality_service.dart';
+import 'package:frontend/Services/user_service.dart';
 import 'package:frontend/Models/backend_types.dart';
-import '../../Modals/CreateTechnicianModal.dart';
+import '../Modals/create_technician_modal.dart';
 
 class CuadrillasScreen extends StatefulWidget {
   const CuadrillasScreen({super.key});
@@ -24,16 +25,13 @@ class _CuadrillasScreenState extends State<CuadrillasScreen> {
     _loadCuadrillas();
   }
 
-  // Carga cuadrillas desde backend y actualiza estado
   Future<void> _loadCuadrillas() async {
+    if (!mounted) return;
     setState(() => _loading = true);
     try {
       final cuadrillas = await TechnicalTeamService.getAll();
-      if (mounted) {
-        setState(() {
-          _cuadrillas = cuadrillas;
-        });
-      }
+      if (!mounted) return;
+      setState(() => _cuadrillas = cuadrillas);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -45,76 +43,80 @@ class _CuadrillasScreenState extends State<CuadrillasScreen> {
     }
   }
 
-  // Refresca y vuelve a pantalla de inicio
-  Future<void> _refreshAndGoToInicio() async {
+  Future<void> _refreshData() async {
     await _loadCuadrillas();
   }
 
-  // Mostrar modal para crear/modificar cuadrilla
   Future<void> _onCrearCuadrilla() async {
+    if (!mounted) return;
     await showDialog(
       context: context,
       builder: (_) => Dialog(
-        child: CrearModificarCuadrillaPage(
-          onSuccess: _refreshAndGoToInicio,
-        ),
+        child: CrearModificarCuadrillaPage(onSuccess: _refreshData),
       ),
     );
   }
 
-  // Mostrar modal para crear técnico con especialidades cargadas y llamada al servicio real
   Future<void> _onCrearOModificarPersona() async {
     try {
       final especialidades = await TechnicianSpecialityService.getAll();
+      final usuariosDisponibles = await UserService.getAvailableUsers();
+
+      if (!mounted) return;
       await showDialog(
         context: context,
-        builder: (_) => CreateTechnicianModal(
-          especialidades: especialidades,
-          onCreate: (data) async {
-            try {
-              await TechnicianService.create(data);
-              if (mounted) {
+        builder: (_) => Dialog(
+          child: CreateTechnicianModal(
+            especialidades: especialidades,
+            usuariosDisponibles: usuariosDisponibles,
+            onCreate: (data) async {
+              try {
+                await TechnicianService.create(data);
+                if (!mounted) return;
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Técnico creado/actualizado')),
                 );
                 Navigator.of(context).pop();
-                await _loadCuadrillas();
+                await _refreshData();
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error al crear técnico: $e')),
+                  );
+                }
               }
-            } catch (e) {
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error al crear técnico: $e')),
-                );
-              }
-            }
-          },
-          onCancel: () => Navigator.of(context).pop(),
+            },
+            onCancel: () {
+              if (mounted) Navigator.of(context).pop();
+            },
+          ),
         ),
       );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al cargar especialidades: $e')),
+          SnackBar(content: Text('Error al cargar datos: $e')),
         );
       }
     }
   }
 
-  // Mostrar modal para modificar cuadrilla existente
-  Future<void> _onModificar(TechnicalTeam team) async {
+  Future<void> _onModificarCuadrilla(TechnicalTeam team) async {
+    if (!mounted) return;
     await showDialog(
       context: context,
       builder: (_) => Dialog(
         child: CrearModificarCuadrillaPage(
           cuadrillaData: team.toJson(),
-          onSuccess: _refreshAndGoToInicio,
+          onSuccess: _refreshData,
         ),
       ),
     );
   }
 
-  // Acción para ver mantenimientos (placeholder)
   void _onVerMantenimientos(TechnicalTeam team) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Ver mantenimientos de ${team.name}')),
     );
@@ -130,8 +132,8 @@ class _CuadrillasScreenState extends State<CuadrillasScreen> {
               child: CuadrillasInicioPage(
                 cuadrillas: _cuadrillas,
                 onCrearCuadrilla: _onCrearCuadrilla,
-                onCrearOModificarPersona: _onCrearOModificarPersona,
-                onModificar: _onModificar,
+                onRefresh: _refreshData,
+                onModificar: _onModificarCuadrilla,
                 onVerMantenimientos: _onVerMantenimientos,
               ),
             ),

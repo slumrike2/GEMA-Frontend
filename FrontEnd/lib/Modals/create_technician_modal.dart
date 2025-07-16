@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import '../Models/backend_types.dart'; // Importa aquí tu modelo User
 
 class CreateTechnicianModal extends StatefulWidget {
   final void Function(Map<String, dynamic> data) onCreate;
   final VoidCallback onCancel;
   final List<String> especialidades;
+  final List<User>? usuariosDisponibles; // Usuarios para dropdown (opcional)
 
   const CreateTechnicianModal({
     super.key,
     required this.onCreate,
     required this.onCancel,
     required this.especialidades,
+    this.usuariosDisponibles,
   });
 
   @override
@@ -22,6 +25,8 @@ class _CreateTechnicianModalState extends State<CreateTechnicianModal> {
   late TextEditingController _contactController;
   late TextEditingController _nameController;
   String? _speciality;
+
+  User? _selectedUser; // Usuario seleccionado en dropdown
 
   @override
   void initState() {
@@ -39,6 +44,21 @@ class _CreateTechnicianModalState extends State<CreateTechnicianModal> {
     super.dispose();
   }
 
+  void _onUserSelected(User? user) {
+    setState(() {
+      _selectedUser = user;
+      if (user != null) {
+        _nameController.text = user.name;
+        _contactController.text = user.email;
+        _personalIdController.clear(); // Sin personalId en User, queda vacío para llenar manualmente
+      } else {
+        _nameController.clear();
+        _personalIdController.clear();
+        _contactController.clear();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -51,14 +71,30 @@ class _CreateTechnicianModalState extends State<CreateTechnicianModal> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (widget.usuariosDisponibles != null && widget.usuariosDisponibles!.isNotEmpty) ...[
+                  DropdownButtonFormField<User>(
+                    decoration: const InputDecoration(labelText: 'Seleccionar usuario'),
+                    items: widget.usuariosDisponibles!
+                        .map((u) => DropdownMenuItem<User>(
+                              value: u,
+                              child: Text((u.name.isNotEmpty) ? u.name : u.email),
+                            ))
+                        .toList(),
+                    onChanged: _onUserSelected,
+                    value: _selectedUser,
+                    validator: (v) => (v == null) ? 'Seleccione un usuario' : null,
+                  ),
+                  const SizedBox(height: 12),
+                ],
+
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(labelText: 'Nombre completo'),
-                  validator: (v) => (v == null || v.trim().isEmpty)
-                      ? 'Ingrese el nombre del técnico'
-                      : null,
+                  validator: (v) =>
+                      (v == null || v.trim().isEmpty) ? 'Ingrese el nombre del técnico' : null,
                 ),
                 const SizedBox(height: 12),
+
                 TextFormField(
                   controller: _personalIdController,
                   decoration: const InputDecoration(labelText: 'Cédula / Identificación'),
@@ -70,13 +106,14 @@ class _CreateTechnicianModalState extends State<CreateTechnicianModal> {
                   },
                 ),
                 const SizedBox(height: 12),
+
                 TextFormField(
                   controller: _contactController,
                   decoration: const InputDecoration(labelText: 'Contacto (teléfono/email)'),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Ingrese contacto' : null,
+                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingrese contacto' : null,
                 ),
                 const SizedBox(height: 12),
+
                 DropdownButtonFormField<String>(
                   value: widget.especialidades.contains(_speciality) ? _speciality : null,
                   items: widget.especialidades
@@ -87,9 +124,7 @@ class _CreateTechnicianModalState extends State<CreateTechnicianModal> {
                       .toList(),
                   onChanged: (v) => setState(() => _speciality = v),
                   decoration: const InputDecoration(labelText: 'Especialidad'),
-                  validator: (v) => (v == null || v.isEmpty)
-                      ? 'Seleccione especialidad'
-                      : null,
+                  validator: (v) => (v == null || v.isEmpty) ? 'Seleccione especialidad' : null,
                 ),
               ],
             ),
@@ -104,12 +139,16 @@ class _CreateTechnicianModalState extends State<CreateTechnicianModal> {
         ElevatedButton(
           onPressed: () {
             if (_formKey.currentState!.validate()) {
-              widget.onCreate({
+              final data = {
                 'name': _nameController.text.trim(),
                 'personalId': _personalIdController.text.trim(),
                 'contact': _contactController.text.trim(),
                 'speciality': _speciality,
-              });
+              };
+              if (_selectedUser != null) {
+                data['uuid'] = _selectedUser!.uuid; // Pasa el UUID del usuario seleccionado
+              }
+              widget.onCreate(data);
             }
           },
           child: const Text('Guardar'),
