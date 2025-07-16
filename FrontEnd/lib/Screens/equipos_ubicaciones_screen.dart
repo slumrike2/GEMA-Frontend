@@ -41,7 +41,6 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
       backgroundColor: AppColors.background,
       body: Column(
         children: [
-          
           // Content
           Expanded(
             child: Padding(
@@ -51,7 +50,7 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
                 children: [
                   // Navigation Panel
                   SizedBox(
-                    width: 400,
+                    width: 600,
                     child: NavigationPanel(
                       searchTerm: searchTerm,
                       onSearchChanged: (value) {
@@ -109,7 +108,12 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
                   const SizedBox(width: 16),
 
                   // Details Panel
-                  Expanded(child: _buildDetailsPanel()),
+                  Expanded(
+                    child: SizedBox(
+                      width: 600, // Increased width for details panel
+                      child: SingleChildScrollView(child: _buildDetailsPanel()),
+                    ),
+                  ),
                 ],
               ),
             ),

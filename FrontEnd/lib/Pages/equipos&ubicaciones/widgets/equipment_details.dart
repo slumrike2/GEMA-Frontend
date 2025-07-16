@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:frontend/Components/custom_card.dart';
 import 'package:frontend/Components/status_chip.dart';
 import 'package:frontend/Models/backend_types.dart';
+import 'package:frontend/Modals/assign_location_modal.dart';
+import 'package:frontend/Modals/schedule_move_modal.dart';
 import 'package:frontend/constants/app_constnats.dart';
 import 'package:frontend/utils/template_processor.dart';
 
@@ -20,6 +22,21 @@ class EquipmentDetails extends StatelessWidget {
     required this.operationalLocations,
     required this.getFullPath,
   });
+
+  void _showAssignLocationModal(BuildContext context) {
+    showDialog(
+      context: context,
+      builder:
+          (ctx) => AssignLocationModal(
+            equipment: equipment,
+            locations: locations,
+            operationalLocations: operationalLocations,
+            onSave: (technicalLocationId, operationalLocationIds) {
+              // TODO: Implement save logic (update equipment and operational locations)
+            },
+          ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -224,9 +241,7 @@ class EquipmentDetails extends StatelessWidget {
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    // Assign locations functionality
-                  },
+                  onPressed: () => _showAssignLocationModal(context),
                   icon: const Icon(Icons.room),
                   label: const Text('Asignar Ubicaciones'),
                   style: ElevatedButton.styleFrom(
@@ -237,19 +252,33 @@ class EquipmentDetails extends StatelessWidget {
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    // Transfer equipment functionality
-                  },
-                  icon: const Icon(Icons.local_shipping),
-                  label: Text(
-                    equipment.state == EquipmentState.transferencia_pendiente
-                        ? 'Gestionar Transferencia'
-                        : 'Programar Transferencia',
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.blue,
-                    side: const BorderSide(color: Colors.blue),
+                child: Builder(
+                  builder: (context) => ElevatedButton.icon(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => ScheduleMoveModal(
+                          equipment: equipment,
+                          locations: locations,
+                          onScheduleMove: (destinationId, date, notes) {
+                            // TODO: Implement scheduling logic (update equipment transferLocation)
+                          },
+                          onConfirmMove: () {
+                            // TODO: Implement confirmation logic (update equipment state and location)
+                          },
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.local_shipping),
+                    label: Text(
+                      equipment.state == EquipmentState.transferencia_pendiente
+                          ? 'Gestionar Mudanza'
+                          : 'Programar Mudanza',
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[50],
+                      foregroundColor: Colors.blue,
+                    ),
                   ),
                 ),
               ),
