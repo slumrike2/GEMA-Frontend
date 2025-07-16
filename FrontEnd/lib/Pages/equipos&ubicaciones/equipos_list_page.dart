@@ -4,7 +4,6 @@ import 'package:frontend/Components/tag.dart';
 import 'package:frontend/Components/search_bar.dart';
 import 'package:frontend/Components/action_button.dart';
 import 'package:frontend/Services/equipment_service.dart';
-import 'package:frontend/Modals/change_equipment_state_modal.dart';
 
 class EquiposListPage extends StatefulWidget {
   final void Function(Equipment) onDeleteEquipment;
@@ -284,18 +283,7 @@ class _EquiposListPageState extends State<EquiposListPage> {
                 ],
               ),
             ),
-            if (_showChangeStateModal && _changingStateEquipment != null)
-              ChangeEquipmentStateModal(
-                currentState: _changingStateEquipment!.state?.name ?? '',
-                possibleStates:
-                    EquipmentState.values.map((e) => e.name).toList(),
-                onSave: _handleSaveState,
-                onCancel:
-                    () => setState(() {
-                      _showChangeStateModal = false;
-                      _changingStateEquipment = null;
-                    }),
-              ),
+            
           ],
         );
       },
