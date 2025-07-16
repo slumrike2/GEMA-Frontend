@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../modals/create_user_modal.dart';
+import '../Modals/create_user_modal.dart';
 import '../Services/user_service.dart';
 import '../Models/backend_types.dart';
 
@@ -71,12 +71,12 @@ class _UserManagerState extends State<UserManager> {
     }
   }
 
-  Future<void> _updateUser(User user, String email, String role) async {
+  Future<void> _updateUser(User user) async {
     setState(() {
       errorText = null;
     });
     try {
-      await UserService.update(user.uuid ?? '', {'email': email, 'role': role});
+      await UserService.update(user.uuid ?? '', user.toJson());
       await _fetchUsers();
     } catch (e) {
       setState(() {
@@ -129,16 +129,57 @@ class _UserManagerState extends State<UserManager> {
 
   void _startEditUser(int index) {
     final user = users[index];
+
+    // Hacer fetch de todos los datos del usuario antes de abrir el modal
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder:
-          (context) => CreateUserModal(
-            onCreate: (email, role) {
-              _updateUser(user, email, role);
+          (context) => FutureBuilder<User>(
+            future: UserService.getById(user.uuid ?? ''),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError || !snapshot.hasData) {
+                return AlertDialog(
+                  title: const Text('Error'),
+                  content: Text('No se pudo cargar el usuario.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Cerrar'),
+                    ),
+                  ],
+                );
+              }
+              final fullUser = snapshot.data!;
+              final fullHasName =
+                  (fullUser.name != null && fullUser.name!.trim().isNotEmpty);
+              return CreateUserModal(
+                onCreate: (email, role, {String? name}) {
+                  // Crear un nuevo objeto User actualizado con los datos del modal
+                  final updatedUser = User(
+                    uuid: fullUser.uuid,
+                    name:
+                        fullHasName
+                            ? (name ?? fullUser.name ?? '')
+                            : (fullUser.name ?? ''),
+                    email: email,
+                    role: UserRole.values.byName(role),
+                    updatedAt: null,
+                    createdAt: null,
+                    deletedAt: null,
+                  );
+                  print(fullUser.createdAt);
+                  _updateUser(updatedUser);
+                },
+                isEdit: fullHasName,
+                initialEmail: fullUser.email,
+                initialRole: fullUser.role?.name,
+                initialName: fullHasName ? fullUser.name : null,
+              );
             },
-            isEdit: true,
-            initialEmail: user.email,
-            initialRole: user.role?.name,
           ),
     );
   }
@@ -215,11 +256,14 @@ class _UserManagerState extends State<UserManager> {
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            IconButton(
-                              icon: Icon(Icons.edit, color: Colors.blue),
-                              tooltip: 'Editar',
-                              onPressed: () => _startEditUser(i),
-                            ),
+                            userName.isNotEmpty
+                                ? IconButton(
+                                  icon: Icon(Icons.edit, color: Colors.blue),
+                                  tooltip: 'Editar',
+                                  onPressed: () => _startEditUser(i),
+                                )
+                                : Container(),
+
                             IconButton(
                               icon: Icon(Icons.delete, color: Colors.red),
                               tooltip: 'Eliminar',
@@ -252,7 +296,7 @@ class _UserManagerState extends State<UserManager> {
                     context: context,
                     builder:
                         (context) => CreateUserModal(
-                          onCreate: (email, role) {
+                          onCreate: (email, role, {String? name}) {
                             _addUser(email, role);
                           },
                           initialEmail: '', // Pass empty string for new user

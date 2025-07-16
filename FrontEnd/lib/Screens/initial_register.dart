@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/Services/user_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 class InitialRegisterScreen extends StatefulWidget {
   const InitialRegisterScreen({super.key});
@@ -67,6 +70,7 @@ class _InitialRegisterScreenState extends State<InitialRegisterScreen> {
                       ),
                       const SizedBox(height: 24),
                       TextFormField(
+                        key: const Key('nameField'),
                         controller: _nameController,
                         decoration: const InputDecoration(
                           labelText: 'Nombre',
@@ -79,9 +83,11 @@ class _InitialRegisterScreenState extends State<InitialRegisterScreen> {
                           }
                           return null;
                         },
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
+                        key: const Key('passwordField'),
                         controller: _passwordController,
                         obscureText: true,
                         decoration: const InputDecoration(
@@ -98,9 +104,11 @@ class _InitialRegisterScreenState extends State<InitialRegisterScreen> {
                           }
                           return null;
                         },
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
+                        key: const Key('passwordVerifyField'),
                         controller: _passwordVerifyController,
                         obscureText: true,
                         decoration: const InputDecoration(
@@ -117,6 +125,7 @@ class _InitialRegisterScreenState extends State<InitialRegisterScreen> {
                           }
                           return null;
                         },
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                       ),
                       const SizedBox(height: 24),
                       _loading
@@ -144,26 +153,29 @@ class _InitialRegisterScreenState extends State<InitialRegisterScreen> {
   }
 
   Future<void> _handleRegister() async {
-    if (!_formKey.currentState!.validate()) return;
+    SupabaseClient supabase = Supabase.instance.client;
+    final isValid = _formKey.currentState?.validate() ?? false;
+    if (!isValid) {
+      setState(() => _loading = false);
+      return;
+    }
     setState(() => _loading = true);
-    // Aquí deberías llamar a tu servicio para actualizar el nombre y la contraseña del usuario actual
-    // Ejemplo:
-    // try {
-    //   await UserService.updateCurrentUser(
-    //     name: _nameController.text.trim(),
-    //     password: _passwordController.text.trim(),
-    //   );
-    //   Navigator.pushReplacementNamed(context, '/admin');
-    // } catch (e) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-    //   );
-    // } finally {
-    //   setState(() => _loading = false);
-    // }
-    await Future.delayed(const Duration(seconds: 1)); // Simulación
-    setState(() => _loading = false);
-    Navigator.pushReplacementNamed(context, '/admin');
+    try {
+      await UserService.updateName(
+        supabase.auth.currentUser?.id ?? '',
+        _nameController.text.trim(),
+      );
+      if (!mounted) return;
+      Navigator.pushReplacementNamed(context, '/admin');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override

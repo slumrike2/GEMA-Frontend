@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 
 class CreateUserModal extends StatefulWidget {
-  final void Function(String email, String role) onCreate;
+  final void Function(String email, String role, {String? name}) onCreate;
   final String? initialEmail;
   final String? initialRole;
+  final String? initialName;
   final bool isEdit;
   const CreateUserModal({
     super.key,
     required this.onCreate,
     this.initialEmail,
     this.initialRole,
+    this.initialName,
     this.isEdit = false,
   });
 
@@ -20,12 +22,15 @@ class CreateUserModal extends StatefulWidget {
 class CreateUserModalState extends State<CreateUserModal> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _emailController;
+  late TextEditingController _nameController;
   String _selectedRole = 'user';
 
   @override
   void initState() {
     super.initState();
     _emailController = TextEditingController(text: widget.initialEmail ?? '');
+    _nameController = TextEditingController(text: widget.initialName ?? '');
+    _selectedRole = widget.initialRole ?? 'user';
   }
 
   @override
@@ -37,13 +42,29 @@ class CreateUserModalState extends State<CreateUserModal> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (widget.isEdit &&
+                (widget.initialName != null &&
+                    widget.initialName!.trim().isNotEmpty))
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: 'Nombre'),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Campo requerido';
+                  }
+                  return null;
+                },
+              ),
+            if (widget.isEdit &&
+                (widget.initialName != null &&
+                    widget.initialName!.trim().isNotEmpty))
+              const SizedBox(height: 16),
             TextFormField(
               controller: _emailController,
               decoration: const InputDecoration(
                 labelText: 'Correo electrónico',
               ),
               keyboardType: TextInputType.emailAddress,
-
               validator: (value) {
                 if (value == null || value.trim().isEmpty)
                   return 'Campo requerido';
@@ -82,7 +103,17 @@ class CreateUserModalState extends State<CreateUserModal> {
         ElevatedButton(
           onPressed: () {
             if (_formKey.currentState!.validate()) {
-              widget.onCreate(_emailController.text.trim(), _selectedRole);
+              if (widget.isEdit &&
+                  (widget.initialName != null &&
+                      widget.initialName!.trim().isNotEmpty)) {
+                widget.onCreate(
+                  _emailController.text.trim(),
+                  _selectedRole,
+                  name: _nameController.text.trim(),
+                );
+              } else {
+                widget.onCreate(_emailController.text.trim(), _selectedRole);
+              }
               Navigator.of(context).pop();
             }
           },

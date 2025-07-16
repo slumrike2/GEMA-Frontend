@@ -34,10 +34,10 @@ class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, this.injectedClient});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<LoginScreen> createState() => LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _loading = false;
@@ -77,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
-    final validationMessage = _validateCredentials(email, password);
+    final validationMessage = validateCredentials(email, password);
     if (validationMessage != null) {
       _showErrorModal(validationMessage);
       return;
@@ -94,7 +94,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _checkUserStatus();
     } on AuthException catch (e) {
       if (mounted) {
-        final errorMessage = _mapAuthError(e.message);
+        final errorMessage = mapAuthError(e.message);
         _showErrorModal(errorMessage);
       }
     } on SocketException {
@@ -118,8 +118,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   /// Validación local de las credenciales antes de llamar a Supabase.
   /// Devuelve un mensaje de error si es inválido, o null si es válido.
-  String? _validateCredentials(String email, String password) {
-    final emailRegex = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$");
+  String? validateCredentials(String email, String password) {
+    final emailRegex = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}");
     if (!emailRegex.hasMatch(email)) {
       return 'Por favor ingresa un correo electrónico válido.';
     }
@@ -130,7 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   /// Mapea errores de Supabase a mensajes entendibles para el usuario final.
-  String _mapAuthError(String? error) {
+  String mapAuthError(String? error) {
     if (error == null) return 'Error desconocido.';
 
     final msg = error.toLowerCase();
