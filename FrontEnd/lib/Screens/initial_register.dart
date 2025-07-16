@@ -1,135 +1,188 @@
 import 'package:flutter/material.dart';
-import '../Services/user_service.dart';
+import 'package:frontend/Services/user_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 class InitialRegisterScreen extends StatefulWidget {
   const InitialRegisterScreen({super.key});
 
+  static const String routeName = '/initial-register';
+
   @override
-  _InitialRegisterScreenState createState() => _InitialRegisterScreenState();
+  State<InitialRegisterScreen> createState() => _InitialRegisterScreenState();
 }
 
 class _InitialRegisterScreenState extends State<InitialRegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _nameController = TextEditingController();
   final _passwordController = TextEditingController();
-  String _selectedRole = 'user';
-  bool _isLoading = false;
+  final _passwordVerifyController = TextEditingController();
+  bool _loading = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Registro Inicial'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Registro de Usuario',
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Ingresa tu email y selecciona el rol para comenzar el proceso de registro',
-                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
-                ),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingresa tu email';
-                  }
-                  if (!value.contains('@')) {
-                    return 'Por favor ingresa un email válido';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-              DropdownButtonFormField<String>(
-                value: _selectedRole,
-                decoration: const InputDecoration(
-                  labelText: 'Rol',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.security),
-                ),
-                items: const [
-                  DropdownMenuItem(value: 'user', child: Text('Usuario')),
-                  DropdownMenuItem(value: 'admin', child: Text('Administrador')),
-                ],
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _selectedRole = value;
-                    });
-                  }
-                },
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _registerUser,
-                  child: _isLoading 
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                        'Continuar',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                ),
-              ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: [
+              Color.fromARGB(122, 252, 198, 48),
+              Color.fromARGB(122, 55, 180, 227),
+              Color.fromARGB(122, 0, 121, 52),
             ],
+          ),
+        ),
+        child: SizedBox.expand(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 32.0,
+                vertical: 24.0,
+              ),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 400),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 60),
+                      Icon(Icons.person, size: 100, color: Colors.blue),
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Completa tu registro',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color.fromARGB(255, 0, 0, 0),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Ingresa tu nombre y crea una nueva contraseña para activar tu cuenta.',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Color.fromARGB(255, 53, 53, 53),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      TextFormField(
+                        key: const Key('nameField'),
+                        controller: _nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Nombre',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.person),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Por favor ingresa tu nombre';
+                          }
+                          return null;
+                        },
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        key: const Key('passwordField'),
+                        controller: _passwordController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Nueva contraseña',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.lock),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Por favor ingresa una contraseña';
+                          }
+                          if (value.length < 6) {
+                            return 'La contraseña debe tener al menos 6 caracteres';
+                          }
+                          return null;
+                        },
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        key: const Key('passwordVerifyField'),
+                        controller: _passwordVerifyController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Verifica la contraseña',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.lock_outline),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Por favor verifica la contraseña';
+                          }
+                          if (value != _passwordController.text) {
+                            return 'Las contraseñas no coinciden';
+                          }
+                          return null;
+                        },
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                      ),
+                      const SizedBox(height: 24),
+                      _loading
+                          ? const CircularProgressIndicator()
+                          : SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _handleRegister,
+                              child: const Text(
+                                'Guardar',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                          ),
+                      const SizedBox(height: 40),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Future<void> _registerUser() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
-
+  Future<void> _handleRegister() async {
+    SupabaseClient supabase = Supabase.instance.client;
+    final isValid = _formKey.currentState?.validate() ?? false;
+    if (!isValid) {
+      setState(() => _loading = false);
+      return;
+    }
+    setState(() => _loading = true);
     try {
-      await UserService.create(
-        email: _emailController.text,
-        role: _selectedRole,
+      await UserService.updateName(
+        supabase.auth.currentUser?.id ?? '',
+        _nameController.text.trim(),
       );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Se ha enviado un enlace de confirmación a tu email'),
-          backgroundColor: Colors.green,
-        ),
-      );
-      Navigator.pushReplacementNamed(context, '/login');
+      if (!mounted) return;
+      Navigator.pushReplacementNamed(context, '/admin');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _nameController.dispose();
+    _passwordController.dispose();
+    _passwordVerifyController.dispose();
     super.dispose();
   }
-} 
+}

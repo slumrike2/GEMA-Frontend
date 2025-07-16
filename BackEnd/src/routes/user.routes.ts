@@ -24,6 +24,11 @@ import { userController } from '../controllers/user.controller';
 // Creación del router de Express para las rutas de usuarios
 const router = Router();
 
+
+router.put('/name/:uuid', userController.updateName);
+
+
+
 /**
  * GET /api/users
  * 
@@ -100,7 +105,7 @@ router.post('/', userController.createWithEmail);
  * Respuesta de error (500):
  * - Mensaje de error si hay problemas con la base de datos
  */
-router.put('/:uuid', userController.updateName);
+router.put('/:uuid', userController.update);
 
 /**
  * DELETE /api/users/:uuid
@@ -117,5 +122,11 @@ router.put('/:uuid', userController.updateName);
  * - Mensaje de error si hay problemas con la base de datos
  */
 router.delete('/:uuid', userController.delete);
+
+
+
+
+
+
 
 export default router;
