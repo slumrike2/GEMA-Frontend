@@ -21,7 +21,7 @@ export const reportController = {
 	/**
 	 * Obtiene los reportes asociados a una ubicación técnica
 	 *
-	 * Endpoint: GET /api/report/by-location/:technicalCode
+	 * Endpoint: GET /api/reports/by-location/:technicalCode
 	 *
 	 * Recibe en los params:
 	 * - technicalCode: Código técnico de la ubicación

@@ -51,8 +51,6 @@ router.get('/', reportController.getAll);
  * Respuesta de error (500):
  * - Mensaje de error si hay problemas con la base de datos
  */
-router.get('/:id', reportController.getByPk);
-
 /**
  * POST /api/reports
  *
@@ -203,5 +201,21 @@ router.post(
 	'/associate-locations/:reportId',
 	reportController.associateLocations
 );
+
+/**
+ * GET /api/reports/:id
+ *
+ * Obtiene un reporte específico por su ID.
+ *
+ * Parámetros de URL:
+ * - id: Identificador único del reporte
+ *
+ * Respuesta exitosa (200):
+ * - Objeto con los datos del reporte o null si no existe
+ *
+ * Respuesta de error (500):
+ * - Mensaje de error si hay problemas con la base de datos
+ */
+router.get('/:id', reportController.getByPk);
 
 export default router;

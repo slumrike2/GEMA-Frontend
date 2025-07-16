@@ -376,7 +376,7 @@ export const Report = pgTable('Report', {
 export const ReportTechnicalLocation = pgTable(
 	'Report_Technical_Location',
 	{
-		reportId: serial()
+		reportId: integer()
 			.notNull()
 			.references(() => Report.id, {
 				onDelete: 'cascade',
@@ -402,7 +402,7 @@ export const ReportTechnicalLocation = pgTable(
 export const ReportEquipment = pgTable(
 	'Report_Equipment',
 	{
-		reportId: serial()
+		reportId: integer()
 			.notNull()
 			.references(() => Report.id, {
 				onDelete: 'cascade',
