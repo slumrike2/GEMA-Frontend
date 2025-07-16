@@ -44,25 +44,5 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Flutter platform-specific generated files
-
-# Android (Flutter generated)
-android/app/generated/
-android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
-
-# iOS (Flutter generated)
-ios/Flutter/Generated.xcconfig
-ios/Flutter/flutter_export_environment.sh
-ios/Runner/GeneratedPluginRegistrant.*
-
-# macOS (Flutter generated)
-macos/Flutter/ephemeral/
-macos/Flutter/GeneratedPluginRegistrant.swift
-
-# Windows (Flutter generated)
-windows/flutter/generated_plugin_registrant.*
-windows/flutter/generated_plugins.cmake
-
-# Linux (Flutter generated)
-linux/flutter/generated_plugin_registrant.*
-linux/flutter/generated_plugins.cmake
+# Environment files
+.env
