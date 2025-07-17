@@ -42,7 +42,7 @@ export const UserSchema = z.object({
 	uuid: z.string().uuid(),
 	name: z.string().optional(),
 	email: z.string().email(),
-	role: z.enum(['user', 'technician', 'coordinator', 'admin']).optional(),
+	role: z.enum(['user', 'admin']).optional(),
 	updatedAt: z.date().optional(),
 	createdAt: z.date().optional(),
 	deletedAt: z.date().optional()
@@ -126,7 +126,7 @@ export const TechnicalLocationSchema = z.object({
 	technicalCode: z.string().min(1),
 	name: z.string().min(1),
 	type: z.number().int(),
-	parentTechnicalCode: z.string().min(1)
+	parentTechnicalCode: z.string().min(1).optional()
 });
 
 /**
@@ -310,5 +310,6 @@ export const ReportUpdateSchema = z.object({
 	description: z.string().min(1),
 	updatedAt: z.date().optional(),
 	createdAt: z.date().optional(),
-	deletedAt: z.date().optional()
+	deletedAt: z.date().optional(),
+	report_id: z.number().int()
 });

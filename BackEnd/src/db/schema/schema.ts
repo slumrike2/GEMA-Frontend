@@ -163,14 +163,13 @@ export const TechnicalLocationTypes = pgTable('Technical_location_types', {
 export const TechnicalLocation = pgTable('Technical_location', {
 	technicalCode: text().primaryKey(), // Código técnico único de la ubicación
 	name: text().notNull(), // Nombre de la ubicación
-	type: serial()
+	type: integer()
 		.notNull()
 		.references(() => TechnicalLocationTypes.id, {
 			onDelete: 'cascade', // Si se elimina el tipo, se eliminan las ubicaciones
 			onUpdate: 'cascade' // Si se actualiza el ID del tipo, se actualiza aquí
 		}),
 	parentTechnicalCode: text()
-		.notNull()
 		.references(() => TechnicalLocation.technicalCode, {
 			onDelete: 'cascade', // Si se elimina la ubicación padre, se eliminan las hijas
 			onUpdate: 'cascade' // Si se actualiza el código del padre, se actualiza aquí
@@ -230,7 +229,7 @@ export const Equipment = pgTable('Equipment', {
 		onDelete: 'set null', // Si se elimina el equipo dependiente, se elimina la referencia
 		onUpdate: 'cascade' // Si se actualiza el UUID del equipo dependiente, se actualiza aquí
 	}),
-	brandId: serial()
+	brandId: integer()
 		.notNull()
 		.references(() => Brand.id, {
 			onDelete: 'cascade', // Si se elimina la marca, se eliminan los equipos
@@ -364,7 +363,7 @@ export const Report = pgTable('Report', {
 	state: reportStateEnum().notNull().default('pending'), // Estado actual del reporte
 	type: reportTypeEnum().notNull().default('preventive'), // Tipo de reporte
 	notes: text(), // Notas adicionales opcionales
-	technicalTeamId: serial().references(() => TechnicalTeam.id, {
+	technicalTeamId: integer().references(() => TechnicalTeam.id, {
 		onDelete: 'set null',
 		onUpdate: 'cascade'
 	}),
@@ -380,5 +379,10 @@ export const Report = pgTable('Report', {
 export const ReportUpdate = pgTable('Report_Update', {
 	id: serial().primaryKey(), // Identificador único de la actualización
 	description: text().notNull(), // Descripción de la actualización
-	...timestamps // Timestamps automáticos
+	report_id: integer().notNull().references(() => Report.id, {
+		onDelete: 'cascade',
+		onUpdate: 'cascade'
+	}),
+	...timestamps // Timestamps 
+	
 });
