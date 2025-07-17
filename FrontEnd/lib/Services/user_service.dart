@@ -77,13 +77,15 @@ class UserService {
     }
   }
 
-  static Future<void> update(String uuid, Map<String, dynamic> data) async {
+  static Future<User> update(String uuid, Map<String, dynamic> data) async {
     final response = await http.put(
       Uri.parse('$baseUrl/$uuid'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(data),
     );
-    if (response.statusCode != 200) {
+    if (response.statusCode == 200) {
+      return User.fromJson(jsonDecode(response.body));
+    } else {
       throw Exception('Error al actualizar usuario: \\${response.statusCode}');
     }
   }
