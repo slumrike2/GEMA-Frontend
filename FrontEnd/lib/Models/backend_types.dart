@@ -68,17 +68,17 @@ class User {
 
   User({
     this.uuid,
-    required this.name,
+    required String? name,
     required this.email,
     this.role,
     this.updatedAt,
     this.createdAt,
     this.deletedAt,
-  });
+  }) : name = name ?? '';
 
   factory User.fromJson(Map<String, dynamic> json) => User(
     uuid: json['uuid'],
-    name: json['name'],
+    name: json['name'] ?? '',
     email: json['email'],
     role: json['role'] != null ? UserRole.values.byName(json['role']) : null,
     updatedAt:
