@@ -98,5 +98,7 @@ export const userController = {
 			res.status(500).json({ error: 'Error actualizando el nombre del usuario', details: error.message });
 		}
 	},
+
+	
 }
 
