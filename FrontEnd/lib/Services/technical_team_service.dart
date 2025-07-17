@@ -16,7 +16,7 @@ class TechnicalTeamService {
     }
   }
 
-  // Obtener un equipo técnico por ID (string)
+  // Obtener un equipo técnico por ID
   static Future<TechnicalTeam> getById(String id) async {
     final response = await http.get(Uri.parse('$baseUrl/$id'));
     if (response.statusCode == 200) {
@@ -57,7 +57,7 @@ class TechnicalTeamService {
   // Eliminar un equipo técnico
   static Future<void> delete(String id) async {
     final response = await http.delete(Uri.parse('$baseUrl/$id'));
-    if (response.statusCode != 200) {
+    if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Error al eliminar el equipo técnico: ${response.statusCode} - ${response.body}');
     }
   }
@@ -81,6 +81,29 @@ class TechnicalTeamService {
       return data.map((e) => TechnicalTeam.fromJson(e)).toList();
     } else {
       throw Exception('Error al obtener equipos por líder: ${response.statusCode} - ${response.body}');
+    }
+  }
+
+  // Obtener técnicos asignados a un equipo
+  static Future<List<Technician>> getTechniciansByTeam(String teamId) async {
+    final response = await http.get(Uri.parse('$baseUrl/$teamId/technicians'));
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((e) => Technician.fromJson(e)).toList();
+    } else {
+      throw Exception('Error al obtener técnicos del equipo: ${response.statusCode} - ${response.body}');
+    }
+  }
+
+  // Asignar un técnico a un equipo
+  static Future<void> assignTechnicianToTeam(String teamId, String technicianId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/$teamId/assign-technician'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'technicianId': technicianId}),
+    );
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Error al asignar técnico al equipo: ${response.statusCode} - ${response.body}');
     }
   }
 }

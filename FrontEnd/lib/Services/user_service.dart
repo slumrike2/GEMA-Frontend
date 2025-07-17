@@ -1,8 +1,9 @@
 import 'package:http/http.dart' as http;
+import 'package:uuid/uuid.dart';
 import 'dart:convert';
 import 'dart:math';
 import '../Models/backend_types.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide User;  
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 
 class UserService {
   static const String baseUrl = 'http://localhost:3000/api/users';
@@ -27,12 +28,17 @@ class UserService {
     }
   }
 
-  // Obtener usuarios disponibles (que no sean técnicos)
+  // Obtener usuarios disponibles que tengan nombre y correo
   static Future<List<User>> getAvailableUsers() async {
     final response = await http.get(Uri.parse('$baseUrl/available'));
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
-      return data.map((e) => User.fromJson(e)).toList();
+      return data
+          .map((e) => User.fromJson(e))
+          .where((user) =>
+              (user.name?.trim().isNotEmpty ?? false) &&
+              (user.email?.trim().isNotEmpty ?? false))
+          .toList();
     } else {
       throw Exception('Error al obtener usuarios disponibles: ${response.statusCode}');
     }
@@ -50,12 +56,10 @@ class UserService {
 
   // Crear usuario: recibe email y rol, genera password aleatoria y registra en Supabase y backend
   static Future<void> create({required String email, required String role}) async {
-    // Generar contraseña aleatoria de 16 caracteres
     final chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     final rand = Random.secure();
     final password = List.generate(16, (index) => chars[rand.nextInt(chars.length)]).join();
 
-    // Registrar en Supabase
     final uuidResponse = await signUpUser(email, password);
     final uuid = uuidResponse.user?.id;
 
@@ -63,7 +67,6 @@ class UserService {
       throw Exception('No se pudo registrar usuario en Supabase');
     }
 
-    // Registrar en backend
     final response = await http.post(
       Uri.parse(baseUrl),
       headers: {'Content-Type': 'application/json'},
@@ -71,18 +74,16 @@ class UserService {
         'uuid': uuid,
         'email': email,
         'role': role,
-        'password': password, // Para enviar correo con contraseña
+        'password': password,
       }),
     );
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      print('Usuario creado en backend');
-    } else {
+    if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception('Error al crear usuario en backend: ${response.body}');
     }
   }
 
-  // Cambiar contraseña usuario actual en Supabase
+  // Cambiar contraseña del usuario actual en Supabase
   static Future<void> changeCurrentUserPassword(String newPassword) async {
     final response = await Supabase.instance.client.auth.updateUser(
       UserAttributes(password: newPassword),
