@@ -257,7 +257,9 @@ class _NavigationPanelState extends State<NavigationPanel> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: InkWell(
-              onTap: () {},
+              onTap: () {
+                widget.onTabChanged('brands');
+              },
               borderRadius: BorderRadius.circular(16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -266,7 +268,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
                   if (_expandedMarca) ...[
                     const SizedBox(width: 6),
                     Text(
-                      'Marca',
+                      'Marcas',
                       style: TextStyle(color: AppColors.primary, fontSize: 14),
                     ),
                   ],

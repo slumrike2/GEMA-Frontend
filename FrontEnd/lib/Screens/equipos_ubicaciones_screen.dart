@@ -4,6 +4,7 @@ import 'package:frontend/Models/initial_data.dart';
 import 'package:frontend/Pages/equipos&ubicaciones/widgets/equipment_details.dart';
 import 'package:frontend/Pages/equipos&ubicaciones/widgets/location_details.dart';
 import 'package:frontend/Pages/equipos&ubicaciones/widgets/tipo_details.dart';
+import 'package:frontend/Pages/equipos&ubicaciones/widgets/marca_details.dart';
 import 'package:frontend/Pages/equipos&ubicaciones/widgets/navigation_panel.dart';
 import 'package:frontend/constants/app_constnats.dart';
 import 'package:frontend/utils/template_processor.dart';
@@ -134,6 +135,25 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
         },
       );
     }
+    if (activeTab == "brands") {
+      // Compute equipment count by brandId
+      final Map<int, int> equipmentCountByBrand = {};
+      for (final eq in equipment.values) {
+        if (brands.containsKey(eq.brandId)) {
+          equipmentCountByBrand[eq.brandId] =
+              (equipmentCountByBrand[eq.brandId] ?? 0) + 1;
+        }
+      }
+      return MarcaDetailsPage(
+        brands: brands.values.toList(),
+        equipmentCountByBrand: equipmentCountByBrand,
+        onClose: () {
+          setState(() {
+            activeTab = "locations";
+          });
+        },
+      );
+    }
     if (selectedItem == null) {
       return Container(
         height: 400,
@@ -175,11 +195,9 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
         ),
       );
     }
-
     if (selectedType == "location") {
       final location = locations[selectedItem!];
       if (location == null) return const SizedBox.shrink();
-
       return LocationDetails(
         location: location,
         locations: locations,
@@ -192,7 +210,6 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
     } else {
       final eq = equipment[selectedItem!];
       if (eq == null) return const SizedBox.shrink();
-
       return EquipmentDetails(
         equipment: eq,
         locations: locations,
