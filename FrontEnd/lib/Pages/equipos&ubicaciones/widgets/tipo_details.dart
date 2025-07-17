@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/Modals/crear_tipo_ubicacion_modal.dart';
+import 'package:frontend/Modals/delete_type_dialog.dart';
 
 // Mock data models
 class TemplateVariable {
@@ -129,7 +130,6 @@ class _LocationTypesPageState extends State<LocationTypesPage> {
       builder:
           (context) => CrearTipoUbicacionModal(
             onCreate: (data) {
-              // Add the new type to the templates list
               setState(() {
                 templates.add(
                   LocationTemplate(
@@ -150,6 +150,32 @@ class _LocationTypesPageState extends State<LocationTypesPage> {
                             .toList(),
                   ),
                 );
+              });
+            },
+          ),
+    );
+  }
+
+  void _showDeleteTypeDialog(LocationTemplate type) async {
+    // Mock: Find locations associated with this type (replace with real data in production)
+    final locationsToDelete = List<String>.generate(
+      7,
+      (i) => '${type.name} ${i + 1}',
+    );
+    final otherTypes = templates.where((t) => t.id != type.id).toList();
+    final locationCount = locationsToDelete.length;
+    showDialog(
+      context: context,
+      builder:
+          (context) => DeleteTypeDialog(
+            type: type,
+            locationCount: locationCount,
+            otherTypes: otherTypes,
+            locationsToDelete: locationsToDelete,
+            onDelete: (action, selectedType) {
+              setState(() {
+                templates.removeWhere((t) => t.id == type.id);
+                // TODO: Handle cascade, move, or keep logic as needed
               });
             },
           ),
@@ -358,7 +384,11 @@ class _LocationTypesPageState extends State<LocationTypesPage> {
                                                       color: Colors.red,
                                                       size: 18,
                                                     ),
-                                                    onPressed: () {},
+                                                    onPressed:
+                                                        () =>
+                                                            _showDeleteTypeDialog(
+                                                              template,
+                                                            ),
                                                     tooltip: 'Eliminar',
                                                   ),
                                                 ],
