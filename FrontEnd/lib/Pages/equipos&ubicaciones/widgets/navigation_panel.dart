@@ -59,13 +59,14 @@ class _NavigationPanelState extends State<NavigationPanel> {
   bool _expandedMarca = false;
   bool _expandedTipos = false;
 
-  void _showCrearUbicacionModal() {
+  void _showCrearUbicacionModal({String? parentCode}) {
     showDialog(
       context: context,
       builder:
           (context) => CrearUbicacionModal(
             locations: widget.locations.values.toList(),
             locationTypes: widget.locationTypes.values.toList(),
+            preselectedParentCode: parentCode,
             onCreate: ({
               required name,
               required technicalCode,
@@ -191,7 +192,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: InkWell(
-              onTap: _showCrearUbicacionModal,
+              onTap: () => _showCrearUbicacionModal(),
               borderRadius: BorderRadius.circular(16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -412,6 +413,8 @@ class _NavigationPanelState extends State<NavigationPanel> {
           onSelectItem: widget.onSelectItem,
           onMouseEnter: widget.onMouseEnter,
           onMouseLeave: widget.onMouseLeave,
+          onQuickCreate:
+              (parentCode) => _showCrearUbicacionModal(parentCode: parentCode),
         );
       },
     );
