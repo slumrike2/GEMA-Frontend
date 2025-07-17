@@ -165,6 +165,9 @@ class _InitialRegisterScreenState extends State<InitialRegisterScreen> {
         supabase.auth.currentUser?.id ?? '',
         _nameController.text.trim(),
       );
+      await UserService.changeCurrentUserPassword(
+        _passwordController.text.trim(),
+      );
       if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/admin');
     } catch (e) {
