@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/Models/backend_types.dart';
+import 'package:frontend/Modals/delete_brand_dialog.dart';
 
 class MarcaDetailsPage extends StatefulWidget {
   final List<Brand> brands;
@@ -58,111 +59,24 @@ class _MarcaDetailsPageState extends State<MarcaDetailsPage> {
   }
 
   void _deleteBrand(Brand brand) {
-    // Find all equipments for this brand
-    final List<String> equipmentNames = [];
-    final int? brandId = brand.id;
-    if (brandId != null) {
-      widget.equipmentCountByBrand[brandId];
-    }
-    // For demo: get equipment names from parent context if possible
-    // We'll use an InheritedWidget or callback in a real app, but for now, just show count
-    // Optionally, you can pass a list of equipment names to this widget for full detail
-
-    // Build list of other brands for selection
     final otherBrands = _brands.where((b) => b.id != brand.id).toList();
-    Brand? selectedBrand;
-    bool moveToNoMarca = true;
-
+    final equipmentCount =
+        brand.id != null ? (widget.equipmentCountByBrand[brand.id!] ?? 0) : 0;
     showDialog(
       context: context,
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            return AlertDialog(
-              title: const Text('Eliminar Marca'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('¿Seguro que deseas eliminar la marca "${brand.name}"?'),
-                  const SizedBox(height: 12),
-                  if ((brand.id != null
-                          ? (widget.equipmentCountByBrand[brand.id!] ?? 0)
-                          : 0) >
-                      0) ...[
-                    Text('Equipos asociados a esta marca:'),
-                    const SizedBox(height: 6),
-                    // For demo, just show count. For real, show names.
-                    Text(
-                      'Total: ${(widget.equipmentCountByBrand[brand.id!] ?? 0)}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 10),
-                    Text('¿Qué deseas hacer con estos equipos?'),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Radio<bool>(
-                          value: true,
-                          groupValue: moveToNoMarca,
-                          onChanged:
-                              (v) => setStateDialog(
-                                () => moveToNoMarca = v ?? true,
-                              ),
-                        ),
-                        const Text('Mover a "Sin Marca"'),
-                        const SizedBox(width: 16),
-                        Radio<bool>(
-                          value: false,
-                          groupValue: moveToNoMarca,
-                          onChanged:
-                              (v) => setStateDialog(
-                                () => moveToNoMarca = v ?? true,
-                              ),
-                        ),
-                        const Text('Mover a otra marca:'),
-                        const SizedBox(width: 8),
-                        if (!moveToNoMarca)
-                          DropdownButton<Brand>(
-                            value: selectedBrand,
-                            hint: const Text('Selecciona'),
-                            items:
-                                otherBrands
-                                    .map(
-                                      (b) => DropdownMenuItem(
-                                        value: b,
-                                        child: Text(b.name),
-                                      ),
-                                    )
-                                    .toList(),
-                            onChanged:
-                                (b) => setStateDialog(() => selectedBrand = b),
-                          ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancelar'),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                  onPressed: () {
-                    // Here you would update the equipment's brandId in a real app
-                    setState(() {
-                      _brands.removeWhere(
-                        (b) => b.id == brand.id && b.name == brand.name,
-                      );
-                    });
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('Eliminar'),
-                ),
-              ],
-            );
+        return DeleteBrandDialog(
+          brand: brand,
+          equipmentCount: equipmentCount,
+          otherBrands: otherBrands,
+          onDelete: (moveToNoMarca, selectedBrand) {
+            // Here you would update the equipment's brandId in a real app
+            setState(() {
+              _brands.removeWhere(
+                (b) => b.id == brand.id && b.name == brand.name,
+              );
+            });
+            // Optionally handle moveToNoMarca/selectedBrand
           },
         );
       },
