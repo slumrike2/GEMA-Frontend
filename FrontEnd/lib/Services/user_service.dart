@@ -3,7 +3,7 @@ import 'package:uuid/uuid.dart';
 import 'dart:convert';
 import 'dart:math';
 import '../Models/backend_types.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide User;  
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 
 class UserService {
   static const String baseUrl = 'http://localhost:3000/api/users';
@@ -35,15 +35,16 @@ class UserService {
     }
   }
 
-  static Future<void> create( 
-  {
+  static Future<void> create({
     required String email,
-    required String role
+    required String role,
   }) async {
     // Código para generar una contraseña aleatoria de 16 carácteres
-    final chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    final chars =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     final rand = Random.secure();
-    final password = List.generate(16, (index) => chars[rand.nextInt(chars.length)]).join();
+    final password =
+        List.generate(16, (index) => chars[rand.nextInt(chars.length)]).join();
 
     final uuidResponse = await signUpUser(email, password);
     final uuid = uuidResponse.user?.id;
@@ -55,7 +56,7 @@ class UserService {
         'uuid': uuid,
         'email': email,
         'role': role,
-        'password' : password
+        'password': password,
       }),
     );
 
@@ -69,20 +70,22 @@ class UserService {
   // Servicio para cambiar contraseña del usuario
   static Future<void> changeCurrentUserPassword(String newPassword) async {
     final response = await Supabase.instance.client.auth.updateUser(
-      UserAttributes(password: newPassword)
+      UserAttributes(password: newPassword),
     );
     if (response.user == null) {
       throw Exception('No se pudo cambiar la contraseña del usuario.');
     }
   }
 
-  static Future<void> update(String uuid, Map<String, dynamic> data) async {
+  static Future<User> update(String uuid, Map<String, dynamic> data) async {
     final response = await http.put(
       Uri.parse('$baseUrl/$uuid'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(data),
     );
-    if (response.statusCode != 200) {
+    if (response.statusCode == 200) {
+      return User.fromJson(jsonDecode(response.body));
+    } else {
       throw Exception('Error al actualizar usuario: \\${response.statusCode}');
     }
   }
@@ -91,6 +94,19 @@ class UserService {
     final response = await http.delete(Uri.parse('$baseUrl/$uuid'));
     if (response.statusCode != 200) {
       throw Exception('Error al eliminar usuario: \\${response.statusCode}');
+    }
+  }
+
+  static Future<void> updateName(String uuid, String name) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/name/$uuid'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'name': name}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception(
+        'Error al actualizar nombre de usuario: \\${response.statusCode}',
+      );
     }
   }
 }
