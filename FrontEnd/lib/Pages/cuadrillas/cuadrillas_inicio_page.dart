@@ -8,7 +8,7 @@ import 'package:frontend/Services/technician_speciality_service.dart';
 class CuadrillasInicioPage extends StatefulWidget {
   final List<TechnicalTeam> cuadrillas;
   final VoidCallback onCrearCuadrilla;
-  final Future<void> Function() onRefresh; // Para refrescar lista luego de crear/editar técnico
+  final Future<void> Function() onRefresh;
   final void Function(TechnicalTeam) onVerMantenimientos;
   final void Function(TechnicalTeam) onModificar;
 
@@ -31,21 +31,19 @@ class _CuadrillasInicioPageState extends State<CuadrillasInicioPage> {
   List<String> _especialidades = [];
 
   Future<void> _abrirModalCrearModificarPersona() async {
-    setState(() {
-      _loadingModal = true;
-    });
+    setState(() => _loadingModal = true);
 
     try {
       final especialidades = await TechnicianSpecialityService.getAll();
       final usuariosDisponibles = await UserService.getAvailableUsers();
+
+      if (!mounted) return;
 
       setState(() {
         _especialidades = especialidades;
         _usuariosDisponibles = usuariosDisponibles;
         _loadingModal = false;
       });
-
-      if (!mounted) return;
 
       await showDialog(
         context: context,
@@ -55,9 +53,13 @@ class _CuadrillasInicioPageState extends State<CuadrillasInicioPage> {
             usuariosDisponibles: _usuariosDisponibles,
             onCreate: (data) async {
               try {
-                await TechnicianService.create(data);
-                if (!mounted) return;
+                // Convertimos todos los campos a String
+                final cleanData = data.map((k, v) =>
+                    MapEntry(k, v?.toString()));
 
+                await TechnicianService.create(cleanData);
+
+                if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Técnico creado/actualizado')),
                 );
@@ -78,9 +80,7 @@ class _CuadrillasInicioPageState extends State<CuadrillasInicioPage> {
       );
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        _loadingModal = false;
-      });
+      setState(() => _loadingModal = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error al cargar datos para técnico: $e')),
       );
@@ -145,7 +145,10 @@ class _CuadrillasInicioPageState extends State<CuadrillasInicioPage> {
                   ),
                   const SizedBox(height: 22),
                   ...widget.cuadrillas.map((cuadrilla) {
-                    final nombre = (cuadrilla.name?.isNotEmpty ?? false) ? cuadrilla.name! : 'Sin nombre';
+                    final String nombre = cuadrilla.name?.toString().trim().isNotEmpty == true
+                        ? cuadrilla.name!.toString()
+                        : 'Sin nombre';
+                    final String? especialidad = cuadrilla.speciality?.toString();
 
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
@@ -175,9 +178,9 @@ class _CuadrillasInicioPageState extends State<CuadrillasInicioPage> {
                                       ),
                                     ),
                                   ),
-                                  if (cuadrilla.speciality != null && cuadrilla.speciality!.isNotEmpty)
+                                  if (especialidad != null && especialidad.isNotEmpty)
                                     Text(
-                                      "Especialidad: ${cuadrilla.speciality}",
+                                      "Especialidad: $especialidad",
                                       style: const TextStyle(fontSize: 16, color: Color(0xFF22356A)),
                                     ),
                                 ],

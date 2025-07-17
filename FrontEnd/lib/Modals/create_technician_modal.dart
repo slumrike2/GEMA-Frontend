@@ -48,8 +48,9 @@ class _CreateTechnicianModalState extends State<CreateTechnicianModal> {
     setState(() {
       _selectedUser = user;
       if (user != null) {
-        _nameController.text = user.name;
-        _contactController.text = user.email;
+        // Usa ?? '' para evitar valores nulos
+        _nameController.text = user.name ?? '';
+        _contactController.text = user.email ?? '';
         _personalIdController.clear(); // Sin personalId en User, queda vacío para llenar manualmente
       } else {
         _nameController.clear();
@@ -77,7 +78,7 @@ class _CreateTechnicianModalState extends State<CreateTechnicianModal> {
                     items: widget.usuariosDisponibles!
                         .map((u) => DropdownMenuItem<User>(
                               value: u,
-                              child: Text((u.name.isNotEmpty) ? u.name : u.email),
+                              child: Text((u.name?.isNotEmpty ?? false) ? u.name! : (u.email ?? 'Sin nombre')),
                             ))
                         .toList(),
                     onChanged: _onUserSelected,

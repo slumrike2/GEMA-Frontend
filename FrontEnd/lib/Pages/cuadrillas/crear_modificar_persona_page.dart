@@ -14,8 +14,7 @@ class CrearModificarPersonaPage extends StatefulWidget {
   });
 
   @override
-  State<CrearModificarPersonaPage> createState() =>
-      _CrearModificarPersonaPageState();
+  State<CrearModificarPersonaPage> createState() => _CrearModificarPersonaPageState();
 }
 
 class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
@@ -24,6 +23,7 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
   late TextEditingController _personalIdController;
   late TextEditingController _contactController;
   late TextEditingController _nameController;
+
   String? _selectedSpeciality;
   String? _selectedTechnicalTeamUuid;
 
@@ -36,12 +36,15 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
   void initState() {
     super.initState();
 
-    _personalIdController =
-        TextEditingController(text: widget.personaData?['personalId']?.toString() ?? '');
-    _contactController =
-        TextEditingController(text: widget.personaData?['contact']?.toString() ?? '');
-    _nameController =
-        TextEditingController(text: widget.personaData?['name']?.toString() ?? '');
+    _personalIdController = TextEditingController(
+      text: widget.personaData?['personalId']?.toString() ?? '',
+    );
+    _contactController = TextEditingController(
+      text: widget.personaData?['contact']?.toString() ?? '',
+    );
+    _nameController = TextEditingController(
+      text: widget.personaData?['name']?.toString() ?? '',
+    );
 
     _selectedSpeciality = widget.personaData?['speciality']?.toString();
     _selectedTechnicalTeamUuid = widget.personaData?['technicalTeamId']?.toString();
@@ -56,10 +59,10 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
         TechnicianSpecialityService.getAll(),
         TechnicalTeamService.getAll(),
       ]);
+
       final especs = List<String>.from(results[0]);
       final teams = List<Map<String, dynamic>>.from(results[1]);
 
-      if (!mounted) return;
       setState(() {
         especialidades = especs;
         technicalTeams = teams;
@@ -67,25 +70,27 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
         if (!especialidades.contains(_selectedSpeciality)) {
           _selectedSpeciality = null;
         }
+
+        final validTeamIds = technicalTeams.map((t) => t['id'].toString()).toList();
         if (_selectedTechnicalTeamUuid != null &&
-            !technicalTeams.any((t) => t["id"].toString() == _selectedTechnicalTeamUuid)) {
+            !validTeamIds.contains(_selectedTechnicalTeamUuid)) {
           _selectedTechnicalTeamUuid = null;
         }
       });
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al cargar datos: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al cargar datos: $e')),
+        );
+      }
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
   }
 
   Future<void> _onGuardar() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
+
     setState(() => isLoading = true);
 
     final data = {
@@ -99,37 +104,42 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
     try {
       if (widget.personaData?['uuid'] != null) {
         await TechnicianService.update(widget.personaData!['uuid'].toString(), data);
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Técnico actualizado exitosamente')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Técnico actualizado exitosamente')),
+          );
+        }
       } else {
         await TechnicianService.create(data);
-        if (!mounted) return;
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Técnico creado exitosamente')),
+          );
+        }
+      }
+
+      widget.onSuccess?.call();
+      if (mounted) Navigator.of(context).pop();
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Técnico creado exitosamente')),
+          SnackBar(content: Text('Error: $e')),
         );
       }
-      widget.onSuccess?.call();
-      if (!mounted) return;
-      Navigator.of(context).pop();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
   }
 
   Future<void> _onEliminar() async {
-    if (widget.personaData?['uuid'] == null) {
+    final uuid = widget.personaData?['uuid']?.toString();
+    if (uuid == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No se puede eliminar un técnico que no existe')),
       );
       return;
     }
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -152,18 +162,20 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
 
     setState(() => isLoading = true);
     try {
-      await TechnicianService.delete(widget.personaData!['uuid'].toString());
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Técnico eliminado exitosamente')),
-      );
-      widget.onSuccess?.call();
-      Navigator.of(context).pop();
+      await TechnicianService.delete(uuid);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Técnico eliminado exitosamente')),
+        );
+        widget.onSuccess?.call();
+        Navigator.of(context).pop();
+      }
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al eliminar: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al eliminar: $e')),
+        );
+      }
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
@@ -182,6 +194,7 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
     if (isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.personaData == null ? 'Crear Técnico' : 'Modificar Técnico'),
@@ -191,17 +204,14 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Campos formulario
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(
                   labelText: 'Nombre completo',
                   border: OutlineInputBorder(),
                 ),
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Ingrese el nombre' : null,
+                validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingrese el nombre' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -228,26 +238,20 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: especialidades.contains(_selectedSpeciality)
-                    ? _selectedSpeciality
-                    : null,
+                value: especialidades.contains(_selectedSpeciality) ? _selectedSpeciality : null,
                 decoration: const InputDecoration(
                   labelText: 'Especialidad',
                   border: OutlineInputBorder(),
                 ),
-                items: especialidades
-                    .map((e) => DropdownMenuItem<String>(
-                          value: e,
-                          child: Text(e),
-                        ))
-                    .toList(),
+                items: especialidades.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
                 onChanged: (v) => setState(() => _selectedSpeciality = v),
-                validator: (v) =>
-                    (v == null || v.isEmpty) ? 'Seleccione especialidad' : null,
+                validator: (v) => (v == null || v.isEmpty) ? 'Seleccione especialidad' : null,
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: technicalTeams.any((t) => t['id'].toString() == _selectedTechnicalTeamUuid)
+                value: technicalTeams.any((t) =>
+                        t['id'] != null &&
+                        t['id'].toString() == _selectedTechnicalTeamUuid)
                     ? _selectedTechnicalTeamUuid
                     : null,
                 decoration: const InputDecoration(
@@ -255,9 +259,10 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
                   border: OutlineInputBorder(),
                 ),
                 items: technicalTeams
+                    .where((t) => t['id'] != null)
                     .map((t) => DropdownMenuItem<String>(
                           value: t['id'].toString(),
-                          child: Text(t['name'] ?? 'Sin nombre'),
+                          child: Text(t['name']?.toString() ?? 'Sin nombre'),
                         ))
                     .toList(),
                 onChanged: (v) => setState(() => _selectedTechnicalTeamUuid = v),
@@ -272,8 +277,7 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFFF5443),
                         foregroundColor: Colors.white,
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(7),
                         ),
@@ -286,8 +290,7 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF2293B4),
                       foregroundColor: Colors.white,
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(7),
                       ),
