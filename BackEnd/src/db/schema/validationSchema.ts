@@ -39,10 +39,10 @@ export const LocationTypeSchema = z.object({
  * - timestamps: Campos de timestamp opcionales
  */
 export const UserSchema = z.object({
-	uuid: z.string().uuid().optional(),
-	name: z.string().min(1),
+	uuid: z.string().uuid(),
+	name: z.string().optional(),
 	email: z.string().email(),
-	role: z.enum(['user', 'technician', 'coordinator', 'admin']).optional(),
+	role: z.enum(['user', 'admin']).optional(),
 	updatedAt: z.date().optional(),
 	createdAt: z.date().optional(),
 	deletedAt: z.date().optional()
@@ -64,10 +64,12 @@ export const UserSchema = z.object({
  * - Electronica: Especialidad en trabajos electrónicos
  */
 export const technicianSpecialityEnum = z.enum([
-	'Electricista',
-	'Mecanica',
-	'Logistica',
-	'Electronica'
+	'Electricidad',
+	'Refrigeracion',
+	'Iluminacion',
+	'Pintura',
+	'Protocolo',
+	'IT'
 ]);
 
 /**
@@ -82,11 +84,11 @@ export const technicianSpecialityEnum = z.enum([
  * - timestamps: Campos de timestamp opcionales
  */
 export const TechnicianSchema = z.object({
-	uuid: z.string().uuid().optional(),
+	uuid: z.string().uuid(),
 	personalId: z.string().min(1),
 	contact: z.string().min(1),
 	speciality: technicianSpecialityEnum,
-	technicalTeamId: z.number().int().optional(),
+	technicalTeamId: z.number().int(),
 	updatedAt: z.date().optional(),
 	createdAt: z.date().optional(),
 	deletedAt: z.date().optional()
@@ -105,6 +107,7 @@ export const TechnicalTeamSchema = z.object({
 	id: z.number().int().optional(),
 	name: z.string().min(1),
 	speciality: technicianSpecialityEnum.optional(),
+	leaderId: z.string().uuid().optional(),
 	updatedAt: z.date().optional(),
 	createdAt: z.date().optional(),
 	deletedAt: z.date().optional()
@@ -123,7 +126,7 @@ export const TechnicalLocationSchema = z.object({
 	technicalCode: z.string().min(1),
 	name: z.string().min(1),
 	type: z.number().int(),
-	parentTechnicalCode: z.string().min(1)
+	parentTechnicalCode: z.string().min(1).optional()
 });
 
 /**
@@ -300,6 +303,7 @@ export const ReportSchema = z.object({
  * Valida los datos requeridos para crear o actualizar una actualización de reporte:
  * - id: ID opcional (generado automáticamente)
  * - description: Descripción de la actualización
+ * - report_id: ID del reporte al que se le hizo la actualización
  * - timestamps: Campos de timestamp opcionales
  */
 export const ReportUpdateSchema = z.object({
@@ -307,5 +311,6 @@ export const ReportUpdateSchema = z.object({
 	description: z.string().min(1),
 	updatedAt: z.date().optional(),
 	createdAt: z.date().optional(),
-	deletedAt: z.date().optional()
+	deletedAt: z.date().optional(),
+	report_id: z.number().int()
 });
