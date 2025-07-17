@@ -111,7 +111,7 @@ export const Technician = pgTable('Technician', {
 	// 	onDelete: 'cascade',
 	// 	onUpdate: 'cascade'
 	// }),
-	technicalTeamId: serial().references(() => TechnicalTeam.id, {
+	technicalTeamId: integer().references(() => TechnicalTeam.id, {
 		onDelete: 'set null', // Si se elimina el equipo, el técnico queda sin equipo
 		onUpdate: 'cascade' // Si se actualiza el ID del equipo, se actualiza aquí
 	}),
