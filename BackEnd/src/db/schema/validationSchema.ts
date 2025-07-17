@@ -88,7 +88,7 @@ export const TechnicianSchema = z.object({
 	personalId: z.string().min(1),
 	contact: z.string().min(1),
 	speciality: technicianSpecialityEnum,
-	technicalTeamId: z.number().int().optional(),
+	technicalTeamId: z.number().int(),
 	updatedAt: z.date().optional(),
 	createdAt: z.date().optional(),
 	deletedAt: z.date().optional()
@@ -107,7 +107,7 @@ export const TechnicalTeamSchema = z.object({
 	id: z.number().int().optional(),
 	name: z.string().min(1),
 	speciality: technicianSpecialityEnum.optional(),
-	leaderId: z.string().uuid(),
+	leaderId: z.string().uuid().optional(),
 	updatedAt: z.date().optional(),
 	createdAt: z.date().optional(),
 	deletedAt: z.date().optional()
@@ -303,6 +303,7 @@ export const ReportSchema = z.object({
  * Valida los datos requeridos para crear o actualizar una actualización de reporte:
  * - id: ID opcional (generado automáticamente)
  * - description: Descripción de la actualización
+ * - report_id: ID del reporte al que se le hizo la actualización
  * - timestamps: Campos de timestamp opcionales
  */
 export const ReportUpdateSchema = z.object({

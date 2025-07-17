@@ -39,14 +39,10 @@ export const timestamps = {
  *
  * Valores disponibles:
  * - user: Usuario básico del sistema
- * - technician: Técnico con permisos especializados
- * - coordinator: Coordinador con permisos de gestión
  * - admin: Administrador con todos los permisos
  */
 export const rolesEnum = pgEnum('roles', [
 	'user',
-	'technician',
-	'coordinator',
 	'admin'
 ]);
 
@@ -111,7 +107,7 @@ export const Technician = pgTable('Technician', {
 	// 	onDelete: 'cascade',
 	// 	onUpdate: 'cascade'
 	// }),
-	technicalTeamId: integer().references(() => TechnicalTeam.id, {
+	technicalTeamId: integer().notNull().references(() => TechnicalTeam.id, {
 		onDelete: 'set null', // Si se elimina el equipo, el técnico queda sin equipo
 		onUpdate: 'cascade' // Si se actualiza el ID del equipo, se actualiza aquí
 	}),
