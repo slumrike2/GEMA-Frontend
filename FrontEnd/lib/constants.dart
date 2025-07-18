@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 /// Colores personalizados para la aplicación.
-const Color primaryGreen = Color(0xFF0A3444); // Verde principal
-const Color primaryBlue = Color(0xFF002811); // Azul claro
+const Color primaryBlue = Color(0xFF0A3444); // Verde principal
+const Color primaryGreen = Color(0xFF002811); // Azul claro
 const Color primaryYellow = Color(0xFF2C2001); // Amarillo
 const Color primaryGray = Color.fromARGB(255, 61, 61, 61); // Gris
 

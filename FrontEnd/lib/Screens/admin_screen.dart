@@ -6,7 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:frontend/Screens/equipos_ubicaciones_screen.dart';
 import 'package:frontend/constants.dart';
 
-import 'mantenimientos_screen.dart';
+// import 'mantenimientos_screen.dart'; // Mantenimientos oculto
 import 'cuadrillas_screen.dart';
 
 class AdminScreen extends StatefulWidget {
@@ -22,13 +22,13 @@ class _AdminScreenState extends State<AdminScreen> {
   bool loadingUser = true;
 
   final List<IconData> _navIcons = [
-    Icons.build,
+    // Icons.build, // Mantenimientos
     Icons.devices,
     Icons.group,
     Icons.person,
   ];
   final List<String> _navLabels = [
-    'Mantenimientos',
+    // 'Mantenimientos',
     'Equipos y Ubicaciones',
     'Cuadrillas',
     'Usuarios',
@@ -75,16 +75,18 @@ class _AdminScreenState extends State<AdminScreen> {
   @override
   Widget build(BuildContext context) {
     final List<Color> navColors = [
-      primaryYellow,
+      // primaryYellow, // Mantenimientos
       primaryGreen,
       primaryBlue,
-      primaryGray, // Mantenimientos
+      primaryGray,
     ];
     List<Image> navIcons = [
-      Image.asset('assets/images/IconMantenimientos.png'),
+      // Image.asset('assets/images/IconMantenimientos.png'),
       Image.asset('assets/images/IconEquiposUbicaciones.png'),
       Image.asset('assets/images/IconCuadrillas.png'),
-      Image.asset('assets/images/IconMantenimientos.png'),
+      Image.asset(
+        'assets/images/IconMantenimientos.png',
+      ), // Si quieres ocultar también esta imagen, comenta esta línea
     ];
 
     if (loadingUser) {
@@ -93,21 +95,21 @@ class _AdminScreenState extends State<AdminScreen> {
 
     // Si el usuario es "user", ocultar el botón y la pantalla de UsersScreen
     final navIconsFiltered =
-        showUsersScreen ? _navIcons : _navIcons.sublist(0, 3);
+        showUsersScreen ? _navIcons : _navIcons.sublist(0, 2);
     final navLabelsFiltered =
-        showUsersScreen ? _navLabels : _navLabels.sublist(0, 3);
+        showUsersScreen ? _navLabels : _navLabels.sublist(0, 2);
     final navImagesFiltered =
-        showUsersScreen ? navIcons : navIcons.sublist(0, 3);
+        showUsersScreen ? navIcons : navIcons.sublist(0, 2);
     final screensFiltered =
         showUsersScreen
             ? [
-              const MantenimientosScreen(),
+              // const MantenimientosScreen(),
               const EquiposUbicacionesScreen(),
               const CuadrillasScreen(),
               const UsersScreen(),
             ]
             : [
-              const MantenimientosScreen(),
+              // const MantenimientosScreen(),
               const EquiposUbicacionesScreen(),
               const CuadrillasScreen(),
             ];
