@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../Modals/create_user_modal.dart';
 import '../Services/user_service.dart';
 import '../Models/backend_types.dart';
+import '../constants.dart';
 
 class UsersScreen extends StatefulWidget {
   const UsersScreen({super.key});
@@ -14,12 +15,10 @@ class _UsersScreenState extends State<UsersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        color: const Color.fromARGB(255, 255, 255, 255),
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: UserManager(),
-        ),
+      backgroundColor: Colors.white,
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Container(child: UserManager()),
       ),
     );
   }
@@ -34,6 +33,8 @@ class _UserManagerState extends State<UserManager> {
   List<User> users = [];
   bool isLoading = false;
   String? errorText;
+  int selectedTab = 0;
+  String searchText = '';
 
   @override
   void initState() {
@@ -129,8 +130,6 @@ class _UserManagerState extends State<UserManager> {
 
   void _startEditUser(int index) {
     final user = users[index];
-
-    // Hacer fetch de todos los datos del usuario antes de abrir el modal
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -158,7 +157,6 @@ class _UserManagerState extends State<UserManager> {
                   (fullUser.name != null && fullUser.name!.trim().isNotEmpty);
               return CreateUserModal(
                 onCreate: (email, role, {String? name}) {
-                  // Crear un nuevo objeto User actualizado con los datos del modal
                   final updatedUser = User(
                     uuid: fullUser.uuid,
                     name:
@@ -171,7 +169,6 @@ class _UserManagerState extends State<UserManager> {
                     createdAt: null,
                     deletedAt: null,
                   );
-                  print(fullUser.createdAt);
                   _updateUser(updatedUser);
                 },
                 isEdit: fullHasName,
@@ -184,130 +181,296 @@ class _UserManagerState extends State<UserManager> {
     );
   }
 
+  List<User> get filteredUsers {
+    List<User> baseList;
+    if (selectedTab == 1) {
+      baseList =
+          users
+              .where(
+                (u) =>
+                    (u.name ?? '').trim().isNotEmpty &&
+                    (u.name ?? '').toLowerCase() != 'no registrado',
+              )
+              .toList();
+    } else if (selectedTab == 2) {
+      baseList =
+          users
+              .where(
+                (u) =>
+                    (u.name ?? '').trim().isEmpty ||
+                    (u.name ?? '').toLowerCase() == 'no registrado',
+              )
+              .toList();
+    } else {
+      baseList = users;
+    }
+    if (searchText.trim().isEmpty) return baseList;
+    final query = searchText.trim().toLowerCase();
+    return baseList.where((u) {
+      final name = (u.name ?? '').toLowerCase();
+      final email = u.email.toLowerCase();
+      return name.contains(query) || email.contains(query);
+    }).toList();
+  }
+
+  Widget _buildTab(String label, int index) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 16.0),
+      child: TextButton(
+        onPressed: () {
+          setState(() => selectedTab = index);
+        },
+        style: TextButton.styleFrom(
+          foregroundColor: selectedTab == index ? Colors.green : Colors.black,
+          textStyle: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        child: Text(label),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Text(
-              'Usuarios',
-              style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
-            ),
-            IconButton(
-              icon: Icon(Icons.refresh, size: 32, color: Colors.blue),
-              tooltip: 'Refrescar',
-              onPressed: isLoading ? null : _fetchUsers,
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        if (errorText != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
-            child: Text(errorText!, style: TextStyle(color: Colors.red)),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: Offset(0, 2),
           ),
-        Expanded(
-          child:
-              isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : users.isEmpty
-                  ? const Center(child: Text('No hay usuarios registrados.'))
-                  : ListView.separated(
-                    itemCount: users.length,
-                    separatorBuilder: (_, __) => Divider(),
-                    itemBuilder: (context, i) {
-                      final user = users[i];
-                      final userName = (user.name ?? '').trim();
-                      final userEmail = user.email;
-                      return ListTile(
-                        leading: CircleAvatar(
-                          child: Text(
-                            userName.isNotEmpty
-                                ? userName[0].toUpperCase()
-                                : '?',
-                          ),
-                          radius: 32,
-                        ),
-                        title: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              userName.isNotEmpty ? userName : 'No registrado',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 22,
-                                color:
-                                    userName.isNotEmpty
-                                        ? Colors.black
-                                        : Colors.red,
-                              ),
-                            ),
-                            Text(
-                              userEmail,
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 18,
-                              ),
-                            ),
-                          ],
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            userName.isNotEmpty
-                                ? IconButton(
-                                  icon: Icon(Icons.edit, color: Colors.blue),
-                                  tooltip: 'Editar',
-                                  onPressed: () => _startEditUser(i),
-                                )
-                                : Container(),
-
-                            IconButton(
-                              icon: Icon(Icons.delete, color: Colors.red),
-                              tooltip: 'Eliminar',
-                              onPressed: () => _deleteUser(i),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Spacer(),
-            SizedBox(
-              height: 48,
-              child: ElevatedButton.icon(
-                icon: Icon(Icons.person_add, size: 28),
-                label: Text('Agregar usuario', style: TextStyle(fontSize: 18)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  padding: EdgeInsets.symmetric(horizontal: 24),
+        ],
+      ),
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text(
+                'Usuarios',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                icon: Icon(Icons.refresh, size: 24, color: Colors.green),
+                tooltip: 'Refrescar',
+                onPressed: isLoading ? null : _fetchUsers,
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder:
-                        (context) => CreateUserModal(
-                          onCreate: (email, role, {String? name}) {
-                            _addUser(email, role);
-                          },
-                          initialEmail: '', // Pass empty string for new user
-                        ),
-                  );
-                },
               ),
+              const SizedBox(width: 8),
+              SizedBox(
+                height: 40,
+                child: ElevatedButton.icon(
+                  icon: Icon(Icons.person_add, size: 20, color: Colors.white),
+                  label: Text(
+                    'Agregar usuario',
+                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: botonGreen,
+                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder:
+                          (context) => CreateUserModal(
+                            onCreate: (email, role, {String? name}) {
+                              _addUser(email, role);
+                            },
+                            initialEmail: '',
+                          ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Buscador
+          Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Buscar usuarios o equipos...',
+                prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+                filled: true,
+                fillColor: Colors.grey[100],
+                contentPadding: EdgeInsets.symmetric(
+                  vertical: 0,
+                  horizontal: 16,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  searchText = value;
+                });
+              },
             ),
-          ],
-        ),
-      ],
+          ),
+          // Tabs
+          Row(
+            children: [
+              _buildTab('Todos', 0),
+              _buildTab('Registrados', 1),
+              _buildTab('Pendientes', 2),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (errorText != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: Text(errorText!, style: TextStyle(color: Colors.red)),
+            ),
+          Expanded(
+            child:
+                isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : filteredUsers.isEmpty
+                    ? const Center(child: Text('No hay usuarios registrados.'))
+                    : ListView.separated(
+                      itemCount: filteredUsers.length,
+                      separatorBuilder: (_, __) => Divider(),
+                      itemBuilder: (context, i) {
+                        final user = filteredUsers[i];
+                        final userName = (user.name ?? '').trim();
+                        final userEmail = user.email;
+                        final userRole =
+                            user.role?.name == 'admin' ? 'Admin' : 'Usuario';
+                        return Container(
+                          padding: EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 0,
+                          ),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 20,
+                                backgroundColor: Colors.grey[200],
+                                child: Text(
+                                  userName.isNotEmpty
+                                      ? userName[0].toUpperCase()
+                                      : '?',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            (userName.isNotEmpty
+                                                    ? userName
+                                                    : 'No registrado') +
+                                                ' · Rol: $userRole',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                              color:
+                                                  userName.isNotEmpty
+                                                      ? Colors.black
+                                                      : Colors.red,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(width: 8),
+                                        Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 2,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                userName.isNotEmpty
+                                                    ? Colors.green[100]
+                                                    : Colors.grey[300],
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            userName.isNotEmpty
+                                                ? 'Registrado'
+                                                : 'Pendiente',
+                                            style: TextStyle(
+                                              color:
+                                                  userName.isNotEmpty
+                                                      ? Colors.green[800]
+                                                      : Colors.grey[800],
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Text(
+                                      userEmail,
+                                      style: TextStyle(
+                                        color: Colors.grey[700],
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  userName.isNotEmpty
+                                      ? IconButton(
+                                        icon: Icon(
+                                          Icons.edit,
+                                          color: Colors.blue,
+                                        ),
+                                        tooltip: 'Editar',
+                                        onPressed: () => _startEditUser(i),
+                                      )
+                                      : Container(),
+                                  IconButton(
+                                    icon: Icon(Icons.delete, color: Colors.red),
+                                    tooltip: 'Eliminar',
+                                    onPressed: () => _deleteUser(i),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
     );
   }
 }
