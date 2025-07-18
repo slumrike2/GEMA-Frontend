@@ -75,6 +75,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
             locations: widget.locations.values.toList(),
             locationTypes: widget.locationTypes.values.toList(),
             preselectedParentCode: parentCode,
+            onRefetchLocations: widget.refetchLocations,
             onCreate: ({
               required name,
               required technicalCode,

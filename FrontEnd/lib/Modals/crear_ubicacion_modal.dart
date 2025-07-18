@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/Models/backend_types.dart';
+import 'package:frontend/Services/technical_location_service.dart';
 
 class CrearUbicacionModal extends StatefulWidget {
   final List<TechnicalLocation> locations;
@@ -11,6 +12,7 @@ class CrearUbicacionModal extends StatefulWidget {
     required String? parentTechnicalCode,
   })
   onCreate;
+  final VoidCallback onRefetchLocations;
   final String? preselectedParentCode;
 
   const CrearUbicacionModal({
@@ -19,6 +21,7 @@ class CrearUbicacionModal extends StatefulWidget {
     required this.locationTypes,
     required this.onCreate,
     this.preselectedParentCode,
+    required this.onRefetchLocations,
   }) : super(key: key);
 
   @override
@@ -28,6 +31,7 @@ class CrearUbicacionModal extends StatefulWidget {
 class _CrearUbicacionModalState extends State<CrearUbicacionModal> {
   final _formKey = GlobalKey<FormState>();
   String? _parentCode;
+  String? _abbreviatedCode;
   LocationType? _selectedType;
   Map<String, String> _variables = {};
   String _previewCode = '';
@@ -63,6 +67,7 @@ class _CrearUbicacionModalState extends State<CrearUbicacionModal> {
             ? parent.technicalCode + '-' + code
             : code;
     _previewName = name;
+    _abbreviatedCode = code;
     setState(() {});
   }
 
@@ -196,17 +201,39 @@ class _CrearUbicacionModalState extends State<CrearUbicacionModal> {
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
                           if (_formKey.currentState?.validate() != true ||
                               _selectedType == null)
                             return;
-                          widget.onCreate(
-                            name: _previewName,
-                            technicalCode: _previewCode,
-                            type: widget.locationTypes.indexOf(_selectedType!),
-                            parentTechnicalCode: _parentCode,
-                          );
-                          Navigator.of(context).pop();
+                          // Construir el objeto para el backend
+                          final technicalLocation = {
+                            'name': _previewName,
+                            'technicalCode': _previewCode,
+                            'type':
+                                _selectedType!.id ??
+                                widget.locationTypes.indexOf(_selectedType!),
+                            'parentTechnicalCode': _parentCode,
+                            'abbreviatedTechnicalCode': _abbreviatedCode,
+                          };
+                          try {
+                            await TechnicalLocationService.create(
+                              technicalLocation,
+                            );
+                            widget.onCreate(
+                              name: _previewName,
+                              technicalCode: _previewCode,
+                              type:
+                                  _selectedType!.id ??
+                                  widget.locationTypes.indexOf(_selectedType!),
+                              parentTechnicalCode: _parentCode,
+                            );
+                            if (widget.onRefetchLocations != null) {
+                              widget.onRefetchLocations!();
+                            }
+                            Navigator.of(context).pop();
+                          } catch (e) {
+                            // Puedes mostrar un error aquí si lo deseas
+                          }
                         },
                         child: const Text('Crear Ubicación'),
                       ),

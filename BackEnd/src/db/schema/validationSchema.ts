@@ -151,6 +151,7 @@ export const technicalTeamSchema = z.object({
 export const technicalLocationSchema = z.object({
 	technicalCode: z.string().min(1),
 	name: z.string().min(1),
+	abbreviatedTechnicalCode: z.string().min(1).optional(),
 	type: z.number().int(),
 	parentTechnicalCode: z.string().min(1).optional()
 });

@@ -5,48 +5,31 @@ import 'package:frontend/Models/backend_types.dart';
 import 'package:frontend/Pages/equipos&ubicaciones/widgets/location_type_card.dart';
 import 'package:frontend/Services/technical_location_type_service.dart';
 
-class LocationTypesPage extends StatefulWidget {
+class LocationTypesPage extends StatelessWidget {
   final VoidCallback? onClose;
-  const LocationTypesPage({Key? key, this.onClose}) : super(key: key);
+  final List<LocationType> types;
+  final Future<void> Function() refetchLocationTypes;
+  const LocationTypesPage({
+    Key? key,
+    this.onClose,
+    required this.types,
+    required this.refetchLocationTypes,
+  }) : super(key: key);
 
-  @override
-  State<LocationTypesPage> createState() => _LocationTypesPageState();
-}
-
-class _LocationTypesPageState extends State<LocationTypesPage> {
-  List<LocationType> types = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchLocationTypes();
-  }
-
-  void _fetchLocationTypes() async {
-    try {
-      final fetchedTypes = await TechnicalLocationTypeService.getAll();
-      setState(() {
-        types = fetchedTypes;
-      });
-    } catch (e) {
-      // Handle error (e.g., show a snackbar or log the error)
-      print('Error fetching location types: $e');
-    }
-  }
-
-  void _showCreateDialog() {
+  void _showCreateDialog(BuildContext context) {
     showDialog(
       context: context,
       builder:
           (context) => CrearTipoUbicacionModal(
-            onCreate: (locationType) {
-              TechnicalLocationTypeService.create(locationType);
+            onCreate: (locationType) async {
+              await TechnicalLocationTypeService.create(locationType);
+              await refetchLocationTypes();
             },
           ),
     );
   }
 
-  void _showDeleteTypeDialog(LocationType type) async {
+  void _showDeleteTypeDialog(BuildContext context, LocationType type) async {
     // Mock: Find locations associated with this type (replace with real data in production)
     final locationsToDelete = List<String>.generate(
       7,
@@ -63,10 +46,8 @@ class _LocationTypesPageState extends State<LocationTypesPage> {
             otherTypes: otherTypes,
             locationsToDelete: locationsToDelete,
             onDelete: (action, selectedType) {
-              setState(() {
-                types.removeWhere((t) => t.id == type.id);
-                // TODO: Handle cascade, move, or keep logic as needed
-              });
+              // TODO: Handle cascade, move, or keep logic as needed
+              refetchLocationTypes();
             },
           ),
     );
@@ -112,10 +93,12 @@ class _LocationTypesPageState extends State<LocationTypesPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Title and close button
-                      HeaderSection(onClose: widget.onClose),
+                      HeaderSection(onClose: onClose),
                       const SizedBox(height: 4),
                       // Description and add button
-                      DescriptionSection(onCreate: _showCreateDialog),
+                      DescriptionSection(
+                        onCreate: () => _showCreateDialog(context),
+                      ),
                       const SizedBox(height: 20),
                       Expanded(
                         child: SingleChildScrollView(
@@ -130,7 +113,10 @@ class _LocationTypesPageState extends State<LocationTypesPage> {
                                     mainAxisSpacing: width < 600 ? 8 : 24,
                                     childAspectRatio: width < 600 ? 0.85 : 0.95,
                                     onDelete:
-                                        (type) => _showDeleteTypeDialog(type),
+                                        (type) => _showDeleteTypeDialog(
+                                          context,
+                                          type,
+                                        ),
                                   ),
                         ),
                       ),

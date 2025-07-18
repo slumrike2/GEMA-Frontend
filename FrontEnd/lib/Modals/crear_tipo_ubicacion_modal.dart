@@ -377,7 +377,7 @@ class _CrearTipoUbicacionModalState extends State<CrearTipoUbicacionModal> {
                       const SizedBox(width: 8),
                       Tooltip(
                         message:
-                            'Las variables permiten personalizar la plantilla de código y nombre. Ejemplo: {laboratorio}, {número}',
+                            'Las variables permiten personalizar la plantilla de código y nombre. Ejemplo: {piso}, {modulo}, {escuela}',
                         child: const Icon(
                           Icons.help_outline,
                           size: 18,
@@ -430,7 +430,7 @@ class _CrearTipoUbicacionModalState extends State<CrearTipoUbicacionModal> {
                                   child: TextFormField(
                                     decoration: InputDecoration(
                                       labelText: 'Etiqueta para Plantilla',
-                                      hintText: 'Ej: laboratorio',
+                                      hintText: 'Ej: Piso',
                                       suffixIcon: Tooltip(
                                         message:
                                             'Esta etiqueta se usará como variable en las plantillas de código y nombre. Ejemplo: {laboratorio}, {número}.',
@@ -454,7 +454,7 @@ class _CrearTipoUbicacionModalState extends State<CrearTipoUbicacionModal> {
                                   child: TextFormField(
                                     decoration: InputDecoration(
                                       labelText: 'Nombre',
-                                      hintText: 'Ej: Laboratorio',
+                                      hintText: 'Ej: piso donde está',
                                       suffixIcon: Tooltip(
                                         message:
                                             'Nombre descriptivo de la variable.',
@@ -541,11 +541,108 @@ class _CrearTipoUbicacionModalState extends State<CrearTipoUbicacionModal> {
                   Padding(
                     padding: EdgeInsets.only(bottom: 8),
                     child: Text(
-                      'Usa las variables definidas arriba para crear el formato de código y nombre. Escribe el texto y selecciona variables usando llaves { } para armar la plantilla.',
+                      'Usa las variables definidas arriba para crear el formato de código y nombre. Escribe el texto y selecciona variables para armar la plantilla. También puedes escribir directamente el nombre de la variable entre llaves, por ejemplo: {nombre_variable}.',
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.blueGrey[700],
                       ),
+                    ),
+                  ),
+                  _CampoAutocompleteTextField(
+                    label: 'Plantilla de Nombre *',
+                    hint: 'Ejemplo: Laboratorio {número}',
+                    controller: _formatoNombreController,
+                    focusNode: _formatoNombreFocusNode,
+                    onChanged: (v) {
+                      setState(() {
+                        formatoNombre = v;
+                      });
+                    },
+                    campos: campos,
+                    validator:
+                        (v) =>
+                            (v == null || v.trim().isEmpty)
+                                ? 'Plantilla requerida'
+                                : null,
+                    tooltip:
+                        'Usa las variables entre llaves. Ejemplo: Laboratorio {número}',
+                  ),
+                  // Botones para insertar variables en Plantilla de Nombre (siempre visibles)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4, left: 2, bottom: 4),
+                    child: Wrap(
+                      spacing: 8,
+                      children:
+                          campos
+                              .where(
+                                (c) => c['id'] != null && c['id']!.isNotEmpty,
+                              )
+                              .map((c) {
+                                return ElevatedButton.icon(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blueGrey[50],
+                                    foregroundColor: Colors.blueGrey[900],
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    textStyle: const TextStyle(fontSize: 12),
+                                  ),
+                                  icon: const Icon(Icons.input, size: 16),
+                                  label: Text('{${c['id']}}'),
+                                  onPressed: () {
+                                    final controller = _formatoNombreController;
+                                    final cursor =
+                                        controller.selection.baseOffset;
+                                    final text = controller.text;
+                                    final insert = '{${c['id']}}';
+                                    final newText =
+                                        cursor < 0
+                                            ? text + insert
+                                            : text.substring(0, cursor) +
+                                                insert +
+                                                text.substring(cursor);
+                                    controller.text = newText;
+                                    controller
+                                        .selection = TextSelection.collapsed(
+                                      offset:
+                                          (cursor < 0
+                                              ? newText.length
+                                              : cursor + insert.length),
+                                    );
+                                    setState(() {
+                                      formatoNombre = newText;
+                                    });
+                                  },
+                                );
+                              })
+                              .toList(),
+                    ),
+                  ),
+                  // Vista previa en tiempo real para Plantilla de Nombre
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2, left: 2, bottom: 8),
+                    child: Builder(
+                      builder: (context) {
+                        String ejemplo = formatoNombre;
+                        campos.forEach((c) {
+                          if (c['id'] != null && c['id']!.isNotEmpty) {
+                            ejemplo = ejemplo.replaceAll(
+                              '{${c['id']}}',
+                              c['defaultValue']?.isNotEmpty == true
+                                  ? c['defaultValue']!
+                                  : c['id']!,
+                            );
+                          }
+                        });
+                        return Text(
+                          'Ejemplo: $ejemplo',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.green[700],
+                          ),
+                        );
+                      },
                     ),
                   ),
                   _CampoAutocompleteTextField(
@@ -567,77 +664,83 @@ class _CrearTipoUbicacionModalState extends State<CrearTipoUbicacionModal> {
                     tooltip:
                         'Usa las variables entre llaves. Ejemplo: {laboratorio}-{número}',
                   ),
-                  Builder(
-                    builder: (context) {
-                      // Ejemplo en vivo para código
-                      String ejemplo = formatoCodigo;
-                      campos.forEach((c) {
-                        if (c['id'] != null && c['id']!.isNotEmpty) {
-                          ejemplo = ejemplo.replaceAll(
-                            '{${c['id']}}',
-                            c['defaultValue']?.isNotEmpty == true
-                                ? c['defaultValue']!
-                                : c['id']!,
-                          );
-                        }
-                      });
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 4, left: 2),
-                        child: Text(
+                  // Botones para insertar variables en Plantilla de Código (siempre visibles)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4, left: 2, bottom: 4),
+                    child: Wrap(
+                      spacing: 8,
+                      children:
+                          campos
+                              .where(
+                                (c) => c['id'] != null && c['id']!.isNotEmpty,
+                              )
+                              .map((c) {
+                                return ElevatedButton.icon(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blueGrey[50],
+                                    foregroundColor: Colors.blueGrey[900],
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    textStyle: const TextStyle(fontSize: 12),
+                                  ),
+                                  icon: const Icon(Icons.input, size: 16),
+                                  label: Text('{${c['id']}}'),
+                                  onPressed: () {
+                                    final controller = _formatoCodigoController;
+                                    final cursor =
+                                        controller.selection.baseOffset;
+                                    final text = controller.text;
+                                    final insert = '{${c['id']}}';
+                                    final newText =
+                                        cursor < 0
+                                            ? text + insert
+                                            : text.substring(0, cursor) +
+                                                insert +
+                                                text.substring(cursor);
+                                    controller.text = newText;
+                                    controller
+                                        .selection = TextSelection.collapsed(
+                                      offset:
+                                          (cursor < 0
+                                              ? newText.length
+                                              : cursor + insert.length),
+                                    );
+                                    setState(() {
+                                      formatoCodigo = newText;
+                                    });
+                                  },
+                                );
+                              })
+                              .toList(),
+                    ),
+                  ),
+                  // Vista previa en tiempo real para Plantilla de Código
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2, left: 2, bottom: 8),
+                    child: Builder(
+                      builder: (context) {
+                        String ejemplo = formatoCodigo;
+                        campos.forEach((c) {
+                          if (c['id'] != null && c['id']!.isNotEmpty) {
+                            ejemplo = ejemplo.replaceAll(
+                              '{${c['id']}}',
+                              c['defaultValue']?.isNotEmpty == true
+                                  ? c['defaultValue']!
+                                  : c['id']!,
+                            );
+                          }
+                        });
+                        return Text(
                           'Ejemplo: $ejemplo',
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.green[700],
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  _CampoAutocompleteTextField(
-                    label: 'Plantilla de Nombre *',
-                    hint: 'Ejemplo: Laboratorio {número}',
-                    controller: _formatoNombreController,
-                    focusNode: _formatoNombreFocusNode,
-                    onChanged: (v) {
-                      setState(() {
-                        formatoNombre = v;
-                      });
-                    },
-                    campos: campos,
-                    validator:
-                        (v) =>
-                            (v == null || v.trim().isEmpty)
-                                ? 'Plantilla requerida'
-                                : null,
-                    tooltip:
-                        'Usa las variables entre llaves. Ejemplo: Laboratorio {número}',
-                  ),
-                  Builder(
-                    builder: (context) {
-                      // Ejemplo en vivo para nombre
-                      String ejemplo = formatoNombre;
-                      campos.forEach((c) {
-                        if (c['id'] != null && c['id']!.isNotEmpty) {
-                          ejemplo = ejemplo.replaceAll(
-                            '{${c['id']}}',
-                            c['defaultValue']?.isNotEmpty == true
-                                ? c['defaultValue']!
-                                : c['id']!,
-                          );
-                        }
-                      });
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 4, left: 2),
-                        child: Text(
-                          'Ejemplo: $ejemplo',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.green[700],
-                          ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                   const SizedBox(height: 18),
                   Row(
@@ -663,6 +766,21 @@ class _CrearTipoUbicacionModalState extends State<CrearTipoUbicacionModal> {
                         ),
                         onPressed: () {
                           if (_formKey.currentState?.validate() ?? false) {
+                            final Map<String, dynamic> fieldsMap = {};
+                            for (var c in campos) {
+                              final id = c['id']?.trim() ?? '';
+                              if (id.isEmpty) continue;
+                              fieldsMap[id] = {
+                                'id': id,
+                                'name': c['name']?.trim() ?? '',
+                                'type': c['type'] ?? 'text',
+                                if (c['defaultValue'] != null &&
+                                    c['defaultValue']!.trim().isNotEmpty)
+                                  'defaultValue': c['defaultValue']!.trim(),
+                                if (c['options'] != null)
+                                  'options': c['options'],
+                              };
+                            }
                             final locationType = LocationType(
                               name: nombre.trim(),
                               icon: 'settings',
@@ -672,25 +790,7 @@ class _CrearTipoUbicacionModalState extends State<CrearTipoUbicacionModal> {
                                       : descripcion.trim(),
                               nameTemplate: formatoNombre.trim(),
                               codeTemplate: formatoCodigo.trim(),
-                              fields: {
-                                'campos':
-                                    campos
-                                        .map(
-                                          (c) => {
-                                            'id': c['id']!.trim(),
-                                            'name': c['name']!.trim(),
-                                            'type': c['type'] ?? 'text',
-                                            'defaultValue':
-                                                (c['defaultValue']
-                                                            ?.trim()
-                                                            .isEmpty ??
-                                                        true)
-                                                    ? null
-                                                    : c['defaultValue']!.trim(),
-                                          },
-                                        )
-                                        .toList(),
-                              },
+                              fields: fieldsMap,
                             );
                             widget.onCreate(locationType);
                             Navigator.of(context).pop();

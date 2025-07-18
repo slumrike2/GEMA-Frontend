@@ -222,6 +222,8 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
   Widget _buildDetailsPanel() {
     if (activeTab == "types") {
       return LocationTypesPage(
+        types: locationTypes.values.toList(),
+        refetchLocationTypes: () => _refetchLocationTypes(),
         onClose: () {
           setState(() {
             activeTab = "locations";
