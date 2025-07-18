@@ -532,24 +532,6 @@ class _CuadrillasInicioPageState extends State<CuadrillasInicioPage> {
                                       ),
                                     ],
                                   ),
-                                  Column(
-                                    children: [
-                                      const Icon(
-                                        Icons.location_on_outlined,
-                                        color: AppColors.iconBlue,
-                                      ),
-                                      SizedBox(
-                                        width: 110,
-                                        child: Text(
-                                          ubicacion,
-                                          style: AppTextStyles.bodySmall(),
-                                          textAlign: TextAlign.center,
-                                          overflow: TextOverflow.ellipsis,
-                                          maxLines: 2,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
                                 ],
                               ),
                               const SizedBox(height: 12),

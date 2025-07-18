@@ -35,8 +35,7 @@ class TechnicalTeamService {
     );
     if (response.statusCode == 201 || response.statusCode == 200) {
       return TechnicalTeam.fromJson(jsonDecode(response.body));
-    } else {
-      throw Exception('Error al crear el equipo técnico: ${response.statusCode} - ${response.body}');
+    } else {throw Exception('Error al crear el equipo técnico: ${response.statusCode} - ${response.body}');
     }
   }
 

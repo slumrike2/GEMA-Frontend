@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import '../Services/technical_team_service.dart';
 import '../Services/technician_service.dart';
 import '../Services/technician_speciality_service.dart';
+import '../Services/user_service.dart';
+import '../Models/backend_types.dart';
 import 'create_technician_modal.dart';
 import 'create_speciality_modal.dart';
+
+List<Map<String, dynamic>> users = [];
 
 class CrearModificarCuadrillaPage extends StatefulWidget {
   final Map<String, dynamic>? cuadrillaData;
@@ -61,16 +65,49 @@ class _CrearModificarCuadrillaPageState
     try {
       final techniciansFuture = TechnicianService.getAll();
       final especialidadesFuture = TechnicianSpecialityService.getAll();
+      final usersFuture = UserService.getAll();
       final results = await Future.wait([
         techniciansFuture,
         especialidadesFuture,
+        usersFuture,
       ]);
       final techs = List<Map<String, dynamic>>.from(results[0]);
       final especs = List<String>.from(results[1]);
+      final usersList = List<User>.from(results[2]);
+      // Convert users to map for easier lookup
+      users =
+          usersList
+              .map(
+                (u) => {
+                  'uuid': u.uuid ?? '',
+                  'name': u.name ?? '',
+                  'email': u.email ?? '',
+                },
+              )
+              .map((m) => m.map((k, v) => MapEntry(k, v.toString())))
+              .toList();
 
       if (!mounted) return;
       setState(() {
-        technicians = techs;
+        // Map technician name/email from users
+        technicians =
+            techs.map((t) {
+              final Map<String, String> user = users
+                  .cast<Map<String, String>>()
+                  .firstWhere(
+                    (u) => u['uuid'] == t['uuid'],
+                    orElse:
+                        () => <String, String>{
+                          'name': 'Sin nombre',
+                          'email': '',
+                        },
+                  );
+              return {
+                ...t,
+                'name': user['name'] ?? (t['name']?.toString() ?? 'Sin nombre'),
+                'email': user['email'] ?? (t['email']?.toString() ?? ''),
+              };
+            }).toList();
         especialidades = especs;
 
         if (!especialidades.contains(_especialidadSeleccionada)) {
@@ -143,7 +180,6 @@ class _CrearModificarCuadrillaPageState
   Future<void> _onGuardar() async {
     if (_nameController.text.isEmpty ||
         _especialidadSeleccionada == null ||
-        _liderSeleccionadoUuid == null ||
         especialidades.isEmpty ||
         technicians.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -151,6 +187,17 @@ class _CrearModificarCuadrillaPageState
           content: Text(
             'Complete todos los campos y asegúrese de que existan técnicos y especialidades',
           ),
+        ),
+      );
+      return;
+    }
+    // Validar líder seleccionado
+    if (_liderSeleccionadoUuid == null ||
+        _liderSeleccionadoUuid == '' ||
+        _liderSeleccionadoUuid == 'default') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Seleccione un líder válido para la cuadrilla'),
         ),
       );
       return;
