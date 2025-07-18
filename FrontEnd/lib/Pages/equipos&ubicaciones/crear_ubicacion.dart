@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/constants/app_constnats.dart';
 import '../../Services/technical_location_service.dart';
 import '../../Models/backend_types.dart';
 import '../../Services/technical_location_type_service.dart';
@@ -90,13 +91,10 @@ class _CrearUbicacionFormState extends State<CrearUbicacionForm> {
               children: [
                 Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         'Crear Ubicación',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: AppTextStyles.title(),
                       ),
                     ),
                     IconButton(
