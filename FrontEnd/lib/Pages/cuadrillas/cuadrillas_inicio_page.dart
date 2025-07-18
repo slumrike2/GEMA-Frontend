@@ -49,38 +49,34 @@ class _CuadrillasInicioPageState extends State<CuadrillasInicioPage> {
       await showDialog(
         context: context,
         builder:
-            (context) => Dialog(
-              child: CreateTechnicianModal(
-                especialidades: _especialidades,
-                usuariosDisponibles: _usuariosDisponibles,
-                onCreate: (data) async {
-                  try {
-                    // Convertimos todos los campos a String
-                    final cleanData = data.map(
-                      (k, v) => MapEntry(k, v?.toString()),
-                    );
+            (context) => CreateTechnicianModal(
+              especialidades: _especialidades,
+              usuariosDisponibles: _usuariosDisponibles,
+              onCreate: (data) async {
+                try {
+                  // Convertimos todos los campos a String
+                  final cleanData = data.map(
+                    (k, v) => MapEntry(k, v?.toString()),
+                  );
 
-                    await TechnicianService.create(cleanData);
+                  await TechnicianService.create(cleanData);
 
-                    if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Técnico creado/actualizado'),
-                      ),
-                    );
-                    Navigator.of(context).pop();
-                    await widget.onRefresh();
-                  } catch (e) {
-                    if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error al crear técnico: $e')),
-                    );
-                  }
-                },
-                onCancel: () {
-                  if (mounted) Navigator.of(context).pop();
-                },
-              ),
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Técnico creado/actualizado')),
+                  );
+                  Navigator.of(context).pop();
+                  await widget.onRefresh();
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error al crear técnico: $e')),
+                  );
+                }
+              },
+              onCancel: () {
+                if (mounted) Navigator.of(context).pop();
+              },
             ),
       );
     } catch (e) {
