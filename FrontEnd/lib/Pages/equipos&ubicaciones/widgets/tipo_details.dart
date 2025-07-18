@@ -324,269 +324,329 @@ class _LocationTypesPageState extends State<LocationTypesPage> {
                                       ],
                                     ),
                                   )
-                                  : GridView.builder(
-                                    itemCount: templates.length,
-                                    gridDelegate:
-                                        SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: crossAxisCount,
-                                          crossAxisSpacing:
-                                              width < 600 ? 8 : 24,
-                                          mainAxisSpacing: width < 600 ? 8 : 24,
-                                          childAspectRatio:
-                                              width < 600 ? 0.85 : 0.95,
-                                        ),
-                                    shrinkWrap: true,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    itemBuilder: (context, index) {
-                                      final template = templates[index];
-                                      return Card(
-                                        elevation: 2,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        child: Padding(
-                                          padding: EdgeInsets.all(cardPadding),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                children: [
-                                                  const Icon(
-                                                    Icons.settings,
-                                                    color: Colors.blue,
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  Expanded(
-                                                    child: Text(
-                                                      template.name,
-                                                      style: const TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        fontSize: 18,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  IconButton(
-                                                    icon: const Icon(
-                                                      Icons.edit,
-                                                      size: 18,
-                                                    ),
-                                                    onPressed: () {},
-                                                    tooltip: 'Editar',
-                                                  ),
-                                                  IconButton(
-                                                    icon: const Icon(
-                                                      Icons.delete,
-                                                      color: Colors.red,
-                                                      size: 18,
-                                                    ),
-                                                    onPressed:
-                                                        () =>
-                                                            _showDeleteTypeDialog(
-                                                              template,
-                                                            ),
-                                                    tooltip: 'Eliminar',
-                                                  ),
-                                                ],
+                                  : LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      final width = constraints.maxWidth;
+                                      int columns = 3;
+                                      if (width < 600) {
+                                        columns = 1;
+                                      } else if (width < 900) {
+                                        columns = 2;
+                                      }
+                                      return Wrap(
+                                        spacing: width < 600 ? 8 : 24,
+                                        runSpacing: width < 600 ? 8 : 24,
+                                        children: List.generate(templates.length, (
+                                          index,
+                                        ) {
+                                          final template = templates[index];
+                                          return SizedBox(
+                                            width:
+                                                (width -
+                                                    ((columns - 1) *
+                                                        (width < 600
+                                                            ? 8
+                                                            : 24))) /
+                                                columns,
+                                            child: Card(
+                                              elevation: 2,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
                                               ),
-                                              const SizedBox(height: 12),
-                                              Container(
-                                                decoration: BoxDecoration(
-                                                  color: Colors.grey[100],
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                ),
-                                                padding: const EdgeInsets.all(
-                                                  12,
+                                              child: Padding(
+                                                padding: EdgeInsets.all(
+                                                  cardPadding,
                                                 ),
                                                 child: Column(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
                                                   crossAxisAlignment:
                                                       CrossAxisAlignment.start,
                                                   children: [
-                                                    Text(
-                                                      'Formato de Código',
-                                                      style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                        color: Colors.grey[800],
-                                                        fontSize: 14,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 4),
-                                                    Text(
-                                                      template.codeFormat,
-                                                      style: const TextStyle(
-                                                        fontFamily: 'monospace',
-                                                        fontSize: 13,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 10),
-                                                    Text(
-                                                      'Formato de Nombre',
-                                                      style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                        color: Colors.grey[800],
-                                                        fontSize: 14,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 4),
-                                                    Text(
-                                                      template.nameFormat,
-                                                      style: const TextStyle(
-                                                        fontFamily: 'monospace',
-                                                        fontSize: 13,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              const SizedBox(height: 14),
-                                              Text(
-                                                'Variables (${template.variables.length})',
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.grey[700],
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 6),
-                                              ...template.variables.map(
-                                                (v) => Container(
-                                                  margin: const EdgeInsets.only(
-                                                    bottom: 6,
-                                                  ),
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 10,
-                                                        vertical: 6,
-                                                      ),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.grey[50],
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          6,
+                                                    // ...existing code for card content...
+                                                    Row(
+                                                      children: [
+                                                        const Icon(
+                                                          Icons.settings,
+                                                          color: Colors.blue,
                                                         ),
-                                                    border: Border.all(
-                                                      color: Colors.grey[200]!,
-                                                    ),
-                                                  ),
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Row(
-                                                        children: [
-                                                          Text(
-                                                            v.name,
+                                                        const SizedBox(
+                                                          width: 8,
+                                                        ),
+                                                        Expanded(
+                                                          child: Text(
+                                                            template.name,
                                                             style:
                                                                 const TextStyle(
                                                                   fontWeight:
                                                                       FontWeight
-                                                                          .w500,
+                                                                          .bold,
+                                                                  fontSize: 18,
+                                                                ),
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                          ),
+                                                        ),
+                                                        IconButton(
+                                                          icon: const Icon(
+                                                            Icons.edit,
+                                                            size: 18,
+                                                          ),
+                                                          onPressed: () {},
+                                                          tooltip: 'Editar',
+                                                        ),
+                                                        IconButton(
+                                                          icon: const Icon(
+                                                            Icons.delete,
+                                                            color: Colors.red,
+                                                            size: 18,
+                                                          ),
+                                                          onPressed:
+                                                              () =>
+                                                                  _showDeleteTypeDialog(
+                                                                    template,
+                                                                  ),
+                                                          tooltip: 'Eliminar',
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    const SizedBox(height: 12),
+                                                    Container(
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.grey[100],
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              8,
+                                                            ),
+                                                      ),
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                            12,
+                                                          ),
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          Text(
+                                                            'Formato de Código',
+                                                            style: TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color:
+                                                                  Colors
+                                                                      .grey[800],
+                                                              fontSize: 14,
+                                                            ),
+                                                          ),
+                                                          const SizedBox(
+                                                            height: 4,
+                                                          ),
+                                                          Text(
+                                                            template.codeFormat,
+                                                            style:
+                                                                const TextStyle(
+                                                                  fontFamily:
+                                                                      'monospace',
+                                                                  fontSize: 13,
                                                                 ),
                                                           ),
                                                           const SizedBox(
-                                                            width: 8,
+                                                            height: 10,
                                                           ),
-                                                          Container(
-                                                            padding:
-                                                                const EdgeInsets.symmetric(
-                                                                  horizontal: 8,
-                                                                  vertical: 2,
-                                                                ),
-                                                            decoration: BoxDecoration(
+                                                          Text(
+                                                            'Formato de Nombre',
+                                                            style: TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
                                                               color:
-                                                                  getVariableTypeColor(
-                                                                    v.type,
-                                                                  ),
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    8,
-                                                                  ),
+                                                                  Colors
+                                                                      .grey[800],
+                                                              fontSize: 14,
                                                             ),
-                                                            child: Text(
-                                                              getVariableTypeLabel(
-                                                                v.type,
-                                                              ),
-                                                              style:
-                                                                  const TextStyle(
-                                                                    fontSize:
-                                                                        12,
-                                                                  ),
-                                                            ),
+                                                          ),
+                                                          const SizedBox(
+                                                            height: 4,
+                                                          ),
+                                                          Text(
+                                                            template.nameFormat,
+                                                            style:
+                                                                const TextStyle(
+                                                                  fontFamily:
+                                                                      'monospace',
+                                                                  fontSize: 13,
+                                                                ),
                                                           ),
                                                         ],
                                                       ),
-                                                      if (v.defaultValue !=
-                                                          null)
-                                                        Padding(
-                                                          padding:
-                                                              const EdgeInsets.only(
-                                                                top: 2,
+                                                    ),
+                                                    const SizedBox(height: 14),
+                                                    Text(
+                                                      'Variables (${template.variables.length})',
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        color: Colors.grey[700],
+                                                        fontSize: 14,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 6),
+                                                    ...template.variables.map(
+                                                      (v) => Container(
+                                                        margin:
+                                                            const EdgeInsets.only(
+                                                              bottom: 6,
+                                                            ),
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              horizontal: 10,
+                                                              vertical: 6,
+                                                            ),
+                                                        decoration: BoxDecoration(
+                                                          color:
+                                                              Colors.grey[50],
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                6,
                                                               ),
-                                                          child: Text(
-                                                            'Por defecto: ${v.defaultValue}',
-                                                            style:
-                                                                const TextStyle(
-                                                                  color:
-                                                                      Colors
-                                                                          .grey,
-                                                                  fontSize: 12,
-                                                                ),
+                                                          border: Border.all(
+                                                            color:
+                                                                Colors
+                                                                    .grey[200]!,
                                                           ),
                                                         ),
-                                                      if (v.options != null)
-                                                        Padding(
-                                                          padding:
-                                                              const EdgeInsets.only(
-                                                                top: 2,
-                                                              ),
-                                                          child: Text(
-                                                            'Opciones: ${v.options!.join(", ")}',
-                                                            style:
-                                                                const TextStyle(
-                                                                  color:
-                                                                      Colors
-                                                                          .grey,
-                                                                  fontSize: 12,
+                                                        child: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            Row(
+                                                              children: [
+                                                                Flexible(
+                                                                  child: Text(
+                                                                    v.name,
+                                                                    style: const TextStyle(
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .w500,
+                                                                    ),
+                                                                    overflow:
+                                                                        TextOverflow
+                                                                            .ellipsis,
+                                                                  ),
                                                                 ),
+                                                                const SizedBox(
+                                                                  width: 8,
+                                                                ),
+                                                                Container(
+                                                                  padding:
+                                                                      const EdgeInsets.symmetric(
+                                                                        horizontal:
+                                                                            8,
+                                                                        vertical:
+                                                                            2,
+                                                                      ),
+                                                                  decoration: BoxDecoration(
+                                                                    color:
+                                                                        getVariableTypeColor(
+                                                                          v.type,
+                                                                        ),
+                                                                    borderRadius:
+                                                                        BorderRadius.circular(
+                                                                          8,
+                                                                        ),
+                                                                  ),
+                                                                  child: Text(
+                                                                    getVariableTypeLabel(
+                                                                      v.type,
+                                                                    ),
+                                                                    style: const TextStyle(
+                                                                      fontSize:
+                                                                          12,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                            if (v.defaultValue !=
+                                                                null)
+                                                              Padding(
+                                                                padding:
+                                                                    const EdgeInsets.only(
+                                                                      top: 2,
+                                                                    ),
+                                                                child: Text(
+                                                                  'Por defecto: ${v.defaultValue}',
+                                                                  style: const TextStyle(
+                                                                    color:
+                                                                        Colors
+                                                                            .grey,
+                                                                    fontSize:
+                                                                        12,
+                                                                  ),
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis,
+                                                                ),
+                                                              ),
+                                                            if (v.options !=
+                                                                null)
+                                                              Padding(
+                                                                padding:
+                                                                    const EdgeInsets.only(
+                                                                      top: 2,
+                                                                    ),
+                                                                child: Text(
+                                                                  'Opciones: ${v.options!.join(", ")}',
+                                                                  style: const TextStyle(
+                                                                    color:
+                                                                        Colors
+                                                                            .grey,
+                                                                    fontSize:
+                                                                        12,
+                                                                  ),
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis,
+                                                                ),
+                                                              ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Row(
+                                                      children: [
+                                                        Expanded(
+                                                          child: OutlinedButton(
+                                                            onPressed: () {},
+                                                            child: const Text(
+                                                              'Editar',
+                                                            ),
                                                           ),
                                                         ),
-                                                    ],
-                                                  ),
+                                                        const SizedBox(
+                                                          width: 8,
+                                                        ),
+                                                        Expanded(
+                                                          child: OutlinedButton(
+                                                            onPressed: () {},
+                                                            child: const Text(
+                                                              'Duplicar',
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
-                                              const Spacer(),
-                                              Row(
-                                                children: [
-                                                  Expanded(
-                                                    child: OutlinedButton(
-                                                      onPressed: () {},
-                                                      child: const Text(
-                                                        'Editar',
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  Expanded(
-                                                    child: OutlinedButton(
-                                                      onPressed: () {},
-                                                      child: const Text(
-                                                        'Duplicar',
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        ),
+                                            ),
+                                          );
+                                        }),
                                       );
                                     },
                                   ),

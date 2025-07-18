@@ -38,202 +38,213 @@ class CreateUserModalState extends State<CreateUserModal> {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 600, maxHeight: 600),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.person, color: Color(0xFF219653), size: 24),
-                  const SizedBox(width: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.person, color: Color(0xFF219653), size: 24),
+                      const SizedBox(width: 8),
+                      Text(
+                        widget.isEdit ? 'Editar usuario' : 'Crear usuario',
+                        style: const TextStyle(
+                          color: Color(0xFF219653),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                      ),
+                      Spacer(),
+                      InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: () => Navigator.of(context).pop(),
+                        child: const Icon(
+                          Icons.close,
+                          size: 22,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
                   Text(
-                    widget.isEdit ? 'Editar usuario' : 'Crear usuario',
-                    style: const TextStyle(
-                      color: Color(0xFF219653),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
+                    widget.isEdit
+                        ? 'Modifica la información del usuario. Los cambios se aplicarán inmediatamente.'
+                        : 'Completa la información para crear un nuevo usuario.',
+                    style: const TextStyle(fontSize: 14, color: Colors.black87),
+                  ),
+                  const SizedBox(height: 24),
+                  if (widget.isEdit) ...[
+                    Text(
+                      'Nombre',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(
+                          Icons.person_outline,
+                          color: Colors.black54,
+                        ),
+                        hintText: 'Nombre completo',
+                        contentPadding: EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 12,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Campo requerido';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  // Correo electrónico
+                  Text(
+                    'Correo electrónico',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
                     ),
                   ),
-                  Spacer(),
-                  InkWell(
-                    borderRadius: BorderRadius.circular(20),
-                    onTap: () => Navigator.of(context).pop(),
-                    child: const Icon(
-                      Icons.close,
-                      size: 22,
-                      color: Colors.black54,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                widget.isEdit
-                    ? 'Modifica la información del usuario. Los cambios se aplicarán inmediatamente.'
-                    : 'Completa la información para crear un nuevo usuario.',
-                style: const TextStyle(fontSize: 14, color: Colors.black87),
-              ),
-              const SizedBox(height: 24),
-              if (widget.isEdit) ...[
-                Text(
-                  'Nombre',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                TextFormField(
-                  controller: _nameController,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(
-                      Icons.person_outline,
-                      color: Colors.black54,
-                    ),
-                    hintText: 'Nombre completo',
-                    contentPadding: EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 12,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Campo requerido';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-              ],
-              // Correo electrónico
-              Text(
-                'Correo electrónico',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 4),
-              TextFormField(
-                controller: _emailController,
-                enabled: !widget.isEdit,
-                decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.email_outlined, color: Colors.black54),
-                  hintText: 'usuario@ejemplo.com',
-                  contentPadding: EdgeInsets.symmetric(
-                    vertical: 12,
-                    horizontal: 12,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty)
-                    return 'Campo requerido';
-                  if (!RegExp(
-                    r'^[^@\s]+@[^@\s]+\.[^@\s]+',
-                  ).hasMatch(value.trim())) {
-                    return 'Correo inválido';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              // Rol
-              Text(
-                'Rol',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 4),
-              DropdownButtonFormField<String>(
-                value: _selectedRole,
-                decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.badge_outlined, color: Colors.black54),
-                  contentPadding: EdgeInsets.symmetric(
-                    vertical: 12,
-                    horizontal: 12,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                items: const [
-                  DropdownMenuItem(value: 'user', child: Text('Usuario')),
-                  DropdownMenuItem(
-                    value: 'admin',
-                    child: Text('Administrador'),
-                  ),
-                ],
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _selectedRole = value;
-                    });
-                  }
-                },
-              ),
-              const SizedBox(height: 28),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    style: TextButton.styleFrom(
-                      backgroundColor: Color(0xFFF2F2F2),
-                      foregroundColor: Colors.black87,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 22,
+                  const SizedBox(height: 4),
+                  TextFormField(
+                    controller: _emailController,
+                    enabled: !widget.isEdit,
+                    decoration: InputDecoration(
+                      prefixIcon: Icon(
+                        Icons.email_outlined,
+                        color: Colors.black54,
+                      ),
+                      hintText: 'usuario@ejemplo.com',
+                      contentPadding: EdgeInsets.symmetric(
                         vertical: 12,
+                        horizontal: 12,
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cancelar'),
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty)
+                        return 'Campo requerido';
+                      if (!RegExp(
+                        r'^[^@\s]+@[^@\s]+\.[^@\s]+',
+                      ).hasMatch(value.trim())) {
+                        return 'Correo inválido';
+                      }
+                      return null;
+                    },
                   ),
-                  const SizedBox(width: 16),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.botonGreen,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 22,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      elevation: 0,
+                  const SizedBox(height: 16),
+                  // Rol
+                  Text(
+                    'Rol',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
                     ),
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        widget.onCreate(
-                          _emailController.text.trim(),
-                          _selectedRole,
-                          name: _nameController.text.trim(),
-                        );
-                        Navigator.of(context).pop();
+                  ),
+                  const SizedBox(height: 4),
+                  DropdownButtonFormField<String>(
+                    value: _selectedRole,
+                    decoration: InputDecoration(
+                      prefixIcon: Icon(
+                        Icons.badge_outlined,
+                        color: Colors.black54,
+                      ),
+                      contentPadding: EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 12,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'user', child: Text('Usuario')),
+                      DropdownMenuItem(
+                        value: 'admin',
+                        child: Text('Administrador'),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _selectedRole = value;
+                        });
                       }
                     },
-                    child: Text(
-                      widget.isEdit ? 'Guardar cambios' : 'Crear usuario',
-                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          backgroundColor: Color(0xFFF2F2F2),
+                          foregroundColor: Colors.black87,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 22,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Cancelar'),
+                      ),
+                      const SizedBox(width: 16),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.botonGreen,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 22,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
+                        ),
+                        onPressed: () {
+                          if (_formKey.currentState!.validate()) {
+                            widget.onCreate(
+                              _emailController.text.trim(),
+                              _selectedRole,
+                              name: _nameController.text.trim(),
+                            );
+                            Navigator.of(context).pop();
+                          }
+                        },
+                        child: Text(
+                          widget.isEdit ? 'Guardar cambios' : 'Crear usuario',
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),

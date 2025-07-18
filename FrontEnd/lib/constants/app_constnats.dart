@@ -50,29 +50,29 @@ class AppConstants {
 class AppTextStyles {
   // Titles
   static TextStyle title({Color? color}) => TextStyle(
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: FontWeight.bold,
     color: color ?? AppColors.primary,
   );
 
   static TextStyle subtitle({Color? color}) => TextStyle(
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: FontWeight.w600,
     color: color ?? AppColors.primary,
   );
 
   static TextStyle sectionTitle({Color? color}) => TextStyle(
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: FontWeight.w600,
     color: color ?? AppColors.primary,
   );
 
   // Body
   static TextStyle body({Color? color}) =>
-      TextStyle(fontSize: 18, color: color ?? AppColors.onSurface);
+      TextStyle(fontSize: 16, color: color ?? AppColors.onSurface);
 
   static TextStyle bodySmall({Color? color}) =>
-      TextStyle(fontSize: 16, color: color ?? AppColors.onSurfaceVariant);
+      TextStyle(fontSize: 14, color: color ?? AppColors.onSurfaceVariant);
 
   // Button
   static TextStyle button({Color? color}) => TextStyle(

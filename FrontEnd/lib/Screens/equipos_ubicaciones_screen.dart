@@ -208,25 +208,22 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
             ),
           ],
         ),
-        child: const Center(
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.business, size: 64, color: Colors.grey),
-              SizedBox(height: 16),
+              const Icon(Icons.business, size: 64, color: Colors.grey),
+              const SizedBox(height: 16),
               Text(
                 'Selecciona una ubicación o equipo',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
+                style: AppTextStyles.subtitle(
                   color: AppColors.onSurfaceVariant,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
                 'para ver sus detalles y opciones de gestión',
-                style: TextStyle(
-                  fontSize: 14,
+                style: AppTextStyles.bodySmall(
                   color: AppColors.onSurfaceVariant,
                 ),
               ),

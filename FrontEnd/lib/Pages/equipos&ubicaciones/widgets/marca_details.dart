@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/Models/backend_types.dart';
 import 'package:frontend/Modals/delete_brand_dialog.dart';
+import 'package:frontend/constants/app_constnats.dart';
 
 class MarcaDetailsPage extends StatefulWidget {
   final List<Brand> brands;
@@ -23,36 +24,131 @@ class _MarcaDetailsPageState extends State<MarcaDetailsPage> {
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Editar Marca'),
-          content: TextField(
-            autofocus: true,
-            decoration: const InputDecoration(labelText: 'Nombre de la marca'),
-            controller: TextEditingController(text: name),
-            onChanged: (value) => name = value,
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancelar'),
+          backgroundColor: const Color(0xFFF7F3FA),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.label,
+                        color: Color(0xFF219653),
+                        size: 24,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Editar marca',
+                        style: AppTextStyles.title(color: Color(0xFF219653)),
+                      ),
+                      const Spacer(),
+                      InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: () => Navigator.of(context).pop(),
+                        child: const Icon(
+                          Icons.close,
+                          size: 22,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Modifica el nombre de la marca.',
+                    style: AppTextStyles.bodySmall(color: Colors.black87),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Nombre',
+                    style: AppTextStyles.label(color: Colors.black87),
+                  ),
+                  const SizedBox(height: 4),
+                  TextField(
+                    autofocus: true,
+                    decoration: const InputDecoration(
+                      hintText: 'Nombre de la marca',
+                      prefixIcon: Icon(
+                        Icons.label_outline,
+                        color: Colors.black54,
+                      ),
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 12,
+                      ),
+                    ),
+                    controller: TextEditingController(text: name),
+                    onChanged: (value) => name = value,
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          backgroundColor: const Color(0xFFF2F2F2),
+                          foregroundColor: Colors.black87,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 22,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text(
+                          'Cancelar',
+                          style: AppTextStyles.button(color: Colors.black87),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.botonGreen,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 22,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
+                        ),
+                        onPressed: () {
+                          if (name.trim().isNotEmpty) {
+                            setState(() {
+                              final idx = _brands.indexWhere(
+                                (b) => b.id == brand.id && b.name == brand.name,
+                              );
+                              if (idx != -1) {
+                                _brands[idx] = Brand(
+                                  id: brand.id,
+                                  name: name.trim(),
+                                );
+                              }
+                            });
+                            Navigator.of(context).pop();
+                          }
+                        },
+                        child: Text('Guardar', style: AppTextStyles.button()),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            ElevatedButton(
-              onPressed: () {
-                if (name.trim().isNotEmpty) {
-                  setState(() {
-                    final idx = _brands.indexWhere(
-                      (b) => b.id == brand.id && b.name == brand.name,
-                    );
-                    if (idx != -1) {
-                      _brands[idx] = Brand(id: brand.id, name: name.trim());
-                    }
-                  });
-                  Navigator.of(context).pop();
-                }
-              },
-              child: const Text('Guardar'),
-            ),
-          ],
+          ),
         );
       },
     );
@@ -96,30 +192,122 @@ class _MarcaDetailsPageState extends State<MarcaDetailsPage> {
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Agregar Marca'),
-          content: TextField(
-            autofocus: true,
-            decoration: const InputDecoration(labelText: 'Nombre de la marca'),
-            onChanged: (value) => name = value,
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancelar'),
+          backgroundColor: const Color(0xFFF7F3FA),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.label,
+                        color: Color(0xFF219653),
+                        size: 24,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Agregar marca',
+                        style: AppTextStyles.title(color: Color(0xFF219653)),
+                      ),
+                      const Spacer(),
+                      InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: () => Navigator.of(context).pop(),
+                        child: const Icon(
+                          Icons.close,
+                          size: 22,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Crea una nueva marca para asociar a los equipos.',
+                    style: AppTextStyles.bodySmall(color: Colors.black87),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Nombre',
+                    style: AppTextStyles.label(color: Colors.black87),
+                  ),
+                  const SizedBox(height: 4),
+                  TextField(
+                    autofocus: true,
+                    decoration: const InputDecoration(
+                      hintText: 'Nombre de la marca',
+                      prefixIcon: Icon(
+                        Icons.label_outline,
+                        color: Colors.black54,
+                      ),
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 12,
+                      ),
+                    ),
+                    onChanged: (value) => name = value,
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          backgroundColor: const Color(0xFFF2F2F2),
+                          foregroundColor: Colors.black87,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 22,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text(
+                          'Cancelar',
+                          style: AppTextStyles.button(color: Colors.black87),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.botonGreen,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 22,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
+                        ),
+                        onPressed: () {
+                          if (name.trim().isNotEmpty) {
+                            setState(() {
+                              _brands.add(Brand(id: null, name: name.trim()));
+                            });
+                            Navigator.of(context).pop();
+                          }
+                        },
+                        child: Text('Agregar', style: AppTextStyles.button()),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            ElevatedButton(
-              onPressed: () {
-                if (name.trim().isNotEmpty) {
-                  setState(() {
-                    _brands.add(Brand(id: null, name: name.trim()));
-                  });
-                  Navigator.of(context).pop();
-                }
-              },
-              child: const Text('Agregar'),
-            ),
-          ],
+          ),
         );
       },
     );
