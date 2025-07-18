@@ -35,12 +35,16 @@ class UserService {
       final List<dynamic> data = jsonDecode(response.body);
       return data
           .map((e) => User.fromJson(e))
-          .where((user) =>
-              (user.name?.trim().isNotEmpty ?? false) &&
-              (user.email?.trim().isNotEmpty ?? false))
+          .where(
+            (user) =>
+                (user.name?.trim().isNotEmpty ?? false) &&
+                (user.email?.trim().isNotEmpty ?? false),
+          )
           .toList();
     } else {
-      throw Exception('Error al obtener usuarios disponibles: ${response.statusCode}');
+      throw Exception(
+        'Error al obtener usuarios disponibles: ${response.statusCode}',
+      );
     }
   }
 
@@ -55,10 +59,15 @@ class UserService {
   }
 
   // Crear usuario: recibe email y rol, genera password aleatoria y registra en Supabase y backend
-  static Future<void> create({required String email, required String role}) async {
-    final chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  static Future<void> create({
+    required String email,
+    required String role,
+  }) async {
+    final chars =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     final rand = Random.secure();
-    final password = List.generate(16, (index) => chars[rand.nextInt(chars.length)]).join();
+    final password =
+        List.generate(16, (index) => chars[rand.nextInt(chars.length)]).join();
 
     final uuidResponse = await signUpUser(email, password);
     final uuid = uuidResponse.user?.id;
@@ -110,6 +119,19 @@ class UserService {
     final response = await http.delete(Uri.parse('$baseUrl/$uuid'));
     if (response.statusCode != 200) {
       throw Exception('Error al eliminar usuario: ${response.statusCode}');
+    }
+  }
+
+  static Future<void> updateName(String uuid, String name) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/name/$uuid'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'name': name}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception(
+        'Error al actualizar nombre de usuario: \\${response.statusCode}',
+      );
     }
   }
 }

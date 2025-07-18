@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/Screens/initial_register.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'Screens/login_screen.dart';
 import 'Screens/admin_screen.dart';
@@ -49,6 +50,8 @@ class MainApp extends StatelessWidget {
 
         // Ruta para la pantalla de administración
         AdminScreen.routeName: (context) => const AdminScreen(),
+        InitialRegisterScreen.routeName:
+            (context) => const InitialRegisterScreen(),
       },
     );
   }
