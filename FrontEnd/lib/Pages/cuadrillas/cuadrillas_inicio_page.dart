@@ -27,6 +27,30 @@ class CuadrillasInicioPage extends StatefulWidget {
 }
 
 class _CuadrillasInicioPageState extends State<CuadrillasInicioPage> {
+  // Cache de info de líderes por uuid
+  final Map<String, User?> _leadersInfo = {};
+  final Set<String> _loadingLeaders = {};
+
+  Future<void> _fetchLeaderInfo(String? uuid) async {
+    if (uuid == null ||
+        _leadersInfo.containsKey(uuid) ||
+        _loadingLeaders.contains(uuid))
+      return;
+    _loadingLeaders.add(uuid);
+    try {
+      final user = await UserService.getById(uuid);
+      setState(() {
+        _leadersInfo[uuid] = user;
+      });
+    } catch (e) {
+      setState(() {
+        _leadersInfo[uuid] = null;
+      });
+    } finally {
+      _loadingLeaders.remove(uuid);
+    }
+  }
+
   bool _loadingModal = false;
   List<User> _usuariosDisponibles = [];
   List<String> _especialidades = [];
@@ -225,13 +249,14 @@ class _CuadrillasInicioPageState extends State<CuadrillasInicioPage> {
                             ? cuadrilla.name
                             : 'Sin nombre';
                     final String? especialidad = cuadrilla.speciality;
-                    // MOCKS para campos no existentes en TechnicalTeam
-                    final String codigo =
-                        cuadrilla.id != null
-                            ? 'CUA-${cuadrilla.id!.toString().padLeft(3, '0')}'
-                            : 'CUA-XXX';
-                    final bool activa = true;
-                    final leader = null; // No existe en modelo
+
+                    final String? leaderId = cuadrilla.leaderId;
+                    User? leader =
+                        leaderId != null ? _leadersInfo[leaderId] : null;
+                    if (leaderId != null &&
+                        !_leadersInfo.containsKey(leaderId)) {
+                      _fetchLeaderInfo(leaderId);
+                    }
                     final List miembros = const []; // No existe en modelo
                     final int pendientes = 0;
                     final int completados = 0;
@@ -271,95 +296,40 @@ class _CuadrillasInicioPageState extends State<CuadrillasInicioPage> {
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
-                                    child: Column(
+                                    child: Row(
                                       crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                          CrossAxisAlignment.center,
                                       children: [
-                                        Row(
-                                          children: [
-                                            Text(
-                                              '$nombre',
-                                              style: AppTextStyles.sectionTitle(
-                                                color: AppColors.primaryBlue,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 10),
-                                            if (especialidad != null &&
-                                                especialidad.isNotEmpty)
-                                              Container(
-                                                margin: const EdgeInsets.only(
-                                                  right: 4,
-                                                ),
-                                                child: Chip(
-                                                  label: Text(
-                                                    especialidad,
-                                                    style: AppTextStyles.label(
-                                                      color: Colors.white,
-                                                    ),
-                                                  ),
-                                                  backgroundColor:
-                                                      AppColors.accentBlue,
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 6,
-                                                      ),
-                                                ),
-                                              ),
-                                            if (activa)
-                                              Chip(
-                                                label: const Text(
-                                                  'Activa',
-                                                  style: TextStyle(
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
-                                                backgroundColor:
-                                                    AppColors.success,
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 6,
-                                                    ),
-                                              ),
-                                          ],
-                                        ),
                                         Text(
-                                          codigo,
-                                          style: AppTextStyles.bodySmall(
-                                            color: AppColors.onSurfaceVariant,
+                                          '$nombre',
+                                          style: AppTextStyles.sectionTitle(
+                                            color: AppColors.primaryBlue,
                                           ),
                                         ),
+                                        const SizedBox(width: 10),
+                                        if (especialidad != null &&
+                                            especialidad.isNotEmpty)
+                                          Container(
+                                            margin: const EdgeInsets.only(
+                                              right: 4,
+                                            ),
+                                            child: Chip(
+                                              label: Text(
+                                                especialidad,
+                                                style: AppTextStyles.label(
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                              backgroundColor:
+                                                  AppColors.accentBlue,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 6,
+                                                  ),
+                                            ),
+                                          ),
                                       ],
                                     ),
-                                  ),
-                                  // Acciones (iconos)
-                                  Row(
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(Icons.edit, size: 20),
-                                        tooltip: 'Modificar',
-                                        onPressed:
-                                            () => widget.onModificar(cuadrilla),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.visibility,
-                                          size: 20,
-                                        ),
-                                        tooltip: 'Ver',
-                                        onPressed:
-                                            () => widget.onVerMantenimientos(
-                                              cuadrilla,
-                                            ),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.delete_outline,
-                                          size: 20,
-                                        ),
-                                        tooltip: 'Eliminar',
-                                        onPressed: () {}, // TODO: implementar
-                                      ),
-                                    ],
                                   ),
                                 ],
                               ),
@@ -391,19 +361,29 @@ class _CuadrillasInicioPageState extends State<CuadrillasInicioPage> {
                                 child: ListTile(
                                   leading: CircleAvatar(
                                     backgroundColor: AppColors.iconBlue,
-                                    child: Text(
-                                      leader != null && leader.name.isNotEmpty
-                                          ? leader.name[0]
-                                          : '?',
-                                      style: AppTextStyles.body(
-                                        color: Colors.white,
-                                      ),
-                                    ),
+                                    child:
+                                        leader == null
+                                            ? const SizedBox(
+                                              width: 18,
+                                              height: 18,
+                                              child: CircularProgressIndicator(
+                                                color: Colors.white,
+                                                strokeWidth: 2.2,
+                                              ),
+                                            )
+                                            : Text(
+                                              leader.name.isNotEmpty
+                                                  ? leader.name[0]
+                                                  : '?',
+                                              style: AppTextStyles.body(
+                                                color: Colors.white,
+                                              ),
+                                            ),
                                   ),
                                   title: Text(
-                                    leader != null
-                                        ? leader.name
-                                        : 'Nombre líder',
+                                    leader == null
+                                        ? 'Cargando líder...'
+                                        : leader.name,
                                     style: AppTextStyles.body(),
                                   ),
                                   subtitle: Column(
@@ -411,15 +391,9 @@ class _CuadrillasInicioPageState extends State<CuadrillasInicioPage> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'CI: ${leader?.ci ?? '--------'}',
-                                        style: AppTextStyles.bodySmall(),
-                                      ),
-                                      Text(
-                                        '📞 ${leader?.phone ?? '--------'}',
-                                        style: AppTextStyles.bodySmall(),
-                                      ),
-                                      Text(
-                                        leader?.email ?? 'correo@correo.com',
+                                        leader == null
+                                            ? 'Cargando correo...'
+                                            : leader.email,
                                         style: AppTextStyles.bodySmall(),
                                       ),
                                     ],

@@ -165,6 +165,7 @@ class TechnicalTeam {
   final DateTime? updatedAt;
   final DateTime? createdAt;
   final DateTime? deletedAt;
+  final String? leaderId;
 
   TechnicalTeam({
     this.id,
@@ -173,6 +174,7 @@ class TechnicalTeam {
     this.updatedAt,
     this.createdAt,
     this.deletedAt,
+    this.leaderId,
   });
 
   factory TechnicalTeam.fromJson(Map<String, dynamic> json) => TechnicalTeam(
@@ -185,6 +187,7 @@ class TechnicalTeam {
         json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
     deletedAt:
         json['deletedAt'] != null ? DateTime.parse(json['deletedAt']) : null,
+    leaderId: json['leaderId'],
   );
   Map<String, dynamic> toJson() => {
     if (id != null) 'id': id,
@@ -193,6 +196,7 @@ class TechnicalTeam {
     if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
     if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
     if (deletedAt != null) 'deletedAt': deletedAt!.toIso8601String(),
+    if (leaderId != null) 'leaderId': leaderId,
   };
 }
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../Models/backend_types.dart'; // Importa aquí tu modelo User
+import 'package:frontend/Services/technician_service.dart';
+import '../Models/backend_types.dart';
+import 'package:frontend/Services/user_service.dart';
 
 class CreateTechnicianModal extends StatefulWidget {
   final void Function(Map<String, dynamic> data) onCreate;
@@ -20,45 +22,74 @@ class CreateTechnicianModal extends StatefulWidget {
 }
 
 class _CreateTechnicianModalState extends State<CreateTechnicianModal> {
+  User? _liderInfo;
+
+  Future<void> _fetchLiderInfo(String uuid) async {
+    try {
+      final user = await UserService.getById(uuid);
+      setState(() {
+        _liderInfo = user;
+      });
+    } catch (e) {
+      setState(() {
+        _liderInfo = null;
+      });
+    }
+  }
+
   final _formKey = GlobalKey<FormState>();
+
   late TextEditingController _personalIdController;
   late TextEditingController _contactController;
-  late TextEditingController _nameController;
   String? _speciality;
-
-  User? _selectedUser; // Usuario seleccionado en dropdown
+  User? _selectedUser;
+  List<User> _usuarios = [];
+  bool _loadingUsuarios = false;
 
   @override
   void initState() {
     super.initState();
     _personalIdController = TextEditingController();
     _contactController = TextEditingController();
-    _nameController = TextEditingController();
+    _fetchUsuarios();
+  }
+
+  Future<void> _fetchUsuarios() async {
+    setState(() => _loadingUsuarios = true);
+    try {
+      final usuarios = await UserService.getAvailableUsers();
+      final existingUsers = await TechnicianService.getAll();
+
+      // Filtra los usuarios para excluir los que ya existen en existingUsers (por uuid)
+      final existingUuids = existingUsers.map((u) => u['uuid']).toSet();
+      usuarios.removeWhere((u) => existingUuids.contains(u.uuid));
+
+      setState(() {
+        _usuarios = usuarios;
+        _loadingUsuarios = false;
+      });
+    } catch (e) {
+      setState(() => _loadingUsuarios = false);
+    }
   }
 
   @override
   void dispose() {
     _personalIdController.dispose();
     _contactController.dispose();
-    _nameController.dispose();
     super.dispose();
   }
 
   void _onUserSelected(User? user) {
     setState(() {
       _selectedUser = user;
-      if (user != null) {
-        // Usa ?? '' para evitar valores nulos
-        _nameController.text = user.name ?? '';
-        _contactController.text = user.email ?? '';
-        _personalIdController
-            .clear(); // Sin personalId en User, queda vacío para llenar manualmente
-      } else {
-        _nameController.clear();
-        _personalIdController.clear();
-        _contactController.clear();
-      }
+      _personalIdController.clear();
+      _contactController.clear();
+      _liderInfo = null;
     });
+    if (user != null && user.uuid != null) {
+      _fetchLiderInfo(user.uuid!);
+    }
   }
 
   @override
@@ -66,7 +97,7 @@ class _CreateTechnicianModalState extends State<CreateTechnicianModal> {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: Container(
-        width: 420,
+        width: 480,
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -78,71 +109,77 @@ class _CreateTechnicianModalState extends State<CreateTechnicianModal> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  const Icon(Icons.person_add_alt_1, color: Color(0xFF2293B4)),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Agregar Miembro al Equipo',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Crear o modificar información de una persona',
-                style: TextStyle(fontSize: 14, color: Colors.black54),
-              ),
-              const SizedBox(height: 18),
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Nombre Completo'),
-                        const SizedBox(height: 4),
-                        TextFormField(
-                          controller: _nameController,
-                          decoration: const InputDecoration(
-                            hintText: 'Nombre del técnico',
-                            border: OutlineInputBorder(),
+              // Nombre como dropdown
+              const Text('Nombre Completo'),
+              const SizedBox(height: 4),
+              DropdownButtonFormField<User>(
+                value: _selectedUser,
+                isExpanded: true,
+                items:
+                    _usuarios
+                        .map(
+                          (u) => DropdownMenuItem<User>(
+                            value: u,
+                            child: Text(u.name),
                           ),
-                          validator:
-                              (v) =>
-                                  (v == null || v.trim().isEmpty)
-                                      ? 'Ingrese el nombre del técnico'
-                                      : null,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Cédula de Identidad'),
-                        const SizedBox(height: 4),
-                        TextFormField(
-                          controller: _personalIdController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            hintText: '12345678',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (v) {
-                            if (v == null || v.trim().isEmpty)
-                              return 'Ingrese la identificación';
-                            if (!RegExp(r'^\d+$').hasMatch(v))
-                              return 'Solo números';
-                            return null;
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                        )
+                        .toList(),
+                onChanged: _loadingUsuarios ? null : _onUserSelected,
+                decoration: const InputDecoration(
+                  hintText: 'Selecciona un usuario',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) => v == null ? 'Seleccione un usuario' : null,
+                disabledHint:
+                    _loadingUsuarios
+                        ? const Text('Cargando usuarios...')
+                        : null,
+              ),
+              const SizedBox(height: 12),
+              // Correo y datos del líder (solo lectura)
+              const Text('Correo Electrónico'),
+              const SizedBox(height: 4),
+              TextFormField(
+                enabled: false,
+                controller: TextEditingController(
+                  text: _liderInfo?.email ?? _selectedUser?.email ?? '',
+                ),
+                decoration: const InputDecoration(
+                  hintText: 'tecnico@empresa.com',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.email, size: 20),
+                ),
+              ),
+              if (_liderInfo != null) ...[
+                const SizedBox(height: 8),
+                Text('Nombre: ${_liderInfo?.name ?? '-'}'),
+                // Only show available fields
+              ],
+              const SizedBox(height: 12),
+              // Cédula
+              const Text('Cédula de Identidad'),
+              const SizedBox(height: 4),
+              TextFormField(
+                controller: _personalIdController,
+                keyboardType: TextInputType.number,
+                maxLength: 8,
+                buildCounter:
+                    (
+                      BuildContext context, {
+                      required int currentLength,
+                      required bool isFocused,
+                      int? maxLength,
+                    }) => null,
+                decoration: const InputDecoration(
+                  hintText: '12345678',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty)
+                    return 'Ingrese la identificación';
+                  if (!RegExp(r'^\d+$').hasMatch(v)) return 'Solo números';
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
@@ -171,40 +208,19 @@ class _CreateTechnicianModalState extends State<CreateTechnicianModal> {
                             : null,
               ),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _contactController,
-                      decoration: const InputDecoration(
-                        labelText: 'Teléfono',
-                        hintText: '+58 424-1234567',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.phone, size: 20),
-                      ),
-                      validator:
-                          (v) =>
-                              (v == null || v.trim().isEmpty)
-                                  ? 'Ingrese contacto'
-                                  : null,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      enabled: false,
-                      controller: TextEditingController(
-                        text: _selectedUser?.email ?? '',
-                      ),
-                      decoration: const InputDecoration(
-                        labelText: 'Correo Electrónico',
-                        hintText: 'tecnico@empresa.com',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.email, size: 20),
-                      ),
-                    ),
-                  ),
-                ],
+              TextFormField(
+                controller: _contactController,
+                decoration: const InputDecoration(
+                  labelText: 'Teléfono',
+                  hintText: '+58 424-1234567',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.phone, size: 20),
+                ),
+                validator:
+                    (v) =>
+                        (v == null || v.trim().isEmpty)
+                            ? 'Ingrese contacto'
+                            : null,
               ),
               const SizedBox(height: 24),
               Row(
@@ -219,7 +235,7 @@ class _CreateTechnicianModalState extends State<CreateTechnicianModal> {
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
                         final data = {
-                          'name': _nameController.text.trim(),
+                          'name': _selectedUser?.name ?? '',
                           'personalId': _personalIdController.text.trim(),
                           'contact': _contactController.text.trim(),
                           'speciality': _speciality,
