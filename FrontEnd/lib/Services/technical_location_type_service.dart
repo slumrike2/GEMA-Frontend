@@ -29,11 +29,11 @@ class TechnicalLocationTypeService {
     }
   }
 
-  static Future<LocationType> create(String name) async {
+  static Future<LocationType> create(LocationType locationType) async {
     final response = await http.post(
       Uri.parse(baseUrl),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'name': name}),
+      body: jsonEncode(locationType.toJson()),
     );
     if (response.statusCode == 201 || response.statusCode == 200) {
       return LocationType.fromJson(jsonDecode(response.body));

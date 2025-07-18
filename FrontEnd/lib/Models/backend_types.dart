@@ -31,29 +31,44 @@ enum ReportState { pending, programmed, inProgress, solved, cancelled }
 // Models
 
 class LocationType {
+  final int? id;
   final String name;
+  final String icon; // New field for icon
   final String? description;
   final String nameTemplate;
   final String codeTemplate;
+  final Map<String, dynamic>? fields;
 
   LocationType({
+    this.id,
     required this.name,
     this.description,
+    required this.icon,
     required this.nameTemplate,
     required this.codeTemplate,
+    this.fields,
   });
 
   factory LocationType.fromJson(Map<String, dynamic> json) => LocationType(
+    id: json['id'],
     name: json['name'],
     description: json['description'],
     nameTemplate: json['nameTemplate'],
+    icon: json['icon'],
     codeTemplate: json['codeTemplate'],
+    fields:
+        json['fields'] != null
+            ? Map<String, dynamic>.from(json['fields'])
+            : null,
   );
   Map<String, dynamic> toJson() => {
+    if (id != null) 'id': id,
     'name': name,
     if (description != null) 'description': description,
+    'icon': icon,
     'nameTemplate': nameTemplate,
     'codeTemplate': codeTemplate,
+    if (fields != null) 'fields': fields,
   };
 }
 
@@ -198,29 +213,33 @@ class TechnicalTeam {
 
 class TechnicalLocation {
   final String technicalCode;
+  final String abbreviatedTechnicalCode;
   final String name;
   final int type;
   final String? parentTechnicalCode;
 
   TechnicalLocation({
     required this.technicalCode,
+    required this.abbreviatedTechnicalCode,
     required this.name,
     required this.type,
-    required this.parentTechnicalCode,
+    this.parentTechnicalCode,
   });
 
   factory TechnicalLocation.fromJson(Map<String, dynamic> json) =>
       TechnicalLocation(
         technicalCode: json['technicalCode'],
+        abbreviatedTechnicalCode: json['abbreviatedTechnicalCode'],
         name: json['name'],
         type: json['type'],
         parentTechnicalCode: json['parentTechnicalCode'],
       );
   Map<String, dynamic> toJson() => {
     'technicalCode': technicalCode,
+    'abbreviatedTechnicalCode': abbreviatedTechnicalCode,
     'name': name,
     'type': type,
-    'parentTechnicalCode': parentTechnicalCode,
+    if (parentTechnicalCode != null) 'parentTechnicalCode': parentTechnicalCode,
   };
 }
 
@@ -305,7 +324,6 @@ class Equipment {
 }
 
 class EquipmentOperationalLocation {
-  final int? id;
   final String equipmentId;
   final String locationId;
   final DateTime? updatedAt;
@@ -313,7 +331,6 @@ class EquipmentOperationalLocation {
   final DateTime? deletedAt;
 
   EquipmentOperationalLocation({
-    this.id,
     required this.equipmentId,
     required this.locationId,
     this.updatedAt,
@@ -324,9 +341,8 @@ class EquipmentOperationalLocation {
   factory EquipmentOperationalLocation.fromJson(
     Map<String, dynamic> json,
   ) => EquipmentOperationalLocation(
-    id: json['id'],
-    equipmentId: json['equipmentId'],
-    locationId: json['locationId'],
+    equipmentId: json['equipmentUuid'],
+    locationId: json['locationTechnicalCode'],
     updatedAt:
         json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
     createdAt:
@@ -335,9 +351,8 @@ class EquipmentOperationalLocation {
         json['deletedAt'] != null ? DateTime.parse(json['deletedAt']) : null,
   );
   Map<String, dynamic> toJson() => {
-    if (id != null) 'id': id,
-    'equipmentId': equipmentId,
-    'locationId': locationId,
+    'equipmentUuid': equipmentId,
+    'locationTechnicalCode': locationId,
     if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
     if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
     if (deletedAt != null) 'deletedAt': deletedAt!.toIso8601String(),

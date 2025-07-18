@@ -1,6 +1,6 @@
 {
-  "id": "d4cab7e3-3641-4ec0-be09-05bbf5aee4e8",
-  "prevId": "46f4c04f-b24c-421b-8e76-f3ac25b8d020",
+  "id": "aef08365-23db-4d03-810a-f8946c3e86dd",
+  "prevId": "4c9ff87a-f0ac-41ac-9210-ba027d7bfbf9",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -88,7 +88,7 @@
         },
         "brandId": {
           "name": "brandId",
-          "type": "serial",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -126,19 +126,6 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "Equipment_dependsOn_Equipment_uuid_fk": {
-          "name": "Equipment_dependsOn_Equipment_uuid_fk",
-          "tableFrom": "Equipment",
-          "tableTo": "Equipment",
-          "columnsFrom": [
-            "dependsOn"
-          ],
-          "columnsTo": [
-            "uuid"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "cascade"
-        },
         "Equipment_brandId_Brand_id_fk": {
           "name": "Equipment_brandId_Brand_id_fk",
           "tableFrom": "Equipment",
@@ -150,6 +137,19 @@
             "id"
           ],
           "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "Equipment_dependsOn_Equipment_uuid_fk": {
+          "name": "Equipment_dependsOn_Equipment_uuid_fk",
+          "tableFrom": "Equipment",
+          "tableTo": "Equipment",
+          "columnsFrom": [
+            "dependsOn"
+          ],
+          "columnsTo": [
+            "uuid"
+          ],
+          "onDelete": "set null",
           "onUpdate": "cascade"
         },
         "Equipment_technicalLocation_Technical_location_technicalCode_fk": {
@@ -250,30 +250,9 @@
           ],
           "onDelete": "cascade",
           "onUpdate": "cascade"
-        },
-        "Equipment_operational_location_locationTechnicalCode_Technical_location_technicalCode_fk": {
-          "name": "Equipment_operational_location_locationTechnicalCode_Technical_location_technicalCode_fk",
-          "tableFrom": "Equipment_operational_location",
-          "tableTo": "Technical_location",
-          "columnsFrom": [
-            "locationTechnicalCode"
-          ],
-          "columnsTo": [
-            "technicalCode"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "cascade"
         }
       },
-      "compositePrimaryKeys": {
-        "Equipment_operational_location_equipmentUuid_locationTechnicalCode_pk": {
-          "name": "Equipment_operational_location_equipmentUuid_locationTechnicalCode_pk",
-          "columns": [
-            "equipmentUuid",
-            "locationTechnicalCode"
-          ]
-        }
-      },
+      "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
@@ -347,6 +326,12 @@
         "deletedAt": {
           "name": "deletedAt",
           "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "technicalTeamId": {
+          "name": "technicalTeamId",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         }
@@ -470,6 +455,12 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
+        },
+        "report_id": {
+          "name": "report_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
         }
       },
       "indexes": {},
@@ -490,6 +481,12 @@
           "primaryKey": true,
           "notNull": true
         },
+        "abbreviatedTechnicalCode": {
+          "name": "abbreviatedTechnicalCode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "name": {
           "name": "name",
           "type": "text",
@@ -498,7 +495,7 @@
         },
         "type": {
           "name": "type",
-          "type": "serial",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -506,7 +503,7 @@
           "name": "parentTechnicalCode",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         }
       },
       "indexes": {},
@@ -520,19 +517,6 @@
           ],
           "columnsTo": [
             "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        },
-        "Technical_location_parentTechnicalCode_Technical_location_technicalCode_fk": {
-          "name": "Technical_location_parentTechnicalCode_Technical_location_technicalCode_fk",
-          "tableFrom": "Technical_location",
-          "tableTo": "Technical_location",
-          "columnsFrom": [
-            "parentTechnicalCode"
-          ],
-          "columnsTo": [
-            "technicalCode"
           ],
           "onDelete": "cascade",
           "onUpdate": "cascade"
@@ -566,6 +550,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "icon": {
+          "name": "icon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "nameTemplate": {
           "name": "nameTemplate",
           "type": "text",
@@ -577,6 +567,12 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "fields": {
+          "name": "fields",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
@@ -632,12 +628,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "leaderId": {
-          "name": "leaderId",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
         "updatedAt": {
           "name": "updatedAt",
           "type": "timestamp",
@@ -656,6 +646,12 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
+        },
+        "leaderId": {
+          "name": "leaderId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
         }
       },
       "indexes": {},
@@ -709,12 +705,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "technicalTeamId": {
-          "name": "technicalTeamId",
-          "type": "serial",
-          "primaryKey": false,
-          "notNull": true
-        },
         "updatedAt": {
           "name": "updatedAt",
           "type": "timestamp",
@@ -733,23 +723,16 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
+        },
+        "technicalTeamId": {
+          "name": "technicalTeamId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "Technician_uuid_User_uuid_fk": {
-          "name": "Technician_uuid_User_uuid_fk",
-          "tableFrom": "Technician",
-          "tableTo": "User",
-          "columnsFrom": [
-            "uuid"
-          ],
-          "columnsTo": [
-            "uuid"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        },
         "Technician_technicalTeamId_Technical_team_id_fk": {
           "name": "Technician_technicalTeamId_Technical_team_id_fk",
           "tableFrom": "Technician",
@@ -761,6 +744,19 @@
             "id"
           ],
           "onDelete": "set null",
+          "onUpdate": "cascade"
+        },
+        "Technician_uuid_User_uuid_fk": {
+          "name": "Technician_uuid_User_uuid_fk",
+          "tableFrom": "Technician",
+          "tableTo": "User",
+          "columnsFrom": [
+            "uuid"
+          ],
+          "columnsTo": [
+            "uuid"
+          ],
+          "onDelete": "cascade",
           "onUpdate": "cascade"
         }
       },
@@ -792,7 +788,7 @@
           "name": "name",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "email": {
           "name": "email",
@@ -818,7 +814,7 @@
           "name": "createdAt",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "default": "now()"
         },
         "deletedAt": {
@@ -912,10 +908,12 @@
       "name": "technician_speciality",
       "schema": "public",
       "values": [
-        "Electricista",
-        "Mecanica",
-        "Logistica",
-        "Electronica"
+        "Electricidad",
+        "Refrigeracion",
+        "Iluminacion",
+        "Pintura",
+        "Protocolo",
+        "IT"
       ]
     }
   },

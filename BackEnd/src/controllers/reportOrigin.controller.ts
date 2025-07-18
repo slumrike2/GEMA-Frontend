@@ -1,9 +1,9 @@
+import { reportOrigin } from '../db/schema/schema';
+import { reportOriginSchema } from '../db/schema/validationSchema';
 import { createCrud } from './crudFactory';
-import { ReportOrigin } from '../db/schema/schema';
-import { ReportOriginSchema } from '../db/schema/validationSchema';
 
 export const reportOriginController = createCrud({
-	table: ReportOrigin,
-	validationSchema: ReportOriginSchema,
+	table: reportOrigin,
+	validationSchema: reportOriginSchema,
 	objectName: 'ReportOrigin'
 });

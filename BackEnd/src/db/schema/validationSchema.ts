@@ -1,11 +1,11 @@
 /**
  * @fileoverview Esquemas de validación para GEMA Backend
- * 
+ *
  * Este archivo define todos los esquemas de validación usando Zod para
  * validar los datos de entrada en las operaciones CRUD. Cada esquema
  * corresponde a una tabla de la base de datos y define las reglas de
  * validación para cada campo.
- * 
+ *
  * @author GEMA Development Team
  * @version 1.0.0
  */
@@ -13,15 +13,41 @@
 import { z } from 'zod';
 
 /**
+ * Esquema de validación para tipos de ubicación técnica (technicalLocationTypes)
+ *
+ * Valida los datos requeridos para crear o actualizar un tipo de ubicación técnica:
+ * - id: ID opcional (generado automáticamente)
+ * - name: Nombre del tipo
+ * - description: Descripción opcional
+ * - icon: Icono representativo
+ * - nameTemplate: Plantilla para nombres
+ * - codeTemplate: Plantilla para códigos
+ * - fields: Campos adicionales en formato JSON
+ * - timestamps: Campos de timestamp opcionales
+ */
+export const technicalLocationTypesSchema = z.object({
+	id: z.number().int().optional(),
+	name: z.string().min(1),
+	description: z.string().optional(),
+	icon: z.string().min(1),
+	nameTemplate: z.string().min(1),
+	codeTemplate: z.string().min(1),
+	fields: z.any().optional(),
+	updatedAt: z.date().optional(),
+	createdAt: z.date().optional(),
+	deletedAt: z.date().optional()
+});
+
+/**
  * Esquema de validación para tipos de ubicación técnica
- * 
+ *
  * Valida los datos requeridos para crear o actualizar un tipo de ubicación:
  * - name: Nombre del tipo (3-50 caracteres)
  * - description: Descripción opcional
  * - nameTemplate: Plantilla para nombres (3-50 caracteres)
  * - codeTemplate: Plantilla para códigos (3-50 caracteres)
  */
-export const LocationTypeSchema = z.object({
+export const locationTypeSchema = z.object({
 	name: z.string().min(3).max(50),
 	description: z.string().optional(),
 	nameTemplate: z.string().min(3).max(50),
@@ -30,7 +56,7 @@ export const LocationTypeSchema = z.object({
 
 /**
  * Esquema de validación para usuarios
- * 
+ *
  * Valida los datos requeridos para crear o actualizar un usuario:
  * - uuid: UUID opcional (generado automáticamente si no se proporciona)
  * - name: Nombre del usuario (mínimo 1 carácter)
@@ -38,7 +64,7 @@ export const LocationTypeSchema = z.object({
  * - role: Rol del usuario (opcional, por defecto 'user')
  * - timestamps: Campos de timestamp opcionales
  */
-export const UserSchema = z.object({
+export const userSchema = z.object({
 	uuid: z.string().uuid(),
 	name: z.string().optional(),
 	email: z.string().email(),
@@ -56,7 +82,7 @@ export const UserSchema = z.object({
 
 /**
  * Enum de validación para especialidades de técnicos
- * 
+ *
  * Define las especialidades válidas que puede tener un técnico:
  * - Electricista: Especialidad en trabajos eléctricos
  * - Mecanica: Especialidad en trabajos mecánicos
@@ -74,7 +100,7 @@ export const technicianSpecialityEnum = z.enum([
 
 /**
  * Esquema de validación para técnicos
- * 
+ *
  * Valida los datos requeridos para crear o actualizar un técnico:
  * - uuid: UUID opcional (referencia al usuario)
  * - personalId: Identificación personal única
@@ -83,7 +109,7 @@ export const technicianSpecialityEnum = z.enum([
  * - technicalTeamId: ID del equipo técnico (opcional)
  * - timestamps: Campos de timestamp opcionales
  */
-export const TechnicianSchema = z.object({
+export const technicianSchema = z.object({
 	uuid: z.string().uuid(),
 	personalId: z.string().min(1),
 	contact: z.string().min(1),
@@ -96,14 +122,14 @@ export const TechnicianSchema = z.object({
 
 /**
  * Esquema de validación para equipos técnicos
- * 
+ *
  * Valida los datos requeridos para crear o actualizar un equipo técnico:
  * - id: ID opcional (generado automáticamente)
  * - name: Nombre del equipo
  * - speciality: Especialidad del equipo (opcional)
  * - timestamps: Campos de timestamp opcionales
  */
-export const TechnicalTeamSchema = z.object({
+export const technicalTeamSchema = z.object({
 	id: z.number().int().optional(),
 	name: z.string().min(1),
 	speciality: technicianSpecialityEnum.optional(),
@@ -115,23 +141,24 @@ export const TechnicalTeamSchema = z.object({
 
 /**
  * Esquema de validación para ubicaciones técnicas
- * 
+ *
  * Valida los datos requeridos para crear o actualizar una ubicación técnica:
  * - technicalCode: Código técnico único de la ubicación
  * - name: Nombre de la ubicación
  * - type: ID del tipo de ubicación
  * - parentTechnicalCode: Código técnico de la ubicación padre
  */
-export const TechnicalLocationSchema = z.object({
+export const technicalLocationSchema = z.object({
 	technicalCode: z.string().min(1),
 	name: z.string().min(1),
+	abbreviatedTechnicalCode: z.string().min(1).optional(),
 	type: z.number().int(),
 	parentTechnicalCode: z.string().min(1).optional()
 });
 
 /**
  * Enum de validación para estados de equipos
- * 
+ *
  * Define los estados válidos que puede tener un equipo:
  * - installed: Equipo instalado y operativo
  * - in_maintenance: Equipo en mantenimiento
@@ -142,7 +169,7 @@ export const TechnicalLocationSchema = z.object({
  * - decommissioned: Equipo descomisionado
  * - transfer_pending: Transferencia pendiente
  */
-export const EquipmentStateEnumSchema = z.enum([
+export const equipmentStateEnumSchema = z.enum([
 	'instalado',
 	'en_mantenimiento',
 	'mantenimiento_pendiente',
@@ -155,19 +182,19 @@ export const EquipmentStateEnumSchema = z.enum([
 
 /**
  * Esquema de validación para marcas
- * 
+ *
  * Valida los datos requeridos para crear o actualizar una marca:
  * - id: ID opcional (generado automáticamente)
  * - name: Nombre único de la marca
  */
-export const BrandSchema = z.object({
+export const brandSchema = z.object({
 	id: z.number().int().optional(),
 	name: z.string().min(1)
 });
 
 /**
  * Esquema de validación para equipos
- * 
+ *
  * Valida los datos requeridos para crear o actualizar un equipo:
  * - uuid: UUID opcional (generado automáticamente)
  * - technicalCode: Código técnico único del equipo
@@ -181,13 +208,13 @@ export const BrandSchema = z.object({
  * - transferLocation: Código de ubicación de transferencia (opcional)
  * - timestamps: Campos de timestamp opcionales
  */
-export const EquipmentSchema = z.object({
+export const equipmentSchema = z.object({
 	uuid: z.string().uuid().optional(),
 	technicalCode: z.string().min(1),
 	name: z.string().min(1),
 	serialNumber: z.string().min(1),
 	description: z.string().optional(),
-	state: EquipmentStateEnumSchema.optional(),
+	state: equipmentStateEnumSchema.optional(),
 	dependsOn: z.string().uuid().nullable().optional(),
 	brandId: z.number().int(),
 	technicalLocation: z.string().optional().nullable(),
@@ -199,17 +226,17 @@ export const EquipmentSchema = z.object({
 
 /**
  * Esquema de validación para ubicaciones operacionales de equipos
- * 
+ *
  * Valida los datos requeridos para crear o actualizar una ubicación operacional:
  * - id: ID opcional (generado automáticamente)
  * - equipmentId: UUID del equipo
  * - locationId: ID de la ubicación
  * - timestamps: Campos de timestamp opcionales
  */
-export const EquipmentOperationalLocationSchema = z.object({
+export const equipmentOperationalLocationSchema = z.object({
 	id: z.number().int().optional(),
-	equipmentId: z.string().uuid(),
-	locationId: z.string().min(1),
+	equipmentUuid: z.string().uuid(),
+	locationTechnicalCode: z.string().min(1),
 	updatedAt: z.date().optional(),
 	createdAt: z.date().optional(),
 	deletedAt: z.date().optional()
@@ -217,14 +244,14 @@ export const EquipmentOperationalLocationSchema = z.object({
 
 /**
  * Enum de validación para fuentes de origen de reportes
- * 
+ *
  * Define las fuentes válidas desde donde puede originarse un reporte:
  * - email: Reporte originado por email
  * - managementSystem: Reporte originado desde sistema de gestión
  * - chat: Reporte originado por chat
  * - GEMA: Reporte originado desde el sistema GEMA
  */
-export const ReportOriginSourceEnumSchema = z.enum([
+export const reportOriginSourceEnumSchema = z.enum([
 	'email',
 	'managementSystem',
 	'chat',
@@ -233,7 +260,7 @@ export const ReportOriginSourceEnumSchema = z.enum([
 
 /**
  * Esquema de validación para orígenes de reportes
- * 
+ *
  * Valida los datos requeridos para crear o actualizar un origen de reporte:
  * - id: ID opcional (generado automáticamente)
  * - emailRemitent: Email del remitente (opcional)
@@ -242,11 +269,11 @@ export const ReportOriginSourceEnumSchema = z.enum([
  * - description: Descripción opcional del origen
  * - timestamps: Campos de timestamp opcionales
  */
-export const ReportOriginSchema = z.object({
+export const reportOriginSchema = z.object({
 	id: z.number().int().optional(),
 	emailRemitent: z.string().email().optional(),
 	GEMAcreator: z.string().uuid().optional(),
-	source: ReportOriginSourceEnumSchema,
+	source: reportOriginSourceEnumSchema,
 	description: z.string().optional(),
 	updatedAt: z.date().optional(),
 	createdAt: z.date().optional(),
@@ -255,15 +282,15 @@ export const ReportOriginSchema = z.object({
 
 /**
  * Enums de validación para reportes
- * 
+ *
  * Define las opciones válidas para diferentes aspectos de los reportes:
  * - ReportPriorityEnumSchema: Prioridades (high, medium, low)
  * - ReportTypeEnumSchema: Tipos (preventive, active)
  * - ReportStateEnumSchema: Estados (pending, programmed, in_progress, solved, cancelled)
  */
-export const ReportPriorityEnumSchema = z.enum(['high', 'medium', 'low']);
-export const ReportTypeEnumSchema = z.enum(['preventive', 'active']);
-export const ReportStateEnumSchema = z.enum([
+export const reportPriorityEnumSchema = z.enum(['high', 'medium', 'low']);
+export const reportTypeEnumSchema = z.enum(['preventive', 'active']);
+export const reportStateEnumSchema = z.enum([
 	'pending',
 	'programmed',
 	'in_progress',
@@ -273,7 +300,7 @@ export const ReportStateEnumSchema = z.enum([
 
 /**
  * Esquema de validación para reportes
- * 
+ *
  * Valida los datos requeridos para crear o actualizar un reporte:
  * - id: ID opcional (generado automáticamente)
  * - title: Título del reporte
@@ -284,13 +311,13 @@ export const ReportStateEnumSchema = z.enum([
  * - notes: Notas adicionales opcionales
  * - timestamps: Campos de timestamp opcionales
  */
-export const ReportSchema = z.object({
+export const reportSchema = z.object({
 	id: z.number().int().optional(),
 	title: z.string().min(1),
 	description: z.string().min(1),
-	priority: ReportPriorityEnumSchema.optional(),
-	state: ReportStateEnumSchema.optional(),
-	type: ReportTypeEnumSchema.optional(),
+	priority: reportPriorityEnumSchema.optional(),
+	state: reportStateEnumSchema.optional(),
+	type: reportTypeEnumSchema.optional(),
 	notes: z.string().optional(),
 	updatedAt: z.date().optional(),
 	createdAt: z.date().optional(),
@@ -299,14 +326,14 @@ export const ReportSchema = z.object({
 
 /**
  * Esquema de validación para actualizaciones de reportes
- * 
+ *
  * Valida los datos requeridos para crear o actualizar una actualización de reporte:
  * - id: ID opcional (generado automáticamente)
  * - description: Descripción de la actualización
  * - report_id: ID del reporte al que se le hizo la actualización
  * - timestamps: Campos de timestamp opcionales
  */
-export const ReportUpdateSchema = z.object({
+export const reportUpdateSchema = z.object({
 	id: z.number().int().optional(),
 	description: z.string().min(1),
 	updatedAt: z.date().optional(),

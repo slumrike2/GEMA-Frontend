@@ -103,4 +103,21 @@ class TechnicalLocationService {
       throw Exception('Error al obtener hijos: $e');
     }
   }
+
+  static Future<List<TechnicalLocation>> getRoots() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/roots'));
+      print('Response status: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((e) => TechnicalLocation.fromJson(e)).toList();
+      } else {
+        throw Exception(
+          'Error al obtener ubicaciones técnicas raíces: \\${response.statusCode} - \\${response.body}',
+        );
+      }
+    } catch (e) {
+      throw Exception('Error al obtener ubicaciones técnicas raíces: $e');
+    }
+  }
 }

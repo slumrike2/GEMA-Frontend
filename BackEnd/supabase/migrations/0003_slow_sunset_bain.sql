@@ -1,0 +1,1 @@
+ALTER TABLE "Technical_location" ADD COLUMN "abbreviatedTechnicalCode" text NOT NULL;

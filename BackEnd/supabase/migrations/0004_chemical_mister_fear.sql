@@ -1,0 +1,1 @@
+ALTER TABLE "Technical_location" ADD CONSTRAINT "Technical_location_parentTechnicalCode_Technical_location_technicalCode_fk" FOREIGN KEY ("parentTechnicalCode") REFERENCES "public"."Technical_location"("technicalCode") ON DELETE cascade ON UPDATE cascade;

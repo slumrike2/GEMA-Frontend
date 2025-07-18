@@ -1,11 +1,11 @@
 import { createCrud } from './crudFactory';
-import { TechnicalLocationTypes } from '../db/schema/schema';
-import { LocationTypeSchema } from '../db/schema/validationSchema';
+import { technicalLocationTypes } from '../db/schema/schema';
 import { db } from '../db';
+import { technicalLocationTypesSchema } from '../db/schema/validationSchema';
 
 const baseTechnicalLocationTypesController = createCrud({
-	table: TechnicalLocationTypes,
-	validationSchema: LocationTypeSchema,
+	table: technicalLocationTypes,
+	validationSchema: technicalLocationTypesSchema,
 	objectName: 'TechnicalLocationTypes'
 });
 

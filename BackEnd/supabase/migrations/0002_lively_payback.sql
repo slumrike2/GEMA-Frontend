@@ -1,0 +1,1 @@
+ALTER TABLE "Technical_location_types" ADD COLUMN "icon" text NOT NULL;

@@ -21,11 +21,11 @@
 
 import { createCrud } from './crudFactory';
 import {
-	Equipment,
-	TechnicalLocation,
-	EquipmentOperationalLocation
+	equipment,
+	technicalLocation,
+	equipmentOperationalLocation
 } from '../db/schema/schema';
-import { EquipmentSchema } from '../db/schema/validationSchema';
+import { equipmentSchema } from '../db/schema/validationSchema';
 import { eq, ne, and, isNull } from 'drizzle-orm';
 import { Request, Response } from 'express';
 import { db } from '../db';
@@ -41,8 +41,8 @@ import { db } from '../db';
  * - delete: Eliminar equipo
  */
 const baseEquipmentController = createCrud({
-	table: Equipment,
-	validationSchema: EquipmentSchema,
+	table: equipment,
+	validationSchema: equipmentSchema,
 	objectName: 'Equipment'
 });
 
@@ -72,9 +72,9 @@ export const equipmentController = {
 		const { equipmentId, technicalLocationId } = req.params;
 		try {
 			await db
-				.update(Equipment)
+				.update(equipment)
 				.set({ technicalLocation: technicalLocationId })
-				.where(eq(Equipment.uuid, equipmentId));
+				.where(eq(equipment.uuid, equipmentId));
 			res
 				.status(200)
 				.json({ message: 'Equipo asignado a ubicación técnica correctamente' });
@@ -105,12 +105,12 @@ export const equipmentController = {
 			// Verificar si ya existe la relación
 			const existing = await db
 				.select()
-				.from(EquipmentOperationalLocation)
+				.from(equipmentOperationalLocation)
 				.where(
 					and(
-						eq(EquipmentOperationalLocation.equipmentUuid, equipmentId),
+						eq(equipmentOperationalLocation.equipmentUuid, equipmentId),
 						eq(
-							EquipmentOperationalLocation.locationTechnicalCode,
+							equipmentOperationalLocation.locationTechnicalCode,
 							operationalLocationId
 						)
 					)
@@ -119,10 +119,10 @@ export const equipmentController = {
 				res.status(409).json({
 					message: 'La relación equipo-ubicación operacional ya existe'
 				});
+				return;
 			}
-
 			// Insertar la nueva relación
-			await db.insert(EquipmentOperationalLocation).values({
+			await db.insert(equipmentOperationalLocation).values({
 				equipmentUuid: equipmentId,
 				locationTechnicalCode: operationalLocationId
 			});
@@ -151,9 +151,9 @@ export const equipmentController = {
 		const { equipmentId, transferLocationId } = req.params;
 		try {
 			await db
-				.update(Equipment)
+				.update(equipment)
 				.set({ transferLocation: transferLocationId })
-				.where(eq(Equipment.uuid, equipmentId));
+				.where(eq(equipment.uuid, equipmentId));
 			res.status(200).json({
 				message: 'Ubicación de transferencia actualizada correctamente'
 			});
@@ -169,8 +169,8 @@ export const equipmentController = {
 		try {
 			const operationalLocations = await db
 				.select()
-				.from(EquipmentOperationalLocation)
-				.where(eq(EquipmentOperationalLocation.equipmentUuid, equipmentId));
+				.from(equipmentOperationalLocation)
+				.where(eq(equipmentOperationalLocation.equipmentUuid, equipmentId));
 
 			const locations = operationalLocations.map(
 				(loc) => loc.locationTechnicalCode
