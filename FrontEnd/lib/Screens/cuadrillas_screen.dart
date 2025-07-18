@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/Models/backend_types.dart';
 import 'package:frontend/Pages/cuadrillas/cuadrillas_inicio_page.dart';
 import 'package:frontend/Modals/crear_modificar_cuadrilla_modal.dart';
-import 'package:frontend/Pages/cuadrillas/crear_modificar_persona_page.dart';
+
 import 'package:frontend/Services/technical_team_service.dart';
 
 class CuadrillasScreen extends StatefulWidget {
@@ -53,24 +53,6 @@ class _CuadrillasScreenState extends State<CuadrillasScreen> {
             child: CrearModificarCuadrillaPage(onSuccess: _refreshData),
           ),
     );
-  }
-
-  Future<void> _onCrearOModificarPersona() async {
-    try {
-      await showDialog(
-        context: context,
-        builder:
-            (_) => Dialog(
-              child: CrearModificarPersonaPage(onSuccess: _refreshData),
-            ),
-      );
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error al cargar datos: $e')));
-      }
-    }
   }
 
   Future<void> _onModificarCuadrilla(TechnicalTeam team) async {
