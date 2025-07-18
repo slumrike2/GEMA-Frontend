@@ -100,13 +100,9 @@ class _NavigationPanelState extends State<NavigationPanel> {
           // Header
           Row(
             children: [
-              const Text(
+              Text(
                 'Navegación',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
+                style: AppTextStyles.subtitle(color: AppColors.primary),
               ),
               const Spacer(),
               _buildActionButtons(),

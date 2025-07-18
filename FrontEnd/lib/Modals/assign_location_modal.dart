@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/Models/backend_types.dart';
+import 'package:frontend/constants/app_constnats.dart';
 
 class AssignLocationModal extends StatefulWidget {
   final Equipment equipment;
@@ -77,28 +78,18 @@ class _AssignLocationModalState extends State<AssignLocationModal> {
             children: [
               Text(
                 'Asignar Ubicaciones - ${widget.equipment.name}',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: AppTextStyles.title(),
               ),
               const SizedBox(height: 24),
               // Technical Location Combobox
-              Text(
-                '📍 Ubicación Física',
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
+              Text('📍 Ubicación Física', style: AppTextStyles.subtitle()),
               if (selectedTechnicalLocation != null &&
                   widget.locations[selectedTechnicalLocation] != null) ...[
                 Padding(
                   padding: const EdgeInsets.only(top: 4, bottom: 4),
                   child: Text(
                     'Actualmente asignada: ${widget.locations[selectedTechnicalLocation]!.name} (${widget.locations[selectedTechnicalLocation]!.technicalCode})',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Colors.green,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: AppTextStyles.body(color: Colors.green),
                   ),
                 ),
               ] else ...[
@@ -106,11 +97,7 @@ class _AssignLocationModalState extends State<AssignLocationModal> {
                   padding: const EdgeInsets.only(top: 4, bottom: 4),
                   child: Text(
                     'Actualmente sin asignar (en inventario)',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Colors.orange,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: AppTextStyles.body(color: Colors.orange),
                   ),
                 ),
               ],
@@ -140,7 +127,10 @@ class _AssignLocationModalState extends State<AssignLocationModal> {
                           shrinkWrap: true,
                           children: [
                             ListTile(
-                              title: const Text('Sin asignar (en inventario)'),
+                              title: Text(
+                                'Sin asignar (en inventario)',
+                                style: AppTextStyles.body(),
+                              ),
                               selected: selectedTechnicalLocation == null,
                               tileColor:
                                   selectedTechnicalLocation == null
@@ -163,6 +153,7 @@ class _AssignLocationModalState extends State<AssignLocationModal> {
                               return ListTile(
                                 title: Text(
                                   '${loc.name} (${loc.technicalCode})',
+                                  style: AppTextStyles.body(),
                                 ),
                                 selected: isSelected,
                                 tileColor:
@@ -189,6 +180,7 @@ class _AssignLocationModalState extends State<AssignLocationModal> {
                               ListTile(
                                 title: Text(
                                   '${widget.locations[selectedTechnicalLocation]!.name} (${widget.locations[selectedTechnicalLocation]!.technicalCode})',
+                                  style: AppTextStyles.body(),
                                 ),
                                 selected: true,
                                 tileColor: Colors.green.shade50,
@@ -209,15 +201,15 @@ class _AssignLocationModalState extends State<AssignLocationModal> {
                 },
               ),
               const SizedBox(height: 4),
-              const Text(
+              Text(
                 'La ubicación física es donde el equipo está instalado actualmente. Si no está asignada, el equipo se considera en inventario.',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+                style: AppTextStyles.body(color: Colors.grey),
               ),
               const SizedBox(height: 24),
               // Operational Locations Multi Combobox
               Text(
                 '⚙️ Ubicaciones Operativas (Donde funciona/opera)',
-                style: const TextStyle(fontWeight: FontWeight.w600),
+                style: AppTextStyles.subtitle(),
               ),
               const SizedBox(height: 8),
               // Selected tags
@@ -254,10 +246,8 @@ class _AssignLocationModalState extends State<AssignLocationModal> {
                                   children: [
                                     Text(
                                       '${loc.name}',
-                                      style: const TextStyle(
-                                        fontSize: 11,
+                                      style: AppTextStyles.caption(
                                         color: Colors.green,
-                                        fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                     const SizedBox(width: 2),
@@ -312,8 +302,8 @@ class _AssignLocationModalState extends State<AssignLocationModal> {
                               '${loc.name} (${loc.technicalCode})',
                               style:
                                   checked
-                                      ? const TextStyle(color: Colors.green)
-                                      : null,
+                                      ? AppTextStyles.body(color: Colors.green)
+                                      : AppTextStyles.body(),
                             ),
                             onChanged: (val) {
                               setState(() {
@@ -334,9 +324,9 @@ class _AssignLocationModalState extends State<AssignLocationModal> {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Selecciona todas las ubicaciones donde este equipo opera o funciona',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+                style: AppTextStyles.body(color: Colors.grey),
               ),
               const SizedBox(height: 24),
               Row(
@@ -344,7 +334,10 @@ class _AssignLocationModalState extends State<AssignLocationModal> {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cancelar'),
+                    child: Text(
+                      'Cancelar',
+                      style: AppTextStyles.button(color: Colors.black87),
+                    ),
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
@@ -356,9 +349,12 @@ class _AssignLocationModalState extends State<AssignLocationModal> {
                       Navigator.of(context).pop();
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green.shade700,
+                      backgroundColor: AppColors.botonGreen,
                     ),
-                    child: const Text('Guardar Asignaciones'),
+                    child: Text(
+                      'Guardar Asignaciones',
+                      style: AppTextStyles.button(color: Colors.white),
+                    ),
                   ),
                 ],
               ),

@@ -72,17 +72,12 @@ class LocationDetails extends StatelessWidget {
                   children: [
                     Text(
                       location.name,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
+                      style: AppTextStyles.title(color: AppColors.primary),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       getFullPath(location.technicalCode),
-                      style: const TextStyle(
-                        fontSize: 14,
+                      style: AppTextStyles.body(
                         color: AppColors.onSurfaceVariant,
                       ),
                     ),
@@ -98,8 +93,7 @@ class LocationDetails extends StatelessWidget {
                       ),
                       child: Text(
                         typeName,
-                        style: const TextStyle(
-                          fontSize: 12,
+                        style: AppTextStyles.bodySmall(
                           color: AppColors.onSurfaceVariant,
                         ),
                       ),

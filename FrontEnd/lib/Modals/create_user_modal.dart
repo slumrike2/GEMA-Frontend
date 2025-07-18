@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/constants.dart';
+import 'package:frontend/constants/app_constnats.dart';
 
 class CreateUserModal extends StatefulWidget {
   final void Function(String email, String role, {String? name}) onCreate;
@@ -206,7 +206,7 @@ class CreateUserModalState extends State<CreateUserModal> {
                   const SizedBox(width: 16),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: botonGreen,
+                      backgroundColor: AppColors.botonGreen,
                       foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(
                         horizontal: 22,

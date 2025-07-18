@@ -41,8 +41,7 @@ class EquipmentItem extends StatelessWidget {
                       Expanded(
                         child: Text(
                           equipment.name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
+                          style: AppTextStyles.subtitle(
                             color: AppColors.onSurface,
                           ),
                         ),
@@ -58,11 +57,9 @@ class EquipmentItem extends StatelessWidget {
                         ),
                         child: Text(
                           equipment.technicalCode,
-                          style: const TextStyle(
-                            fontSize: 10,
+                          style: AppTextStyles.caption(
                             color: AppColors.primary,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          ).copyWith(fontWeight: FontWeight.w500),
                         ),
                       ),
                     ],
@@ -70,8 +67,7 @@ class EquipmentItem extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     '${TemplateProcessor.getBrandName(equipment.brandId, brands)} • ${equipment.serialNumber}',
-                    style: const TextStyle(
-                      fontSize: 14,
+                    style: AppTextStyles.body(
                       color: AppColors.onSurfaceVariant,
                     ),
                   ),
@@ -79,8 +75,7 @@ class EquipmentItem extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       '📍 ${TemplateProcessor.getLocationName(equipment.technicalLocation, locations)}',
-                      style: const TextStyle(
-                        fontSize: 12,
+                      style: AppTextStyles.bodySmall(
                         color: AppColors.onSurfaceVariant,
                       ),
                     ),
@@ -108,10 +103,7 @@ class EquipmentItem extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         '→ ${TemplateProcessor.getLocationName(equipment.transferLocation, locations)}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.blue,
-                        ),
+                        style: AppTextStyles.bodySmall(color: Colors.blue),
                       ),
                     ],
                   ),

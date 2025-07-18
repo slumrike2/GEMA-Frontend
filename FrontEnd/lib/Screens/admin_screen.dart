@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:frontend/Screens/users_screen.dart';
 import 'package:frontend/Services/user_service.dart';
 import 'package:frontend/Models/backend_types.dart';
+import 'package:frontend/constants/app_constnats.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:frontend/Screens/equipos_ubicaciones_screen.dart';
-import 'package:frontend/constants.dart';
 
 // import 'mantenimientos_screen.dart'; // Mantenimientos oculto
 import 'cuadrillas_screen.dart';
@@ -76,9 +76,9 @@ class _AdminScreenState extends State<AdminScreen> {
   Widget build(BuildContext context) {
     final List<Color> navColors = [
       // primaryYellow, // Mantenimientos
-      primaryGreen,
-      primaryBlue,
-      primaryGray,
+      AppColors.primaryGreen,
+      AppColors.primaryBlue,
+      AppColors.primaryGray,
     ];
     List<Image> navIcons = [
       // Image.asset('assets/images/IconMantenimientos.png'),

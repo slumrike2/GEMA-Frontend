@@ -104,8 +104,7 @@ class TreeNode extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   location.name,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
+                                  style: AppTextStyles.subtitle(
                                     color: AppColors.onSurface,
                                   ),
                                 ),
@@ -121,11 +120,9 @@ class TreeNode extends StatelessWidget {
                                 ),
                                 child: Text(
                                   location.technicalCode,
-                                  style: const TextStyle(
-                                    fontSize: 10,
+                                  style: AppTextStyles.caption(
                                     color: AppColors.primary,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                                  ).copyWith(fontWeight: FontWeight.w500),
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -140,8 +137,7 @@ class TreeNode extends StatelessWidget {
                                 ),
                                 child: Text(
                                   typeName,
-                                  style: const TextStyle(
-                                    fontSize: 10,
+                                  style: AppTextStyles.caption(
                                     color: AppColors.onSurfaceVariant,
                                   ),
                                 ),
@@ -151,8 +147,7 @@ class TreeNode extends StatelessWidget {
                           const SizedBox(height: 4),
                           Text(
                             getFullPath(technicalCode),
-                            style: const TextStyle(
-                              fontSize: 12,
+                            style: AppTextStyles.bodySmall(
                               color: AppColors.onSurfaceVariant,
                             ),
                           ),

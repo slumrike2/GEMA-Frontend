@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/constants/app_constnats.dart';
 import 'package:frontend/Models/backend_types.dart';
 // ...existing code...
 
@@ -60,10 +61,7 @@ class _ScheduleMoveModalState extends State<ScheduleMoveModal> {
             children: [
               Text(
                 isPendingMove ? 'Gestionar Mudanza' : 'Programar Mudanza',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: AppTextStyles.title(),
               ),
               const SizedBox(height: 16),
               if (isPendingMove) ...[
@@ -79,21 +77,18 @@ class _ScheduleMoveModalState extends State<ScheduleMoveModal> {
                     children: [
                       Text(
                         'Mudanza Programada',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Colors.blue[800],
-                        ),
+                        style: AppTextStyles.subtitle(color: Colors.blue[800]),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'Destino: ${_destinationId != null ? widget.locations[_destinationId!]?.name ?? "N/A" : "N/A"}',
-                        style: TextStyle(color: Colors.blue[700]),
+                        style: AppTextStyles.body(color: Colors.blue[700]),
                       ),
                       // ...existing code...
                       if (_notes != null && _notes!.isNotEmpty)
                         Text(
                           'Observaciones: $_notes',
-                          style: TextStyle(color: Colors.blue[700]),
+                          style: AppTextStyles.body(color: Colors.blue[700]),
                         ),
                     ],
                   ),
@@ -107,34 +102,31 @@ class _ScheduleMoveModalState extends State<ScheduleMoveModal> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green[700],
                         ),
-                        child: const Text('Confirmar Mudanza Completada'),
+                        child: Text(
+                          'Confirmar Mudanza Completada',
+                          style: AppTextStyles.button(),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Cerrar'),
+                        child: Text(
+                          'Cerrar',
+                          style: AppTextStyles.button(color: Colors.blue),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ] else ...[
-                Text(
-                  '📍 Proceso de Mudanza',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
+                Text('📍 Proceso de Mudanza', style: AppTextStyles.subtitle()),
                 Padding(
                   padding: const EdgeInsets.only(top: 4, bottom: 4),
                   child: Row(
                     children: [
-                      const Text(
-                        'Actual: ',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
+                      Text('Actual: ', style: AppTextStyles.label()),
                       if (widget.equipment.technicalLocation != null &&
                           widget.locations[widget
                                   .equipment
@@ -142,47 +134,25 @@ class _ScheduleMoveModalState extends State<ScheduleMoveModal> {
                               null)
                         Text(
                           '${widget.locations[widget.equipment.technicalLocation!]!.name} (${widget.locations[widget.equipment.technicalLocation!]!.technicalCode})',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.blue,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: AppTextStyles.label(color: Colors.blue),
                         )
                       else
-                        const Text(
+                        Text(
                           'Sin asignar',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.orange,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: AppTextStyles.label(color: Colors.orange),
                         ),
-                      const Text('  →  ', style: TextStyle(fontSize: 13)),
-                      const Text(
-                        'Destino: ',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
+                      Text('  →  ', style: AppTextStyles.label()),
+                      Text('Destino: ', style: AppTextStyles.label()),
                       if (_destinationId != null &&
                           widget.locations[_destinationId!] != null)
                         Text(
                           '${widget.locations[_destinationId!]!.name} (${widget.locations[_destinationId!]!.technicalCode})',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.green,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: AppTextStyles.label(color: Colors.green),
                         )
                       else
-                        const Text(
+                        Text(
                           'Sin seleccionar',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.orange,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: AppTextStyles.label(color: Colors.orange),
                         ),
                     ],
                   ),
@@ -250,9 +220,9 @@ class _ScheduleMoveModalState extends State<ScheduleMoveModal> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
+                Text(
                   'La ubicación de destino es donde el equipo será movido.',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                  style: AppTextStyles.caption(color: Colors.grey),
                 ),
                 const SizedBox(height: 12),
                 // ...existing code...
@@ -268,7 +238,10 @@ class _ScheduleMoveModalState extends State<ScheduleMoveModal> {
                   children: [
                     OutlinedButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Cancelar'),
+                      child: Text(
+                        'Cancelar',
+                        style: AppTextStyles.button(color: Colors.blue),
+                      ),
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton(
@@ -279,7 +252,10 @@ class _ScheduleMoveModalState extends State<ScheduleMoveModal> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue[700],
                       ),
-                      child: const Text('Programar Mudanza'),
+                      child: Text(
+                        'Programar Mudanza',
+                        style: AppTextStyles.button(),
+                      ),
                     ),
                   ],
                 ),

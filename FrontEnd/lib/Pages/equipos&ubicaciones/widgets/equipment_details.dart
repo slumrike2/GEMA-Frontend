@@ -68,17 +68,12 @@ class EquipmentDetails extends StatelessWidget {
                   children: [
                     Text(
                       equipment.name,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
+                      style: AppTextStyles.title(color: AppColors.primary),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       '${brand?.name ?? "Sin marca"} • ${equipment.serialNumber}',
-                      style: const TextStyle(
-                        fontSize: 14,
+                      style: AppTextStyles.body(
                         color: AppColors.onSurfaceVariant,
                       ),
                     ),
@@ -100,8 +95,7 @@ class EquipmentDetails extends StatelessWidget {
                             ),
                             child: Text(
                               '📍 ${TemplateProcessor.getLocationName(equipment.technicalLocation, locations)}',
-                              style: const TextStyle(
-                                fontSize: 12,
+                              style: AppTextStyles.bodySmall(
                                 color: AppColors.onSurfaceVariant,
                               ),
                             ),
@@ -182,13 +176,9 @@ class EquipmentDetails extends StatelessWidget {
 
           // Operational Locations
           if (operationalLocationCodes.isNotEmpty) ...[
-            const Text(
+            Text(
               'Ubicaciones Operativas',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.onSurface,
-              ),
+              style: AppTextStyles.sectionTitle(color: AppColors.onSurface),
             ),
             const SizedBox(height: 8),
             ...operationalLocationCodes.map((locationCode) {
@@ -207,10 +197,7 @@ class EquipmentDetails extends StatelessWidget {
                     const Icon(Icons.room, size: 16, color: AppColors.primary),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        location.name,
-                        style: const TextStyle(fontSize: 14),
-                      ),
+                      child: Text(location.name, style: AppTextStyles.body()),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -223,7 +210,7 @@ class EquipmentDetails extends StatelessWidget {
                       ),
                       child: Text(
                         location.technicalCode,
-                        style: const TextStyle(fontSize: 10),
+                        style: AppTextStyles.caption(),
                       ),
                     ),
                   ],
@@ -304,20 +291,17 @@ class EquipmentDetails extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: AppColors.onSurfaceVariant,
-            ),
+            style: AppTextStyles.bodySmall(color: AppColors.onSurfaceVariant),
           ),
           const SizedBox(height: 4),
           Text(
             value,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              fontFamily: isCode ? 'monospace' : null,
-            ),
+            style:
+                isCode
+                    ? AppTextStyles.bodySmall().copyWith(
+                      fontFamily: 'monospace',
+                    )
+                    : AppTextStyles.bodySmall(),
           ),
         ],
       ),
