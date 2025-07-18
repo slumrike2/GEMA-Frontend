@@ -75,23 +75,4 @@ class TechnicianService {
     }
   }
 
-  // Obtener todos los usuarios disponibles en el sistema
-  static Future<List<Map<String, dynamic>>> getAllUsers() async {
-    const String usersUrl = 'http://localhost:3000/api/users';
-    try {
-      final response = await http.get(Uri.parse(usersUrl));
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data is List) {
-          return data.cast<Map<String, dynamic>>();
-        } else {
-          throw Exception('La respuesta del servidor no es una lista');
-        }
-      } else {
-        throw Exception('Error al obtener usuarios: ${response.statusCode} - ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error al obtener usuarios: $e');
-    }
-  }
 }
