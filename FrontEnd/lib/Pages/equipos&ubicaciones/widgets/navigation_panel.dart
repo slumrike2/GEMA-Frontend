@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:frontend/Components/custom_card.dart';
 import 'package:frontend/Modals/crear_equipo_modal.dart';
 import 'package:frontend/Models/backend_types.dart';
-import 'package:frontend/Modals/crear_ubicacion_modal.dart';
 import 'package:frontend/Pages/equipos&ubicaciones/widgets/equipment_item.dart';
 import 'package:frontend/Pages/equipos&ubicaciones/widgets/tree_node.dart';
 import 'package:frontend/constants/app_constnats.dart';
@@ -58,27 +57,6 @@ class _NavigationPanelState extends State<NavigationPanel> {
   bool _expandedEquipo = false;
   bool _expandedMarca = false;
   bool _expandedTipos = false;
-
-  void _showCrearUbicacionModal({String? parentCode}) {
-    showDialog(
-      context: context,
-      builder:
-          (context) => CrearUbicacionModal(
-            locations: widget.locations.values.toList(),
-            locationTypes: widget.locationTypes.values.toList(),
-            preselectedParentCode: parentCode,
-            onCreate: ({
-              required name,
-              required technicalCode,
-              required type,
-              required parentTechnicalCode,
-            }) {
-              // TODO: handle location creation logic here
-            },
-          ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final filteredLocations = SearchUtils.filterLocations(
@@ -188,7 +166,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: InkWell(
-              onTap: () => _showCrearUbicacionModal(),
+              onTap: () {},
               borderRadius: BorderRadius.circular(16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -275,9 +253,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: InkWell(
-              onTap: () {
-                widget.onTabChanged('brands');
-              },
+              onTap: () {},
               borderRadius: BorderRadius.circular(16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -286,7 +262,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
                   if (_expandedMarca) ...[
                     const SizedBox(width: 6),
                     Text(
-                      'Marcas',
+                      'Marca',
                       style: TextStyle(color: AppColors.primary, fontSize: 14),
                     ),
                   ],
@@ -409,8 +385,6 @@ class _NavigationPanelState extends State<NavigationPanel> {
           onSelectItem: widget.onSelectItem,
           onMouseEnter: widget.onMouseEnter,
           onMouseLeave: widget.onMouseLeave,
-          onQuickCreate:
-              (parentCode) => _showCrearUbicacionModal(parentCode: parentCode),
         );
       },
     );

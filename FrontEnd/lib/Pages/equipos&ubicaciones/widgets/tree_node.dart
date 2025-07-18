@@ -4,6 +4,7 @@ import 'package:frontend/Models/backend_types.dart';
 import 'package:frontend/constants/app_constnats.dart';
 import 'package:frontend/utils/template_processor.dart';
 
+
 class TreeNode extends StatelessWidget {
   final String technicalCode;
   final int level;
@@ -19,7 +20,6 @@ class TreeNode extends StatelessWidget {
   final void Function(String, String) onSelectItem;
   final VoidCallback Function(String) onMouseEnter;
   final VoidCallback onMouseLeave;
-  final void Function(String parentTechnicalCode)? onQuickCreate;
 
   const TreeNode({
     super.key,
@@ -37,7 +37,6 @@ class TreeNode extends StatelessWidget {
     required this.onSelectItem,
     required this.onMouseEnter,
     required this.onMouseLeave,
-    this.onQuickCreate,
   });
 
   @override
@@ -157,10 +156,9 @@ class TreeNode extends StatelessWidget {
 
                     if (isHovered)
                       IconButton(
-                        onPressed:
-                            onQuickCreate != null
-                                ? () => onQuickCreate!(technicalCode)
-                                : null,
+                        onPressed: () {
+                          // Quick insert functionality
+                        },
                         icon: const Icon(
                           Icons.add,
                           size: 16,
@@ -195,7 +193,6 @@ class TreeNode extends StatelessWidget {
               onSelectItem: onSelectItem,
               onMouseEnter: onMouseEnter,
               onMouseLeave: onMouseLeave,
-              onQuickCreate: onQuickCreate,
             ),
           ),
       ],

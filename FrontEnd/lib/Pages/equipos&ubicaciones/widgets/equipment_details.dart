@@ -240,36 +240,33 @@ class EquipmentDetails extends StatelessWidget {
               const SizedBox(width: 16),
               Expanded(
                 child: Builder(
-                  builder:
-                      (context) => ElevatedButton.icon(
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder:
-                                (ctx) => ScheduleMoveModal(
-                                  equipment: equipment,
-                                  locations: locations,
-                                  onScheduleMove: (destinationId, date, notes) {
-                                    // TODO: Implement scheduling logic (update equipment transferLocation)
-                                  },
-                                  onConfirmMove: () {
-                                    // TODO: Implement confirmation logic (update equipment state and location)
-                                  },
-                                ),
-                          );
-                        },
-                        icon: const Icon(Icons.local_shipping),
-                        label: Text(
-                          equipment.state ==
-                                  EquipmentState.transferencia_pendiente
-                              ? 'Gestionar Mudanza'
-                              : 'Programar Mudanza',
+                  builder: (context) => ElevatedButton.icon(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => ScheduleMoveModal(
+                          equipment: equipment,
+                          locations: locations,
+                          onScheduleMove: (destinationId, date, notes) {
+                            // TODO: Implement scheduling logic (update equipment transferLocation)
+                          },
+                          onConfirmMove: () {
+                            // TODO: Implement confirmation logic (update equipment state and location)
+                          },
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue[50],
-                          foregroundColor: Colors.blue,
-                        ),
-                      ),
+                      );
+                    },
+                    icon: const Icon(Icons.local_shipping),
+                    label: Text(
+                      equipment.state == EquipmentState.transferencia_pendiente
+                          ? 'Gestionar Mudanza'
+                          : 'Programar Mudanza',
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[50],
+                      foregroundColor: Colors.blue,
+                    ),
+                  ),
                 ),
               ),
             ],

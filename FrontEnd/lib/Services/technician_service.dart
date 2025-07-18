@@ -1,92 +1,78 @@
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class TechnicianService {
   static const String baseUrl = 'http://localhost:3000/api/technicians';
 
-  // Obtener todos los técnicos
-  static Future<List<dynamic>> getAll() async {
-    try {
-      final response = await http.get(Uri.parse(baseUrl));
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        throw Exception('Error al obtener técnicos: ${response.statusCode} - ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error al obtener técnicos: $e');
-    }
-  }
-
-  // Obtener un técnico por UUID
-  static Future<Map<String, dynamic>> getByUuid(String uuid) async {
-    try {
-      final response = await http.get(Uri.parse('$baseUrl/$uuid'));
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        throw Exception('Error al obtener el técnico: ${response.statusCode} - ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error al obtener el técnico: $e');
-    }
-  }
-
-  // Crear un nuevo técnico
+  // Crear técnico
   static Future<void> create(Map<String, dynamic> data) async {
-    try {
-      final response = await http.post(
-        Uri.parse(baseUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(data),
-      );
-      if (response.statusCode != 201) {
-        throw Exception('Error al crear el técnico: ${response.statusCode} - ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error al crear el técnico: $e');
+    final response = await http.post(
+      Uri.parse(baseUrl),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(data),
+    );
+    if (response.statusCode >= 400) {
+      throw Exception('Error al crear técnico: ${response.body}');
     }
   }
 
-  // Actualizar un técnico
+  // Actualizar técnico
   static Future<void> update(String uuid, Map<String, dynamic> data) async {
-    try {
-      final response = await http.put(
-        Uri.parse('$baseUrl/$uuid'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(data),
-      );
-      if (response.statusCode != 200) {
-        throw Exception('Error al actualizar el técnico: ${response.statusCode} - ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error al actualizar el técnico: $e');
+    final response = await http.put(
+      Uri.parse('$baseUrl/$uuid'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(data),
+    );
+    if (response.statusCode >= 400) {
+      throw Exception('Error al actualizar técnico: ${response.body}');
     }
   }
 
-  // Eliminar un técnico
+  // Eliminar técnico
   static Future<void> delete(String uuid) async {
-    try {
-      final response = await http.delete(Uri.parse('$baseUrl/$uuid'));
-      if (response.statusCode != 200) {
-        throw Exception('Error al eliminar el técnico: ${response.statusCode} - ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error al eliminar el técnico: $e');
+    final response = await http.delete(Uri.parse('$baseUrl/$uuid'));
+    if (response.statusCode >= 400) {
+      throw Exception('Error al eliminar técnico: ${response.body}');
     }
   }
 
-  // Obtener técnicos por equipo técnico
-  static Future<List<dynamic>> getByTechnicalTeam(String technicalTeamId) async {
-    try {
-      final response = await http.get(Uri.parse('$baseUrl/technical-team/$technicalTeamId'));
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        throw Exception('Error al obtener técnicos por equipo técnico: ${response.statusCode} - ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error al obtener técnicos por equipo técnico: $e');
+  // Obtener todos los técnicos existentes
+  static Future<List<Map<String, dynamic>>> getAll() async {
+    final response = await http.get(Uri.parse(baseUrl));
+    if (response.statusCode == 200) {
+      final List<dynamic> body = jsonDecode(response.body);
+      return body.cast<Map<String, dynamic>>();
+    } else {
+      throw Exception('Error al obtener técnicos: ${response.body}');
     }
   }
+
+  // Obtener todos los usuarios disponibles para ser técnicos (que tengan correo y nombre)
+  static Future<List<Map<String, dynamic>>> getAllUsers() async {
+    final response = await http.get(Uri.parse('$baseUrl/users'));
+    if (response.statusCode == 200) {
+      final List<dynamic> body = jsonDecode(response.body);
+
+      // Filtrar solo los que tienen tanto nombre como correo
+      final List<Map<String, dynamic>> filtered = body
+          .where((user) =>
+              user is Map<String, dynamic> &&
+              (user['name']?.toString().trim().isNotEmpty ?? false) &&
+              (user['email']?.toString().trim().isNotEmpty ?? false))
+          .map<Map<String, dynamic>>((user) {
+        // Completar datos faltantes como cédula si se puede inferir o dejar en blanco
+        return {
+          'uuid': user['uuid'] ?? '',
+          'name': user['name'],
+          'email': user['email'],
+          'personalId': user['personalId'] ?? '', // completar si está disponible
+        };
+      }).toList();
+
+      return filtered;
+    } else {
+      throw Exception('Error al obtener usuarios: ${response.body}');
+    }
+  }
+
 }
