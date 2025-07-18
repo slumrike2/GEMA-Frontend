@@ -1,22 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/Models/backend_types.dart';
+import 'package:frontend/Services/equipment_operational_location_service.dart';
+import 'package:frontend/Services/equipment_service.dart';
 
 class AssignLocationModal extends StatefulWidget {
   final Equipment equipment;
   final Map<String, TechnicalLocation> locations;
   final List<EquipmentOperationalLocation> operationalLocations;
+  final void Function() refetchOperationalLocations;
   final void Function(
     String? technicalLocationId,
     List<String> operationalLocationIds,
   )
   onSave;
+  final VoidCallback onRefetch;
 
   const AssignLocationModal({
     super.key,
     required this.equipment,
+    required this.refetchOperationalLocations,
     required this.locations,
     required this.operationalLocations,
     required this.onSave,
+    required this.onRefetch,
   });
 
   @override
@@ -348,12 +354,38 @@ class _AssignLocationModalState extends State<AssignLocationModal> {
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
-                    onPressed: () {
-                      widget.onSave(
-                        selectedTechnicalLocation,
-                        selectedOperationalLocations,
-                      );
-                      Navigator.of(context).pop();
+                    onPressed: () async {
+                      try {
+                        // Assign technical location if selected
+                        final equipmentId = widget.equipment.uuid ?? '';
+                        if (equipmentId.isNotEmpty &&
+                            selectedTechnicalLocation != null) {
+                          await EquipmentService.assignTechnicalLocation(
+                            equipmentId,
+                            selectedTechnicalLocation!,
+                          );
+                        }
+                        // Assign operational locations
+                        if (equipmentId.isNotEmpty) {
+                          for (final opLoc in selectedOperationalLocations) {
+                            await EquipmentOperationalLocationService.create({
+                              'equipmentUuid': equipmentId,
+                              'locationTechnicalCode': opLoc,
+                            });
+                            widget.refetchOperationalLocations();
+                          }
+                        }
+                        widget.onSave(
+                          selectedTechnicalLocation,
+                          selectedOperationalLocations,
+                        );
+                        if (widget.onRefetch != null) {
+                          widget.onRefetch!();
+                        }
+                        Navigator.of(context).pop();
+                      } catch (e) {
+                        // Puedes mostrar un error aquí si lo deseas
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green.shade700,

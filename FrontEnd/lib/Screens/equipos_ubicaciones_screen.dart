@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/Models/backend_types.dart';
+import 'package:frontend/Services/equipment_operational_location_service.dart';
 import 'package:frontend/Services/technical_location_service.dart';
 import 'package:frontend/Services/technical_location_type_service.dart';
 import 'package:frontend/Services/equipment_service.dart';
@@ -44,20 +45,17 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
 
   Future<void> _fetchLocationsAndTypes() async {
     try {
-      final results = await Future.wait([
-        TechnicalLocationService.getAll(),
-        TechnicalLocationTypeService.getAll(),
-        EquipmentService.getAll(),
-        BrandService.getAll(),
-      ]);
-      final locs = results[0] as List<TechnicalLocation>;
-      final types = results[1] as List<LocationType>;
-      final equipments = results[2] as List<Equipment>;
-      final brandsList = results[3] as List<Brand>;
+      final locs = await TechnicalLocationService.getAll();
+      final types = await TechnicalLocationTypeService.getAll();
+      final equipments = await EquipmentService.getAll();
+      final brandsList = await BrandService.getAll();
+      final opsLocations = await EquipmentOperationalLocationService.getAll();
+
       setState(() {
         locations = {for (var l in locs) l.technicalCode: l};
         locationTypes = {for (var t in types) t.name: t};
         equipment = {for (var e in equipments) e.technicalCode: e};
+        operationalLocations = opsLocations;
         brands = {
           for (var b in brandsList)
             if (b.id != null) b.id!: b,
@@ -71,6 +69,17 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
       });
     } catch (e) {
       // Puedes mostrar un error aquí si lo deseas
+    }
+  }
+
+  _refetchOperationalLocations() async {
+    try {
+      final ops = await EquipmentOperationalLocationService.getAll();
+      setState(() {
+        operationalLocations = ops;
+      });
+    } catch (e) {
+      print('Error fetching operational locations: $e');
     }
   }
 
@@ -310,7 +319,9 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
       return EquipmentDetails(
         equipment: eq,
         locations: locations,
+        refetchOperationalLocations: _refetchOperationalLocations,
         brands: brands,
+        onRefetch: () => {_refetchEquipment(), _refetchLocations()},
         operationalLocations: operationalLocations,
         getFullPath: (code) => TemplateProcessor.getFullPath(code, locations),
       );

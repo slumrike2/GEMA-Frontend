@@ -119,8 +119,8 @@ export const equipmentController = {
 				res.status(409).json({
 					message: 'La relación equipo-ubicación operacional ya existe'
 				});
+				return;
 			}
-
 			// Insertar la nueva relación
 			await db.insert(equipmentOperationalLocation).values({
 				equipmentUuid: equipmentId,

@@ -8,9 +8,12 @@ class EquipmentOperationalLocationService {
 
   static Future<List<EquipmentOperationalLocation>> getAll() async {
     final response = await http.get(Uri.parse(baseUrl));
+
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
-      return data.map((e) => EquipmentOperationalLocation.fromJson(e)).toList();
+      final List<EquipmentOperationalLocation> locations =
+          data.map((e) => EquipmentOperationalLocation.fromJson(e)).toList();
+      return locations;
     } else {
       throw Exception(
         'Error al obtener ubicaciones operacionales: \\${response.statusCode}',

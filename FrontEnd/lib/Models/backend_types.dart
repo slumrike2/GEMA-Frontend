@@ -324,7 +324,6 @@ class Equipment {
 }
 
 class EquipmentOperationalLocation {
-  final int? id;
   final String equipmentId;
   final String locationId;
   final DateTime? updatedAt;
@@ -332,7 +331,6 @@ class EquipmentOperationalLocation {
   final DateTime? deletedAt;
 
   EquipmentOperationalLocation({
-    this.id,
     required this.equipmentId,
     required this.locationId,
     this.updatedAt,
@@ -343,9 +341,8 @@ class EquipmentOperationalLocation {
   factory EquipmentOperationalLocation.fromJson(
     Map<String, dynamic> json,
   ) => EquipmentOperationalLocation(
-    id: json['id'],
-    equipmentId: json['equipmentId'],
-    locationId: json['locationId'],
+    equipmentId: json['equipmentUuid'],
+    locationId: json['locationTechnicalCode'],
     updatedAt:
         json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
     createdAt:
@@ -354,9 +351,8 @@ class EquipmentOperationalLocation {
         json['deletedAt'] != null ? DateTime.parse(json['deletedAt']) : null,
   );
   Map<String, dynamic> toJson() => {
-    if (id != null) 'id': id,
-    'equipmentId': equipmentId,
-    'locationId': locationId,
+    'equipmentUuid': equipmentId,
+    'locationTechnicalCode': locationId,
     if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
     if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
     if (deletedAt != null) 'deletedAt': deletedAt!.toIso8601String(),

@@ -235,8 +235,8 @@ export const equipmentSchema = z.object({
  */
 export const equipmentOperationalLocationSchema = z.object({
 	id: z.number().int().optional(),
-	equipmentId: z.string().uuid(),
-	locationId: z.string().min(1),
+	equipmentUuid: z.string().uuid(),
+	locationTechnicalCode: z.string().min(1),
 	updatedAt: z.date().optional(),
 	createdAt: z.date().optional(),
 	deletedAt: z.date().optional()

@@ -12,15 +12,19 @@ class EquipmentDetails extends StatelessWidget {
   final Map<String, TechnicalLocation> locations;
   final Map<int, Brand> brands;
   final List<EquipmentOperationalLocation> operationalLocations;
+  final void Function() refetchOperationalLocations;
   final String Function(String) getFullPath;
+  final VoidCallback onRefetch;
 
   const EquipmentDetails({
     super.key,
     required this.equipment,
     required this.locations,
+    required this.refetchOperationalLocations,
     required this.brands,
     required this.operationalLocations,
     required this.getFullPath,
+    required this.onRefetch,
   });
 
   void _showAssignLocationModal(BuildContext context) {
@@ -28,6 +32,8 @@ class EquipmentDetails extends StatelessWidget {
       context: context,
       builder:
           (ctx) => AssignLocationModal(
+            onRefetch: onRefetch,
+            refetchOperationalLocations: refetchOperationalLocations,
             equipment: equipment,
             locations: locations,
             operationalLocations: operationalLocations,
