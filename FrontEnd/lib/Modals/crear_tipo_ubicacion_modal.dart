@@ -368,7 +368,7 @@ class _CrearTipoUbicacionModalState extends State<CrearTipoUbicacionModal> {
                   Row(
                     children: [
                       const Text(
-                        'Campos',
+                        'Variables Personalizadas',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -377,7 +377,7 @@ class _CrearTipoUbicacionModalState extends State<CrearTipoUbicacionModal> {
                       const SizedBox(width: 8),
                       Tooltip(
                         message:
-                            'Los campos permiten personalizar el formato de código y nombre. Ejemplo: {prefix}, {number}',
+                            'Las variables permiten personalizar la plantilla de código y nombre. Ejemplo: {laboratorio}, {número}',
                         child: const Icon(
                           Icons.help_outline,
                           size: 18,
@@ -387,7 +387,7 @@ class _CrearTipoUbicacionModalState extends State<CrearTipoUbicacionModal> {
                       const Spacer(),
                       TextButton.icon(
                         icon: const Icon(Icons.add),
-                        label: const Text('Agregar Campo'),
+                        label: const Text('Agregar Variable'),
                         onPressed: addCampo,
                       ),
                     ],
@@ -406,7 +406,7 @@ class _CrearTipoUbicacionModalState extends State<CrearTipoUbicacionModal> {
                             Row(
                               children: [
                                 Text(
-                                  'Campo ${idx + 1}',
+                                  'Variable ${idx + 1}',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -419,7 +419,7 @@ class _CrearTipoUbicacionModalState extends State<CrearTipoUbicacionModal> {
                                       color: Colors.red,
                                       size: 18,
                                     ),
-                                    tooltip: 'Eliminar Campo',
+                                    tooltip: 'Eliminar Variable',
                                     onPressed: () => removeCampo(idx),
                                   ),
                               ],
@@ -429,11 +429,11 @@ class _CrearTipoUbicacionModalState extends State<CrearTipoUbicacionModal> {
                                 Flexible(
                                   child: TextFormField(
                                     decoration: InputDecoration(
-                                      labelText: 'ID de Campo',
-                                      hintText: 'Ej: prefix',
+                                      labelText: 'Etiqueta para Plantilla',
+                                      hintText: 'Ej: laboratorio',
                                       suffixIcon: Tooltip(
                                         message:
-                                            'Identificador único del campo. Usado en los formatos.',
+                                            'Esta etiqueta se usará como variable en las plantillas de código y nombre. Ejemplo: {laboratorio}, {número}.',
                                         child: const Icon(
                                           Icons.help_outline,
                                           size: 18,
@@ -443,7 +443,7 @@ class _CrearTipoUbicacionModalState extends State<CrearTipoUbicacionModal> {
                                     validator:
                                         (v) =>
                                             (v == null || v.trim().isEmpty)
-                                                ? 'ID requerido'
+                                                ? 'Etiqueta requerida'
                                                 : null,
                                     onChanged: (val) => c['id'] = val,
                                     initialValue: c['id'],
@@ -454,10 +454,10 @@ class _CrearTipoUbicacionModalState extends State<CrearTipoUbicacionModal> {
                                   child: TextFormField(
                                     decoration: InputDecoration(
                                       labelText: 'Nombre',
-                                      hintText: 'Ej: Prefijo',
+                                      hintText: 'Ej: Laboratorio',
                                       suffixIcon: Tooltip(
                                         message:
-                                            'Nombre descriptivo del campo.',
+                                            'Nombre descriptivo de la variable.',
                                         child: const Icon(
                                           Icons.help_outline,
                                           size: 18,
@@ -480,7 +480,7 @@ class _CrearTipoUbicacionModalState extends State<CrearTipoUbicacionModal> {
                                     decoration: InputDecoration(
                                       labelText: 'Tipo',
                                       suffixIcon: Tooltip(
-                                        message: 'Tipo de dato del campo.',
+                                        message: 'Tipo de dato de la variable.',
                                         child: const Icon(
                                           Icons.help_outline,
                                           size: 18,
@@ -516,7 +516,7 @@ class _CrearTipoUbicacionModalState extends State<CrearTipoUbicacionModal> {
                                 hintText: 'Valor predeterminado',
                                 suffixIcon: Tooltip(
                                   message:
-                                      'Valor inicial sugerido para el campo.',
+                                      'Valor inicial sugerido para la variable.',
                                   child: const Icon(
                                     Icons.help_outline,
                                     size: 18,
@@ -532,52 +532,112 @@ class _CrearTipoUbicacionModalState extends State<CrearTipoUbicacionModal> {
                     );
                   }),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _CampoAutocompleteTextField(
-                          label: 'Formato de Código',
-                          hint: '{prefix}',
-                          controller: _formatoCodigoController,
-                          focusNode: _formatoCodigoFocusNode,
-                          onChanged: (v) {
-                            setState(() {
-                              formatoCodigo = v;
-                            });
-                          },
-                          campos: campos,
-                          validator:
-                              (v) =>
-                                  (v == null || v.trim().isEmpty)
-                                      ? 'Formato requerido'
-                                      : null,
-                          tooltip:
-                              'Usa {campo_id} para referenciar campos. Ejemplo: {prefix}',
-                        ),
+                  const Divider(height: 32, thickness: 1),
+                  const Text(
+                    'Plantillas',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  const SizedBox(height: 10),
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      'Usa las variables definidas arriba para crear el formato de código y nombre. Escribe el texto y selecciona variables usando llaves { } para armar la plantilla.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.blueGrey[700],
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _CampoAutocompleteTextField(
-                          label: 'Formato de Nombre *',
-                          hint: 'Ej: Laboratorio {number}',
-                          controller: _formatoNombreController,
-                          focusNode: _formatoNombreFocusNode,
-                          onChanged: (v) {
-                            setState(() {
-                              formatoNombre = v;
-                            });
-                          },
-                          campos: campos,
-                          validator:
-                              (v) =>
-                                  (v == null || v.trim().isEmpty)
-                                      ? 'Formato requerido'
-                                      : null,
-                          tooltip:
-                              'Usa {campo_id} para referenciar campos. Ejemplo: Laboratorio {number}',
+                    ),
+                  ),
+                  _CampoAutocompleteTextField(
+                    label: 'Plantilla de Código',
+                    hint: 'Ejemplo: {laboratorio}-{número}',
+                    controller: _formatoCodigoController,
+                    focusNode: _formatoCodigoFocusNode,
+                    onChanged: (v) {
+                      setState(() {
+                        formatoCodigo = v;
+                      });
+                    },
+                    campos: campos,
+                    validator:
+                        (v) =>
+                            (v == null || v.trim().isEmpty)
+                                ? 'Plantilla requerida'
+                                : null,
+                    tooltip:
+                        'Usa las variables entre llaves. Ejemplo: {laboratorio}-{número}',
+                  ),
+                  Builder(
+                    builder: (context) {
+                      // Ejemplo en vivo para código
+                      String ejemplo = formatoCodigo;
+                      campos.forEach((c) {
+                        if (c['id'] != null && c['id']!.isNotEmpty) {
+                          ejemplo = ejemplo.replaceAll(
+                            '{${c['id']}}',
+                            c['defaultValue']?.isNotEmpty == true
+                                ? c['defaultValue']!
+                                : c['id']!,
+                          );
+                        }
+                      });
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 4, left: 2),
+                        child: Text(
+                          'Ejemplo: $ejemplo',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.green[700],
+                          ),
                         ),
-                      ),
-                    ],
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  _CampoAutocompleteTextField(
+                    label: 'Plantilla de Nombre *',
+                    hint: 'Ejemplo: Laboratorio {número}',
+                    controller: _formatoNombreController,
+                    focusNode: _formatoNombreFocusNode,
+                    onChanged: (v) {
+                      setState(() {
+                        formatoNombre = v;
+                      });
+                    },
+                    campos: campos,
+                    validator:
+                        (v) =>
+                            (v == null || v.trim().isEmpty)
+                                ? 'Plantilla requerida'
+                                : null,
+                    tooltip:
+                        'Usa las variables entre llaves. Ejemplo: Laboratorio {número}',
+                  ),
+                  Builder(
+                    builder: (context) {
+                      // Ejemplo en vivo para nombre
+                      String ejemplo = formatoNombre;
+                      campos.forEach((c) {
+                        if (c['id'] != null && c['id']!.isNotEmpty) {
+                          ejemplo = ejemplo.replaceAll(
+                            '{${c['id']}}',
+                            c['defaultValue']?.isNotEmpty == true
+                                ? c['defaultValue']!
+                                : c['id']!,
+                          );
+                        }
+                      });
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 4, left: 2),
+                        child: Text(
+                          'Ejemplo: $ejemplo',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.green[700],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 18),
                   Row(

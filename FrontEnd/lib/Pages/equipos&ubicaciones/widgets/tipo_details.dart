@@ -40,22 +40,7 @@ class _LocationTypesPageState extends State<LocationTypesPage> {
       builder:
           (context) => CrearTipoUbicacionModal(
             onCreate: (locationType) {
-              setState(() {
-                // Assign a mock ID if needed
-                final typeWithId =
-                    locationType.id == null
-                        ? LocationType(
-                          id: types.length + 1,
-                          name: locationType.name,
-                          icon: locationType.icon,
-                          description: locationType.description,
-                          nameTemplate: locationType.nameTemplate,
-                          codeTemplate: locationType.codeTemplate,
-                          fields: locationType.fields,
-                        )
-                        : locationType;
-                types.add(typeWithId);
-              });
+              TechnicalLocationTypeService.create(locationType);
             },
           ),
     );
