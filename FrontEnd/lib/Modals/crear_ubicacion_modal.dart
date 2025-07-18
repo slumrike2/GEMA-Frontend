@@ -31,6 +31,7 @@ class CrearUbicacionModal extends StatefulWidget {
 class _CrearUbicacionModalState extends State<CrearUbicacionModal> {
   final _formKey = GlobalKey<FormState>();
   String? _parentCode;
+  String _searchParentLocation = '';
   String? _abbreviatedCode;
   LocationType? _selectedType;
   Map<String, String> _variables = {};
@@ -103,28 +104,122 @@ class _CrearUbicacionModalState extends State<CrearUbicacionModal> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    value: _parentCode,
-                    decoration: const InputDecoration(
-                      labelText: 'Ubicación Padre',
-                    ),
-                    items:
-                        widget.locations
-                            .map(
-                              (loc) => DropdownMenuItem(
-                                value: loc.technicalCode,
-                                child: Text(
-                                  '${loc.technicalCode} - ${loc.name}',
-                                ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Ubicación Padre',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        decoration: const InputDecoration(
+                          hintText: 'Buscar ubicación padre...',
+                          prefixIcon: Icon(Icons.search),
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          setState(() => _searchParentLocation = value);
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        constraints: const BoxConstraints(maxHeight: 200),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: ListView(
+                          shrinkWrap: true,
+                          children: [
+                            ListTile(
+                              title: const Text('Sin ubicación padre'),
+                              selected: _parentCode == null,
+                              tileColor:
+                                  _parentCode == null
+                                      ? Colors.green.shade50
+                                      : null,
+                              textColor:
+                                  _parentCode == null ? Colors.green : null,
+                              onTap: () {
+                                setState(() {
+                                  _parentCode = null;
+                                  _updatePreview();
+                                });
+                              },
+                            ),
+                            ...(() {
+                              final query = _searchParentLocation.toLowerCase();
+                              final filtered =
+                                  widget.locations.where((loc) {
+                                    if (query.isEmpty) return true;
+                                    if (loc.name.toLowerCase().contains(query))
+                                      return true;
+                                    if (loc.abbreviatedTechnicalCode
+                                        .toLowerCase()
+                                        .contains(query))
+                                      return true;
+                                    if (loc.technicalCode
+                                        .toLowerCase()
+                                        .contains(query))
+                                      return true;
+                                    return false;
+                                  }).toList();
+                              // Sort: exact abbreviatedTechnicalCode match first
+                              filtered.sort((a, b) {
+                                final aExact =
+                                    a.abbreviatedTechnicalCode.toLowerCase() ==
+                                    query;
+                                final bExact =
+                                    b.abbreviatedTechnicalCode.toLowerCase() ==
+                                    query;
+                                if (aExact && !bExact) return -1;
+                                if (!aExact && bExact) return 1;
+                                return 0;
+                              });
+                              return filtered.map((loc) {
+                                final isSelected =
+                                    _parentCode == loc.technicalCode;
+                                return ListTile(
+                                  title: Text(
+                                    '${loc.technicalCode} - ${loc.name}',
+                                  ),
+                                  subtitle: Text(
+                                    'Abrev: ${loc.abbreviatedTechnicalCode}',
+                                  ),
+                                  selected: isSelected,
+                                  tileColor:
+                                      isSelected ? Colors.green.shade50 : null,
+                                  textColor: isSelected ? Colors.green : null,
+                                  onTap: () {
+                                    setState(() {
+                                      _parentCode = loc.technicalCode;
+                                      _updatePreview();
+                                    });
+                                  },
+                                );
+                              });
+                            })(),
+                            if (_parentCode != null &&
+                                !widget.locations.any(
+                                  (loc) => loc.technicalCode == _parentCode,
+                                ))
+                              ListTile(
+                                title: Text('$_parentCode'),
+                                selected: true,
+                                tileColor: Colors.green.shade50,
+                                textColor: Colors.green,
+                                onTap: () {
+                                  setState(() {
+                                    _parentCode = _parentCode;
+                                    _updatePreview();
+                                  });
+                                },
                               ),
-                            )
-                            .toList(),
-                    onChanged: (v) {
-                      setState(() {
-                        _parentCode = v;
-                        _updatePreview();
-                      });
-                    },
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<LocationType>(
@@ -227,9 +322,7 @@ class _CrearUbicacionModalState extends State<CrearUbicacionModal> {
                                   widget.locationTypes.indexOf(_selectedType!),
                               parentTechnicalCode: _parentCode,
                             );
-                            if (widget.onRefetchLocations != null) {
-                              widget.onRefetchLocations!();
-                            }
+                            widget.onRefetchLocations();
                             Navigator.of(context).pop();
                           } catch (e) {
                             // Puedes mostrar un error aquí si lo deseas
