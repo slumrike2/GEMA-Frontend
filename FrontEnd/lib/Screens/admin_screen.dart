@@ -1,69 +1,44 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/Screens/users_screen.dart';
-import 'package:frontend/Services/user_service.dart';
-import 'package:frontend/Models/backend_types.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:frontend/Screens/equipos_ubicaciones_screen.dart';
-import 'package:frontend/constants.dart';
-
 import 'mantenimientos_screen.dart';
 import 'cuadrillas_screen.dart';
 
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
   static const String routeName = '/admin';
+
   @override
   State<AdminScreen> createState() => _AdminScreenState();
 }
 
 class _AdminScreenState extends State<AdminScreen> {
   int selectedIndex = 0;
-  bool showUsersScreen = false;
-  bool loadingUser = true;
 
-  final List<IconData> _navIcons = [
+  // Cambia el orden si quieres que el color coincida con el orden de las pantallas
+  final List<Color> navColors = [
+    const Color(0xFF37B4E3), // Mantenimientos
+    const Color(0xFF007934), // Equipos y Ubicaciones
+    const Color(0xFFFCC430), // Cuadrillas
+  ];
+
+  final List<Image> navImages = [
+    Image.asset('assets/images/IconMantenimientos.png'),
+    Image.asset('assets/images/IconEquiposUbicaciones.png'),
+    Image.asset('assets/images/IconCuadrillas.png'),
+  ];
+
+  final List<IconData> navIcons = [
     Icons.build,
     Icons.devices,
     Icons.group,
-    Icons.person,
   ];
-  final List<String> _navLabels = [
+
+  final List<String> navLabels = [
     'Mantenimientos',
     'Equipos y Ubicaciones',
     'Cuadrillas',
-    'Usuarios',
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchCurrentUserRole();
-  }
-
-  Future<void> _fetchCurrentUserRole() async {
-    try {
-      final session = Supabase.instance.client.auth.currentSession;
-      final uuid = session?.user.id;
-      if (uuid != null) {
-        // Asume que tienes UserService.getById disponible
-        final user = await UserService.getById(uuid);
-        setState(() {
-          showUsersScreen = user.role != UserRole.user;
-          loadingUser = false;
-        });
-      } else {
-        setState(() {
-          showUsersScreen = false;
-          loadingUser = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        showUsersScreen = false;
-        loadingUser = false;
-      });
-    }
-  }
 
   void _handleLogout() async {
     await Supabase.instance.client.auth.signOut();
@@ -74,69 +49,30 @@ class _AdminScreenState extends State<AdminScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Color> navColors = [
-      primaryYellow,
-      primaryGreen,
-      primaryBlue,
-      primaryGray, // Mantenimientos
-    ];
-    List<Image> navIcons = [
-      Image.asset('assets/images/IconMantenimientos.png'),
-      Image.asset('assets/images/IconEquiposUbicaciones.png'),
-      Image.asset('assets/images/IconCuadrillas.png'),
-      Image.asset('assets/images/IconMantenimientos.png'),
-    ];
-
-    if (loadingUser) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
-    // Si el usuario es "user", ocultar el botón y la pantalla de UsersScreen
-    final navIconsFiltered =
-        showUsersScreen ? _navIcons : _navIcons.sublist(0, 3);
-    final navLabelsFiltered =
-        showUsersScreen ? _navLabels : _navLabels.sublist(0, 3);
-    final navImagesFiltered =
-        showUsersScreen ? navIcons : navIcons.sublist(0, 3);
-    final screensFiltered =
-        showUsersScreen
-            ? [
-              const MantenimientosScreen(),
-              const EquiposUbicacionesScreen(),
-              const CuadrillasScreen(),
-              const UsersScreen(),
-            ]
-            : [
-              const MantenimientosScreen(),
-              const EquiposUbicacionesScreen(),
-              const CuadrillasScreen(),
-            ];
-
-    // Ajustar selectedIndex si es necesario
-    final safeSelectedIndex =
-        selectedIndex >= screensFiltered.length ? 0 : selectedIndex;
-
     return Scaffold(
       body: Row(
         children: [
           NavigationRail(
             minWidth: 200,
-            selectedIndex: safeSelectedIndex,
+            selectedIndex: selectedIndex,
             onDestinationSelected: (int index) {
               setState(() {
                 selectedIndex = index;
               });
             },
-            backgroundColor: navColors[safeSelectedIndex],
+            backgroundColor: navColors[selectedIndex],
             leading: Padding(
               padding: const EdgeInsets.only(top: 24.0),
               child: Column(
                 children: [
-                  navImagesFiltered[safeSelectedIndex],
+                  SizedBox(
+                    height: 64,
+                    child: navImages[selectedIndex],
+                  ),
                   const SizedBox(height: 8),
                   const Text(
                     'Panel',
-                    style: TextStyle(color: Colors.white, fontSize: 18),
+                    style: TextStyle(color: Colors.black, fontSize: 18),
                   ),
                 ],
               ),
@@ -144,24 +80,21 @@ class _AdminScreenState extends State<AdminScreen> {
             trailing: Padding(
               padding: const EdgeInsets.only(bottom: 24.0),
               child: IconButton(
-                icon: const Icon(Icons.logout, color: Colors.white, size: 28),
+                icon: const Icon(Icons.logout, color: Colors.black, size: 28),
                 tooltip: 'Cerrar sesión',
                 onPressed: _handleLogout,
               ),
             ),
             destinations: List.generate(
-              navIconsFiltered.length,
+              navIcons.length,
               (i) => NavigationRailDestination(
-                icon: Icon(navIconsFiltered[i], color: Colors.white),
-                selectedIcon: Icon(navIconsFiltered[i], color: Colors.black),
+                icon: Icon(navIcons[i], color: Colors.black),
+                selectedIcon: Icon(navIcons[i], color: Colors.black),
                 label: Text(
-                  navLabelsFiltered[i],
+                  navLabels[i],
                   style: TextStyle(
-                    color: Colors.white,
-                    fontWeight:
-                        i == safeSelectedIndex
-                            ? FontWeight.bold
-                            : FontWeight.normal,
+                    color: Colors.black,
+                    fontWeight: i == selectedIndex ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
               ),
@@ -171,7 +104,7 @@ class _AdminScreenState extends State<AdminScreen> {
               size: 28,
             ),
             unselectedIconTheme: const IconThemeData(
-              color: Colors.white,
+              color: Colors.black,
               size: 28,
             ),
             labelType: NavigationRailLabelType.all,
@@ -179,8 +112,12 @@ class _AdminScreenState extends State<AdminScreen> {
           const VerticalDivider(width: 1, thickness: 1),
           Expanded(
             child: IndexedStack(
-              index: safeSelectedIndex,
-              children: screensFiltered,
+              index: selectedIndex,
+              children: const [
+                MantenimientosScreen(),
+                EquiposUbicacionesScreen(),
+                CuadrillasScreen(),
+              ],
             ),
           ),
         ],

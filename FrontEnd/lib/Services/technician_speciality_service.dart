@@ -10,7 +10,6 @@ class TechnicianSpecialityService {
       final response = await http.get(Uri.parse(baseUrl));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        // Asumiendo que la respuesta es un array de strings o un objeto con las especialidades
         if (data is List) {
           return data.cast<String>();
         } else if (data is Map && data.containsKey('specialities')) {
@@ -25,4 +24,20 @@ class TechnicianSpecialityService {
       throw Exception('Error al obtener especialidades: $e');
     }
   }
-} 
+
+  // Crear una nueva especialidad
+  static Future<void> create(String speciality) async {
+    try {
+      final response = await http.post(
+        Uri.parse(baseUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'speciality': speciality}),
+      );
+      if (response.statusCode != 201) {
+        throw Exception('Error al crear especialidad: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error al crear especialidad: $e');
+    }
+  }
+}

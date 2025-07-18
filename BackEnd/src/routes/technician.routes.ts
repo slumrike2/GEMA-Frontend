@@ -3,11 +3,12 @@ import { technicianController } from '../controllers/technician.controller';
 
 const router = Router();
 
-router.get('/', technicianController.getAll);
-router.get('/:uuid', technicianController.getByPk);
-router.post('/', technicianController.insert);
-router.put('/:uuid', technicianController.update);
-router.delete('/:uuid', technicianController.delete);
-router.get('/technical-team/:technicalTeamId', technicianController.getByTechnicalTeam);
+router.get('/', technicianController.getAll.bind(technicianController));
+router.get('/technical-team/:technicalTeamId', technicianController.getByTechnicalTeam.bind(technicianController));
+router.get('/:uuid', technicianController.getByPk.bind(technicianController));
+router.post('/', technicianController.insert.bind(technicianController));
+router.put('/:uuid', technicianController.update.bind(technicianController));
+router.delete('/:uuid', technicianController.delete.bind(technicianController));
+router.post('/from-user', technicianController.insertFromUser.bind(technicianController));
 
 export default router;
