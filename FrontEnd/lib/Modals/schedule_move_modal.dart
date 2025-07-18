@@ -5,8 +5,7 @@ import 'package:frontend/Models/backend_types.dart';
 class ScheduleMoveModal extends StatefulWidget {
   final Equipment equipment;
   final Map<String, TechnicalLocation> locations;
-  final void Function(String? destinationId, String? date, String? notes)
-  onScheduleMove;
+  final void Function(String? destinationId, String? date, String? notes) onScheduleMove;
   final void Function() onConfirmMove;
 
   const ScheduleMoveModal({
@@ -35,21 +34,13 @@ class _ScheduleMoveModalState extends State<ScheduleMoveModal> {
 
   @override
   Widget build(BuildContext context) {
-    final isPendingMove =
-        widget.equipment.state == EquipmentState.transferencia_pendiente;
-    final filteredLocations =
-        widget.locations.values
-            .where(
-              (loc) =>
-                  (loc.name.toLowerCase().contains(
-                        searchDestination.toLowerCase(),
-                      ) ||
-                      loc.technicalCode.toLowerCase().contains(
-                        searchDestination.toLowerCase(),
-                      )) &&
-                  loc.technicalCode != widget.equipment.technicalLocation,
-            )
-            .toList();
+    final isPendingMove = widget.equipment.state == EquipmentState.transferencia_pendiente;
+    final filteredLocations = widget.locations.values
+        .where((loc) =>
+          (loc.name.toLowerCase().contains(searchDestination.toLowerCase()) ||
+           loc.technicalCode.toLowerCase().contains(searchDestination.toLowerCase())) &&
+          loc.technicalCode != widget.equipment.technicalLocation)
+        .toList();
     return Dialog(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -60,10 +51,7 @@ class _ScheduleMoveModalState extends State<ScheduleMoveModal> {
             children: [
               Text(
                 isPendingMove ? 'Gestionar Mudanza' : 'Programar Mudanza',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               if (isPendingMove) ...[
@@ -77,24 +65,12 @@ class _ScheduleMoveModalState extends State<ScheduleMoveModal> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Mudanza Programada',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Colors.blue[800],
-                        ),
-                      ),
+                      Text('Mudanza Programada', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.blue[800])),
                       const SizedBox(height: 8),
-                      Text(
-                        'Destino: ${_destinationId != null ? widget.locations[_destinationId!]?.name ?? "N/A" : "N/A"}',
-                        style: TextStyle(color: Colors.blue[700]),
-                      ),
+                      Text('Destino: ${_destinationId != null ? widget.locations[_destinationId!]?.name ?? "N/A" : "N/A"}', style: TextStyle(color: Colors.blue[700])),
                       // ...existing code...
                       if (_notes != null && _notes!.isNotEmpty)
-                        Text(
-                          'Observaciones: $_notes',
-                          style: TextStyle(color: Colors.blue[700]),
-                        ),
+                        Text('Observaciones: $_notes', style: TextStyle(color: Colors.blue[700])),
                     ],
                   ),
                 ),
@@ -104,9 +80,7 @@ class _ScheduleMoveModalState extends State<ScheduleMoveModal> {
                     Expanded(
                       child: ElevatedButton(
                         onPressed: widget.onConfirmMove,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green[700],
-                        ),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green[700]),
                         child: const Text('Confirmar Mudanza Completada'),
                       ),
                     ),
@@ -120,70 +94,28 @@ class _ScheduleMoveModalState extends State<ScheduleMoveModal> {
                   ],
                 ),
               ] else ...[
-                Text(
-                  '📍 Proceso de Mudanza',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
+                Text('📍 Proceso de Mudanza', style: const TextStyle(fontWeight: FontWeight.w600)),
                 Padding(
                   padding: const EdgeInsets.only(top: 4, bottom: 4),
                   child: Row(
                     children: [
-                      const Text(
-                        'Actual: ',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      if (widget.equipment.technicalLocation != null &&
-                          widget.locations[widget
-                                  .equipment
-                                  .technicalLocation!] !=
-                              null)
+                      const Text('Actual: ', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                      if (widget.equipment.technicalLocation != null && widget.locations[widget.equipment.technicalLocation!] != null)
                         Text(
                           '${widget.locations[widget.equipment.technicalLocation!]!.name} (${widget.locations[widget.equipment.technicalLocation!]!.technicalCode})',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.blue,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: const TextStyle(fontSize: 13, color: Colors.blue, fontWeight: FontWeight.w500),
                         )
                       else
-                        const Text(
-                          'Sin asignar',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.orange,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                        const Text('Sin asignar', style: TextStyle(fontSize: 13, color: Colors.orange, fontWeight: FontWeight.w500)),
                       const Text('  →  ', style: TextStyle(fontSize: 13)),
-                      const Text(
-                        'Destino: ',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      if (_destinationId != null &&
-                          widget.locations[_destinationId!] != null)
+                      const Text('Destino: ', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                      if (_destinationId != null && widget.locations[_destinationId!] != null)
                         Text(
                           '${widget.locations[_destinationId!]!.name} (${widget.locations[_destinationId!]!.technicalCode})',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.green,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: const TextStyle(fontSize: 13, color: Colors.green, fontWeight: FontWeight.w500),
                         )
                       else
-                        const Text(
-                          'Sin seleccionar',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.orange,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                        const Text('Sin seleccionar', style: TextStyle(fontSize: 13, color: Colors.orange, fontWeight: FontWeight.w500)),
                     ],
                   ),
                 ),
@@ -193,8 +125,7 @@ class _ScheduleMoveModalState extends State<ScheduleMoveModal> {
                     prefixIcon: Icon(Icons.search),
                     border: OutlineInputBorder(),
                   ),
-                  onChanged:
-                      (value) => setState(() => searchDestination = value),
+                  onChanged: (value) => setState(() => searchDestination = value),
                 ),
                 const SizedBox(height: 8),
                 Container(
@@ -209,10 +140,7 @@ class _ScheduleMoveModalState extends State<ScheduleMoveModal> {
                       ListTile(
                         title: const Text('Sin seleccionar'),
                         selected: _destinationId == null,
-                        tileColor:
-                            _destinationId == null
-                                ? Colors.green.shade50
-                                : null,
+                        tileColor: _destinationId == null ? Colors.green.shade50 : null,
                         textColor: _destinationId == null ? Colors.green : null,
                         onTap: () {
                           setState(() => _destinationId = null);
@@ -230,15 +158,9 @@ class _ScheduleMoveModalState extends State<ScheduleMoveModal> {
                           },
                         );
                       }),
-                      if (_destinationId != null &&
-                          !filteredLocations.any(
-                            (loc) => loc.technicalCode == _destinationId,
-                          ) &&
-                          widget.locations[_destinationId!] != null)
+                      if (_destinationId != null && !filteredLocations.any((loc) => loc.technicalCode == _destinationId) && widget.locations[_destinationId!] != null)
                         ListTile(
-                          title: Text(
-                            '${widget.locations[_destinationId!]!.name} (${widget.locations[_destinationId!]!.technicalCode})',
-                          ),
+                          title: Text('${widget.locations[_destinationId!]!.name} (${widget.locations[_destinationId!]!.technicalCode})'),
                           selected: true,
                           tileColor: Colors.green.shade50,
                           textColor: Colors.green,
@@ -250,10 +172,7 @@ class _ScheduleMoveModalState extends State<ScheduleMoveModal> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  'La ubicación de destino es donde el equipo será movido.',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
+                const Text('La ubicación de destino es donde el equipo será movido.', style: TextStyle(fontSize: 12, color: Colors.grey)),
                 const SizedBox(height: 12),
                 // ...existing code...
                 TextFormField(
@@ -273,12 +192,10 @@ class _ScheduleMoveModalState extends State<ScheduleMoveModal> {
                     const SizedBox(width: 8),
                     ElevatedButton(
                       onPressed: () {
-                        widget.onScheduleMove(_destinationId, null, _notes);
+                      widget.onScheduleMove(_destinationId, null, _notes);
                         Navigator.of(context).pop();
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[700],
-                      ),
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.blue[700]),
                       child: const Text('Programar Mudanza'),
                     ),
                   ],

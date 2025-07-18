@@ -59,7 +59,7 @@ class LocationType {
 
 class User {
   final String? uuid;
-  final String? name;
+  final String name;
   final String email;
   final UserRole? role;
   final DateTime? updatedAt;
@@ -68,17 +68,17 @@ class User {
 
   User({
     this.uuid,
-    this.name,
+    required String? name,
     required this.email,
     this.role,
     this.updatedAt,
     this.createdAt,
     this.deletedAt,
-  });
+  }) : name = name ?? '';
 
   factory User.fromJson(Map<String, dynamic> json) => User(
     uuid: json['uuid'],
-    name: json['name'] != null ? json['name'] : null,
+    name: json['name'] ?? '',
     email: json['email'],
     role: json['role'] != null ? UserRole.values.byName(json['role']) : null,
     updatedAt:
