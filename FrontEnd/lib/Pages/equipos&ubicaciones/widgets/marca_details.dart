@@ -41,17 +41,19 @@ class _MarcaDetailsPageState extends State<MarcaDetailsPage> {
               child: const Text('Cancelar'),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 if (name.trim().isNotEmpty) {
-                  setState(() {
-                    final idx = widget.brands.indexWhere(
-                      (b) => b.id == brand.id && b.name == brand.name,
+                  try {
+                    await BrandService.update(brand.id ?? 0, {
+                      "name": name.trim(),
+                    });
+                    widget.refetchBrands();
+                    Navigator.of(context).pop();
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error al editar marca: $e')),
                     );
-                    if (idx != -1) {
-                      widget.brands[idx] = Brand(id: brand.id, name: name.trim());
-                    }
-                  });
-                  Navigator.of(context).pop();
+                  }
                 }
               },
               child: const Text('Guardar'),
@@ -73,21 +75,22 @@ class _MarcaDetailsPageState extends State<MarcaDetailsPage> {
           brand: brand,
           equipmentCount: equipmentCount,
           otherBrands: otherBrands,
-          onDelete: (moveToNoMarca, selectedBrand) {
-            // Here you would update the equipment's brandId in a real app
-            setState(() {
-              widget.brands.removeWhere(
-                (b) => b.id == brand.id && b.name == brand.name,
+          onDelete: (moveToNoMarca, selectedBrand) async {
+            try {
+              await BrandService.delete(brand.id ?? 0);
+              widget.refetchBrands();
+              Navigator.of(context).pop();
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error al eliminar marca: $e')),
               );
-            });
+            }
             // Optionally handle moveToNoMarca/selectedBrand
           },
         );
       },
     );
   }
-
-
 
   @override
   void initState() {
