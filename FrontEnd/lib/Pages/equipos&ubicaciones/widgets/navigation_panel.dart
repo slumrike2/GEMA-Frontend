@@ -24,6 +24,10 @@ class NavigationPanel extends StatefulWidget {
   final String Function(String) getFullPath;
   final VoidCallback Function(String) onToggleExpanded;
   final void Function(String, String) onSelectItem;
+  final VoidCallback refetchEquipment;
+  final VoidCallback refetchLocations;
+  final VoidCallback refetchLocationTypes;
+  final VoidCallback refetchBrands;
   final VoidCallback Function(String) onMouseEnter;
   final VoidCallback onMouseLeave;
 
@@ -31,6 +35,10 @@ class NavigationPanel extends StatefulWidget {
     super.key,
     required this.searchTerm,
     required this.onSearchChanged,
+    required this.refetchEquipment,
+    required this.refetchLocations,
+    required this.refetchLocationTypes,
+    required this.refetchBrands,
     required this.activeTab,
     required this.onTabChanged,
     required this.locations,
@@ -81,11 +89,14 @@ class _NavigationPanelState extends State<NavigationPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredLocations = SearchUtils.filterLocations(
+    final filteredLocationsList = SearchUtils.filterLocations(
       widget.searchTerm,
       widget.locations,
       widget.locationTypes,
     );
+    final Map<String, TechnicalLocation> filteredLocations = {
+      for (var loc in filteredLocationsList) loc.technicalCode: loc,
+    };
 
     final filteredEquipment = SearchUtils.filterEquipment(
       widget.searchTerm,
@@ -340,25 +351,6 @@ class _NavigationPanelState extends State<NavigationPanel> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildActionButton(
-    IconData icon,
-    String tooltip,
-    VoidCallback onPressed,
-  ) {
-    return Tooltip(
-      message: tooltip,
-      child: IconButton(
-        onPressed: onPressed,
-        icon: Icon(icon, size: 16),
-        style: IconButton.styleFrom(
-          backgroundColor: AppColors.primary.withOpacity(0.1),
-          foregroundColor: AppColors.primary,
-          minimumSize: const Size(32, 32),
-        ),
-      ),
     );
   }
 

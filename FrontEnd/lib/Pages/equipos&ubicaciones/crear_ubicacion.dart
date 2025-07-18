@@ -54,6 +54,7 @@ class _CrearUbicacionFormState extends State<CrearUbicacionForm> {
           (t) => t.name == _selectedLocationTypeName,
         ),
         parentTechnicalCode: widget.parentTechnicalCode,
+        abbreviatedTechnicalCode: _codeController.text,
       );
       await TechnicalLocationService.create(newLocation.toJson());
       widget.onSuccess?.call();

@@ -1,9 +1,9 @@
+import { reportUpdate } from '../db/schema/schema';
+import { reportUpdateSchema } from '../db/schema/validationSchema';
 import { createCrud } from './crudFactory';
-import { ReportUpdate } from '../db/schema/schema';
-import { ReportUpdateSchema } from '../db/schema/validationSchema';
 
 export const reportUpdateController = createCrud({
-	table: ReportUpdate,
-	validationSchema: ReportUpdateSchema,
+	table: reportUpdate,
+	validationSchema: reportUpdateSchema,
 	objectName: 'ReportUpdate'
 });

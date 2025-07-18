@@ -1,9 +1,9 @@
+import { brand } from '../../supabase/migrations/schema';
+import { brandSchema } from '../db/schema/validationSchema';
 import { createCrud } from './crudFactory';
-import { Brand } from '../db/schema/schema';
-import { BrandSchema } from '../db/schema/validationSchema';
 
 export const brandController = createCrud({
-	table: Brand,
-	validationSchema: BrandSchema,
+	table: brand,
+	validationSchema: brandSchema,
 	objectName: 'Brand'
 });

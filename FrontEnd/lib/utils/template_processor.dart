@@ -6,8 +6,13 @@ class TemplateProcessor {
     Map<String, String> variables,
   ) {
     String result = template;
+    String replaceVariable(Match match, String value) => value;
+
     variables.forEach((key, value) {
-      result = result.replaceAll('{$key}', value);
+      result = result.replaceAllMapped(
+        RegExp(r'\{' + RegExp.escape(key) + r'\}'),
+        (match) => replaceVariable(match, value),
+      );
     });
     return result;
   }
@@ -51,18 +56,11 @@ class TemplateProcessor {
     int typeId,
     Map<String, LocationType> types,
   ) {
-    // Assuming type IDs map to location type names
-    final typeNames = {
-      1: "sede",
-      2: "edificio",
-      3: "piso",
-      4: "salon",
-      5: "laboratorio",
-      6: "oficina",
-    };
-
-    final typeName = typeNames[typeId] ?? "default";
-    return types[typeName]?.name ?? "Tipo desconocido";
+    final name = types.values.firstWhere((type) => type.id == typeId).name;
+    if (name.isEmpty) {
+      return "Sin tipo";
+    }
+    return name;
   }
 
   static List<String> getChildLocations(

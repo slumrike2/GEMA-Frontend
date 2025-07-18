@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:frontend/Models/backend_types.dart';
 
 class CrearTipoUbicacionModal extends StatefulWidget {
-  final void Function(Map<String, dynamic>) onCreate;
+  final void Function(LocationType locationType) onCreate;
   const CrearTipoUbicacionModal({Key? key, required this.onCreate})
     : super(key: key);
 
@@ -602,32 +603,36 @@ class _CrearTipoUbicacionModalState extends State<CrearTipoUbicacionModal> {
                         ),
                         onPressed: () {
                           if (_formKey.currentState?.validate() ?? false) {
-                            widget.onCreate({
-                              'nombre': nombre.trim(),
-                              'descripcion':
+                            final locationType = LocationType(
+                              name: nombre.trim(),
+                              icon: 'settings',
+                              description:
                                   descripcion.trim().isEmpty
                                       ? null
                                       : descripcion.trim(),
-                              'formatoCodigo': formatoCodigo.trim(),
-                              'formatoNombre': formatoNombre.trim(),
-                              'campos':
-                                  campos
-                                      .map(
-                                        (c) => {
-                                          'id': c['id']!.trim(),
-                                          'name': c['name']!.trim(),
-                                          'type': c['type'] ?? 'text',
-                                          'defaultValue':
-                                              (c['defaultValue']
-                                                          ?.trim()
-                                                          .isEmpty ??
-                                                      true)
-                                                  ? null
-                                                  : c['defaultValue']!.trim(),
-                                        },
-                                      )
-                                      .toList(),
-                            });
+                              nameTemplate: formatoNombre.trim(),
+                              codeTemplate: formatoCodigo.trim(),
+                              fields: {
+                                'campos':
+                                    campos
+                                        .map(
+                                          (c) => {
+                                            'id': c['id']!.trim(),
+                                            'name': c['name']!.trim(),
+                                            'type': c['type'] ?? 'text',
+                                            'defaultValue':
+                                                (c['defaultValue']
+                                                            ?.trim()
+                                                            .isEmpty ??
+                                                        true)
+                                                    ? null
+                                                    : c['defaultValue']!.trim(),
+                                          },
+                                        )
+                                        .toList(),
+                              },
+                            );
+                            widget.onCreate(locationType);
                             Navigator.of(context).pop();
                           }
                         },

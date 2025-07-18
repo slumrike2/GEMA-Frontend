@@ -58,3 +58,51 @@ class AppColors {
   static const Color warning = Color(0xFFF59E0B);
   static const Color success = Color(0xFF10B981);
 }
+
+enum LocationTypeEnum {
+  business,
+  apartment,
+  layers,
+  room,
+  science,
+  localPostOffice,
+  localCafe,
+  menuBook,
+  fitnessCenter,
+  theaterComedy,
+  localParking,
+  park,
+  handyman,
+  warehouse,
+  doorFrontDoor,
+  meetingRoom,
+  weekend,
+  computer,
+  biotech,
+  eco,
+  locationOn,
+}
+
+const Map<LocationTypeEnum, IconData> locationTypeIcons = {
+  LocationTypeEnum.business: Icons.business,
+  LocationTypeEnum.apartment: Icons.apartment,
+  LocationTypeEnum.layers: Icons.layers,
+  LocationTypeEnum.room: Icons.room,
+  LocationTypeEnum.science: Icons.science,
+  LocationTypeEnum.localPostOffice: Icons.local_post_office,
+  LocationTypeEnum.localCafe: Icons.local_cafe,
+  LocationTypeEnum.menuBook: Icons.menu_book,
+  LocationTypeEnum.fitnessCenter: Icons.fitness_center,
+  LocationTypeEnum.theaterComedy: Icons.theater_comedy,
+  LocationTypeEnum.localParking: Icons.local_parking,
+  LocationTypeEnum.park: Icons.park,
+  LocationTypeEnum.handyman: Icons.handyman,
+  LocationTypeEnum.warehouse: Icons.warehouse,
+  LocationTypeEnum.doorFrontDoor: Icons.door_front_door,
+  LocationTypeEnum.meetingRoom: Icons.meeting_room,
+  LocationTypeEnum.weekend: Icons.weekend,
+  LocationTypeEnum.computer: Icons.computer,
+  LocationTypeEnum.biotech: Icons.biotech,
+  LocationTypeEnum.eco: Icons.eco,
+  LocationTypeEnum.locationOn: Icons.location_on,
+};

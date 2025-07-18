@@ -1,9 +1,9 @@
 import { createCrud } from './crudFactory';
-import { EquipmentOperationalLocation } from '../db/schema/schema';
-import { EquipmentOperationalLocationSchema } from '../db/schema/validationSchema';
+import { equipmentOperationalLocation } from '../db/schema/schema';
+import { equipmentOperationalLocationSchema } from '../db/schema/validationSchema';
 
 export const equipmentOperationalLocationController = createCrud({
-	table: EquipmentOperationalLocation,
-	validationSchema: EquipmentOperationalLocationSchema,
+	table: equipmentOperationalLocation,
+	validationSchema: equipmentOperationalLocationSchema,
 	objectName: 'EquipmentOperationalLocation'
 });

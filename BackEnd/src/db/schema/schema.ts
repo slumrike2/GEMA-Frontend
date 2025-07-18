@@ -10,187 +10,27 @@
  */
 
 import {
-	uuid,
-	integer,
 	pgTable,
-	serial,
+	foreignKey,
+	uuid,
 	text,
 	timestamp,
-	pgEnum,
-	primaryKey
+	unique,
+	serial,
+	integer,
+	type AnyPgColumn,
+	jsonb,
+	pgEnum
 } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm/sql/sql';
+import { sql } from 'drizzle-orm';
 
-/**
- * Configuración de timestamps automáticos para todas las tablas
- *
- * - updatedAt: Timestamp de última actualización (se actualiza automáticamente)
- * - createdAt: Timestamp de creación (se establece automáticamente al crear)
- * - deletedAt: Timestamp de eliminación (para soft deletes)
- */
-export const timestamps = {
-	updatedAt: timestamp(),
-	createdAt: timestamp().defaultNow().notNull(),
-	deletedAt: timestamp()
-};
-
-/**
- * Enum para roles de usuario en el sistema
- *
- * Valores disponibles:
- * - user: Usuario básico del sistema
- * - technician: Técnico con permisos especializados
- * - coordinator: Coordinador con permisos de gestión
- * - admin: Administrador con todos los permisos
- */
-export const rolesEnum = pgEnum('roles', [
-	'user',
-	'technician',
-	'coordinator',
-	'admin'
+export const reportOriginSource = pgEnum('Report_Origin_Source', [
+	'email',
+	'managementSystem',
+	'chat',
+	'GEMA'
 ]);
-
-/**
- * Tabla de usuarios del sistema
- *
- * Almacena información básica de todos los usuarios incluyendo
- * su rol en el sistema y datos de contacto.
- */
-export const User = pgTable('User', {
-	uuid: uuid().primaryKey(), // Identificador único del usuario
-	name: text(), // Nombre completo del usuario
-	email: text().notNull().unique(), // Email único del usuario
-	role: rolesEnum().notNull().default('user'), // Rol del usuario en el sistema
-	...timestamps // Timestamps automáticos
-});
-
-// Tabla comentada de especialidades de técnicos (reemplazada por enum)
-// export const TechnicianSpecialities = pgTable('Technician_specialties', {
-// 	codeName: text().primaryKey(),
-// 	description: text()
-// });
-
-/**
- * Enum para especialidades de técnicos
- *
- * Define las especialidades disponibles para los técnicos:
- * - Electricidad: Especialidad en sistemas eléctricos
- * - Refrigeracion: Especialidad en sistemas de refrigeración
- * - Iluminacion: Especialidad en sistemas de iluminación
- * - Pintura: Especialidad en trabajos de pintura
- * - Protocolo: Especialidad en protocolos y procedimientos
- * - IT: Especialidad en tecnologías de la información
- */
-export const technicianSpecialityEnum = pgEnum('technician_speciality', [
-	'Electricidad',
-	'Refrigeracion',
-	'Iluminacion',
-	'Pintura',
-	'Protocolo',
-	'IT'
-]);
-
-/**
- * Tabla de técnicos del sistema
- *
- * Extiende la información de usuarios con datos específicos de técnicos
- * como identificación personal, contacto y especialidad.
- */
-export const Technician = pgTable('Technician', {
-	uuid: uuid()
-		.primaryKey()
-		.references(() => User.uuid, {
-			onDelete: 'cascade', // Si se elimina el usuario, se elimina el técnico
-			onUpdate: 'cascade' // Si se actualiza el UUID del usuario, se actualiza aquí
-		}),
-	personalId: text().notNull().unique(), // Identificación personal única del técnico
-	contact: text().notNull(), // Información de contacto del técnico
-	speciality: technicianSpecialityEnum().notNull(), // Especialidad del técnico
-	// Campo comentado de referencia a especialidades (reemplazado por enum)
-	// .references(() => TechnicianSpecialities.codeName, {
-	// 	onDelete: 'cascade',
-	// 	onUpdate: 'cascade'
-	// }),
-	technicalTeamId: serial().references(() => TechnicalTeam.id, {
-		onDelete: 'set null', // Si se elimina el equipo, el técnico queda sin equipo
-		onUpdate: 'cascade' // Si se actualiza el ID del equipo, se actualiza aquí
-	}),
-	...timestamps // Timestamps automáticos
-});
-
-/**
- * Tabla de equipos técnicos
- *
- * Representa grupos de técnicos que trabajan juntos en proyectos
- * o áreas específicas. Puede tener un líder designado.
- */
-export const TechnicalTeam = pgTable('Technical_team', {
-	id: serial().primaryKey(), // Identificador único del equipo
-	name: text().notNull(), // Nombre del equipo técnico
-	speciality: technicianSpecialityEnum(), // Especialidad principal del equipo (opcional)
-	// Campo comentado de referencia a especialidades (reemplazado por enum)
-	// .references(() => TechnicianSpecialities.codeName, {
-	// 	onDelete: 'cascade',
-	// 	onUpdate: 'cascade'
-	// }),
-	leaderId: uuid().references(() => Technician.uuid, {
-		onDelete: 'set null', // Si se elimina el líder, el equipo queda sin líder
-		onUpdate: 'cascade' // Si se actualiza el UUID del líder, se actualiza aquí
-	}),
-	...timestamps // Timestamps automáticos
-});
-
-/**
- * Tabla de tipos de ubicaciones técnicas
- *
- * Define los diferentes tipos de ubicaciones que pueden existir
- * en el sistema (ej: edificio, piso, sala, etc.)
- */
-export const TechnicalLocationTypes = pgTable('Technical_location_types', {
-	id: serial().primaryKey(), // Identificador único del tipo
-	name: text().notNull().unique(), // Nombre único del tipo de ubicación
-	description: text(), // Descripción opcional del tipo
-	nameTemplate: text().notNull().unique(), // Plantilla para nombres de ubicaciones de este tipo
-	codeTemplate: text().notNull().unique() // Plantilla para códigos de ubicaciones de este tipo
-});
-
-/**
- * Tabla de ubicaciones técnicas
- *
- * Representa ubicaciones físicas o lógicas en el sistema
- * con una estructura jerárquica (padre-hijo).
- */
-export const TechnicalLocation = pgTable('Technical_location', {
-	technicalCode: text().primaryKey(), // Código técnico único de la ubicación
-	name: text().notNull(), // Nombre de la ubicación
-	type: serial()
-		.notNull()
-		.references(() => TechnicalLocationTypes.id, {
-			onDelete: 'cascade', // Si se elimina el tipo, se eliminan las ubicaciones
-			onUpdate: 'cascade' // Si se actualiza el ID del tipo, se actualiza aquí
-		}),
-	parentTechnicalCode: text()
-		.notNull()
-		.references(() => TechnicalLocation.technicalCode, {
-			onDelete: 'cascade', // Si se elimina la ubicación padre, se eliminan las hijas
-			onUpdate: 'cascade' // Si se actualiza el código del padre, se actualiza aquí
-		})
-});
-
-/**
- * Enum para estados de equipos
- *
- * Define los posibles estados en los que puede estar un equipo:
- * - instalado: Equipo instalado y operativo
- * - en_mantenimiento: Equipo en proceso de mantenimiento
- * - mantenimiento_pendiente: Mantenimiento programado pero no iniciado
- * - en_reparaciones: Equipo en proceso de reparación
- * - reparaciones_pendientes: Reparación programada pero no iniciada
- * - en_inventario: Equipo almacenado en inventario
- * - descomisionado: Equipo retirado del servicio
- * - transferencia_pendiente: Equipo en proceso de transferencia
- */
-export const EquipmentStateEnum = pgEnum('equipment_state', [
+export const equipmentState = pgEnum('equipment_state', [
 	'instalado',
 	'en_mantenimiento',
 	'mantenimiento_pendiente',
@@ -200,181 +40,263 @@ export const EquipmentStateEnum = pgEnum('equipment_state', [
 	'descomisionado',
 	'transferencia_pendiente'
 ]);
-
-/**
- * Tabla de marcas de equipos
- *
- * Almacena las diferentes marcas de equipos disponibles en el sistema.
- */
-export const Brand = pgTable('Brand', {
-	id: serial().primaryKey(), // Identificador único de la marca
-	name: text().notNull().unique() // Nombre único de la marca
-});
-
-/**
- * Tabla de equipos
- *
- * Representa todos los equipos del sistema con su información
- * técnica, ubicación y estado actual.
- */
-export const Equipment = pgTable('Equipment', {
-	uuid: uuid()
-		.primaryKey()
-		.default(sql`gen_random_uuid()`), // UUID generado automáticamente
-	technicalCode: text().notNull().unique(), // Código técnico único del equipo
-	name: text().notNull(), // Nombre del equipo
-	serialNumber: text().notNull().unique(), // Número de serie único del equipo
-	description: text(), // Descripción opcional del equipo
-	state: EquipmentStateEnum().notNull().default('en_inventario'), // Estado actual del equipo
-	dependsOn: uuid().references(() => Equipment.uuid, {
-		onDelete: 'set null', // Si se elimina el equipo dependiente, se elimina la referencia
-		onUpdate: 'cascade' // Si se actualiza el UUID del equipo dependiente, se actualiza aquí
-	}),
-	brandId: serial()
-		.notNull()
-		.references(() => Brand.id, {
-			onDelete: 'cascade', // Si se elimina la marca, se eliminan los equipos
-			onUpdate: 'cascade' // Si se actualiza el ID de la marca, se actualiza aquí
-		}),
-	technicalLocation: text().references(() => TechnicalLocation.technicalCode, {
-		onDelete: 'set null', // Si se elimina la ubicación, el equipo queda sin ubicación
-		onUpdate: 'cascade' // Si se actualiza el código de ubicación, se actualiza aquí
-	}),
-	transferLocation: text().references(() => TechnicalLocation.technicalCode, {
-		onDelete: 'set null', // Si se elimina la ubicación de transferencia, se elimina la referencia
-		onUpdate: 'cascade' // Si se actualiza el código de ubicación de transferencia, se actualiza aquí
-	}),
-	...timestamps // Timestamps automáticos
-});
-
-/**
- * Tabla de ubicaciones operacionales de equipos
- *
- * Tabla de relación muchos a muchos entre equipos y ubicaciones
- * que permite rastrear el historial de ubicaciones de cada equipo.
- */
-export const EquipmentOperationalLocation = pgTable(
-	'Equipment_operational_location',
-	{
-		equipmentUuid: uuid()
-			.notNull()
-			.references(() => Equipment.uuid, {
-				onDelete: 'cascade', // Si se elimina el equipo, se eliminan sus ubicaciones operacionales
-				onUpdate: 'cascade' // Si se actualiza el UUID del equipo, se actualiza aquí
-			}),
-		locationTechnicalCode: text()
-			.notNull()
-			.references(() => TechnicalLocation.technicalCode, {
-				onDelete: 'set null', // Si se elimina la ubicación, se elimina la referencia
-				onUpdate: 'cascade' // Si se actualiza el código de ubicación, se actualiza aquí
-			}),
-
-		...timestamps // Timestamps automáticos
-	},
-
-	(table) => ({
-		// Clave primaria compuesta por equipo y ubicación
-		pk: primaryKey(table.equipmentUuid, table.locationTechnicalCode)
-	})
-);
-
-/**
- * Enum para fuentes de origen de reportes
- *
- * Define las diferentes fuentes desde donde pueden originarse los reportes:
- * - email: Reporte originado por email
- * - managementSystem: Reporte originado desde sistema de gestión
- * - chat: Reporte originado por chat
- * - GEMA: Reporte originado desde el sistema GEMA
- */
-export const ReportOriginSourceEnum = pgEnum('Report_Origin_Source', [
-	'email',
-	'managementSystem',
-	'chat',
-	'GEMA'
-]);
-
-/**
- * Tabla de orígenes de reportes
- *
- * Almacena información sobre el origen de cada reporte,
- * incluyendo quién lo creó y desde qué fuente.
- */
-export const ReportOrigin = pgTable('Report_Origin', {
-	id: serial().primaryKey(), // Identificador único del origen
-	emailRemitent: text(), // Email del remitente (si aplica)
-	GEMAcreator: uuid().references(() => User.uuid), // Usuario que creó el reporte en GEMA
-	source: ReportOriginSourceEnum().notNull(), // Fuente del reporte
-	description: text(), // Descripción opcional del origen
-	...timestamps // Timestamps automáticos
-});
-
-/**
- * Enum para prioridades de reportes
- *
- * Define los niveles de prioridad para los reportes:
- * - high: Prioridad alta
- * - medium: Prioridad media
- * - low: Prioridad baja
- */
-export const reportPriorityEnum = pgEnum('report_priority', [
+export const reportPriority = pgEnum('report_priority', [
 	'high',
 	'medium',
 	'low'
 ]);
-
-/**
- * Enum para tipos de reportes
- *
- * Define los tipos de reportes disponibles:
- * - preventive: Reporte preventivo
- * - active: Reporte activo/correctivo
- */
-export const reportTypeEnum = pgEnum('report_type', ['preventive', 'active']);
-
-/**
- * Enum para estados de reportes
- *
- * Define los posibles estados de un reporte:
- * - pending: Reporte pendiente de revisión
- * - programmed: Reporte programado para ejecución
- * - in_progress: Reporte en proceso de ejecución
- * - solved: Reporte resuelto/completado
- * - cancelled: Reporte cancelado
- */
-export const reportStateEnum = pgEnum('report_state', [
+export const reportState = pgEnum('report_state', [
 	'pending',
 	'programmed',
 	'in_progress',
 	'solved',
 	'cancelled'
 ]);
+export const reportType = pgEnum('report_type', ['preventive', 'active']);
+export const roles = pgEnum('roles', [
+	'user',
+	'technician',
+	'coordinator',
+	'admin'
+]);
+export const technicianSpeciality = pgEnum('technician_speciality', [
+	'Electricidad',
+	'Refrigeracion',
+	'Iluminacion',
+	'Pintura',
+	'Protocolo',
+	'IT'
+]);
 
-/**
- * Tabla de reportes
- *
- * Almacena todos los reportes del sistema con su información
- * básica, prioridad, estado y tipo.
- */
-export const Report = pgTable('Report', {
-	id: serial().primaryKey(), // Identificador único del reporte
-	title: text().notNull(), // Título del reporte
-	description: text().notNull(), // Descripción detallada del reporte
-	priority: reportPriorityEnum().notNull().default('medium'), // Prioridad del reporte
-	state: reportStateEnum().notNull().default('pending'), // Estado actual del reporte
-	type: reportTypeEnum().notNull().default('preventive'), // Tipo de reporte
-	notes: text(), // Notas adicionales opcionales
-	...timestamps // Timestamps automáticos
+export const equipmentOperationalLocation = pgTable(
+	'Equipment_operational_location',
+	{
+		equipmentUuid: uuid().notNull(),
+		locationTechnicalCode: text().notNull(),
+		updatedAt: timestamp({ mode: 'string' }),
+		createdAt: timestamp({ mode: 'string' }).defaultNow().notNull(),
+		deletedAt: timestamp({ mode: 'string' })
+	},
+	(table) => [
+		foreignKey({
+			columns: [table.equipmentUuid],
+			foreignColumns: [equipment.uuid],
+			name: 'Equipment_operational_location_equipmentUuid_Equipment_uuid_fk'
+		})
+			.onUpdate('cascade')
+			.onDelete('cascade')
+	]
+);
+
+export const equipment = pgTable(
+	'Equipment',
+	{
+		uuid: uuid().defaultRandom().primaryKey().notNull(),
+		technicalCode: text().notNull(),
+		name: text().notNull(),
+		serialNumber: text().notNull(),
+		description: text(),
+		state: equipmentState().default('en_inventario').notNull(),
+		dependsOn: uuid(),
+		brandId: integer().notNull(),
+		technicalLocation: text(),
+		transferLocation: text(),
+		updatedAt: timestamp({ mode: 'string' }),
+		createdAt: timestamp({ mode: 'string' }).defaultNow().notNull(),
+		deletedAt: timestamp({ mode: 'string' })
+	},
+	(table) => [
+		foreignKey({
+			columns: [table.brandId],
+			foreignColumns: [brand.id],
+			name: 'Equipment_brandId_Brand_id_fk'
+		})
+			.onUpdate('cascade')
+			.onDelete('cascade'),
+		foreignKey({
+			columns: [table.dependsOn],
+			foreignColumns: [table.uuid],
+			name: 'Equipment_dependsOn_Equipment_uuid_fk'
+		})
+			.onUpdate('cascade')
+			.onDelete('set null'),
+		foreignKey({
+			columns: [table.technicalLocation],
+			foreignColumns: [technicalLocation.technicalCode],
+			name: 'Equipment_technicalLocation_Technical_location_technicalCode_fk'
+		})
+			.onUpdate('cascade')
+			.onDelete('set null'),
+		foreignKey({
+			columns: [table.transferLocation],
+			foreignColumns: [technicalLocation.technicalCode],
+			name: 'Equipment_transferLocation_Technical_location_technicalCode_fk'
+		})
+			.onUpdate('cascade')
+			.onDelete('set null'),
+		unique('Equipment_technicalCode_unique').on(table.technicalCode),
+		unique('Equipment_serialNumber_unique').on(table.serialNumber)
+	]
+);
+
+export const report = pgTable('Report', {
+	id: serial().primaryKey().notNull(),
+	title: text().notNull(),
+	description: text().notNull(),
+	priority: reportPriority().default('medium').notNull(),
+	state: reportState().default('pending').notNull(),
+	type: reportType().default('preventive').notNull(),
+	notes: text(),
+	updatedAt: timestamp({ mode: 'string' }),
+	createdAt: timestamp({ mode: 'string' }).defaultNow().notNull(),
+	deletedAt: timestamp({ mode: 'string' }),
+	technicalTeamId: integer()
 });
 
-/**
- * Tabla de actualizaciones de reportes
- *
- * Almacena el historial de actualizaciones y comentarios
- * realizados sobre cada reporte.
- */
-export const ReportUpdate = pgTable('Report_Update', {
-	id: serial().primaryKey(), // Identificador único de la actualización
-	description: text().notNull(), // Descripción de la actualización
-	...timestamps // Timestamps automáticos
+export const brand = pgTable(
+	'Brand',
+	{
+		id: serial().primaryKey().notNull(),
+		name: text().notNull()
+	},
+	(table) => [unique('Brand_name_unique').on(table.name)]
+);
+
+export const reportOrigin = pgTable(
+	'Report_Origin',
+	{
+		id: serial().primaryKey().notNull(),
+		emailRemitent: text(),
+		gemAcreator: uuid('GEMAcreator'),
+		source: reportOriginSource().notNull(),
+		description: text(),
+		updatedAt: timestamp({ mode: 'string' }),
+		createdAt: timestamp({ mode: 'string' }).defaultNow().notNull(),
+		deletedAt: timestamp({ mode: 'string' })
+	},
+	(table) => [
+		foreignKey({
+			columns: [table.gemAcreator],
+			foreignColumns: [user.uuid],
+			name: 'Report_Origin_GEMAcreator_User_uuid_fk'
+		})
+	]
+);
+
+export const technician = pgTable(
+	'Technician',
+	{
+		uuid: uuid().primaryKey().notNull(),
+		personalId: text().notNull(),
+		contact: text().notNull(),
+		speciality: technicianSpeciality().notNull(),
+		updatedAt: timestamp({ mode: 'string' }),
+		createdAt: timestamp({ mode: 'string' }).defaultNow().notNull(),
+		deletedAt: timestamp({ mode: 'string' }),
+		technicalTeamId: integer()
+	},
+	(table) => [
+		foreignKey({
+			columns: [table.technicalTeamId],
+			foreignColumns: [technicalTeam.id],
+			name: 'Technician_technicalTeamId_Technical_team_id_fk'
+		})
+			.onUpdate('cascade')
+			.onDelete('set null'),
+		foreignKey({
+			columns: [table.uuid],
+			foreignColumns: [user.uuid],
+			name: 'Technician_uuid_User_uuid_fk'
+		})
+			.onUpdate('cascade')
+			.onDelete('cascade'),
+		unique('Technician_personalId_unique').on(table.personalId)
+	]
+);
+
+export const reportUpdate = pgTable('Report_Update', {
+	id: serial().primaryKey().notNull(),
+	description: text().notNull(),
+	updatedAt: timestamp({ mode: 'string' }),
+	createdAt: timestamp({ mode: 'string' }).defaultNow().notNull(),
+	deletedAt: timestamp({ mode: 'string' }),
+	reportId: integer('report_id').notNull()
 });
+
+export const technicalLocationTypes = pgTable(
+	'Technical_location_types',
+	{
+		id: serial().primaryKey().notNull(),
+		name: text().notNull(),
+		description: text(),
+		icon: text().notNull(),
+		nameTemplate: text().notNull(),
+		codeTemplate: text().notNull(),
+		fields: jsonb()
+	},
+	(table) => [
+		unique('Technical_location_types_name_unique').on(table.name),
+		unique('Technical_location_types_nameTemplate_unique').on(
+			table.nameTemplate
+		),
+		unique('Technical_location_types_codeTemplate_unique').on(
+			table.codeTemplate
+		)
+	]
+);
+
+export const user = pgTable(
+	'User',
+	{
+		uuid: uuid().primaryKey().notNull(),
+		name: text(),
+		email: text().notNull(),
+		role: roles().default('user').notNull(),
+		updatedAt: timestamp({ mode: 'string' }),
+		createdAt: timestamp({ mode: 'string' }).defaultNow(),
+		deletedAt: timestamp({ mode: 'string' })
+	},
+	(table) => [unique('User_email_unique').on(table.email)]
+);
+
+export const technicalTeam = pgTable(
+	'Technical_team',
+	{
+		id: serial().primaryKey().notNull(),
+		name: text().notNull(),
+		speciality: technicianSpeciality(),
+		updatedAt: timestamp({ mode: 'string' }),
+		createdAt: timestamp({ mode: 'string' }).defaultNow().notNull(),
+		deletedAt: timestamp({ mode: 'string' }),
+		leaderId: uuid().notNull()
+	},
+	(table) => [
+		foreignKey({
+			columns: [table.leaderId],
+			foreignColumns: [technician.uuid],
+			name: 'Technical_team_leaderId_Technician_uuid_fk'
+		})
+			.onUpdate('cascade')
+			.onDelete('set null')
+	]
+);
+
+export const technicalLocation = pgTable(
+	'Technical_location',
+	{
+		technicalCode: text().primaryKey().notNull(),
+		abbreviatedTechnicalCode: text().notNull(),
+		name: text().notNull(),
+		type: integer().notNull(),
+		parentTechnicalCode: text()
+	},
+	(table) => [
+		foreignKey({
+			columns: [table.type],
+			foreignColumns: [technicalLocationTypes.id],
+			name: 'Technical_location_type_Technical_location_types_id_fk'
+		})
+			.onUpdate('cascade')
+			.onDelete('cascade')
+	]
+);

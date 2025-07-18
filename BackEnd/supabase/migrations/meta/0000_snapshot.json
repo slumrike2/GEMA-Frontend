@@ -1,5 +1,5 @@
 {
-  "id": "4e079495-ea98-45ba-bd29-0d68f225dd24",
+  "id": "e315d4c4-0b79-4bba-b296-62ab93d4928a",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -78,7 +78,7 @@
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
-          "default": "'in_stock'"
+          "default": "'en_inventario'"
         },
         "dependsOn": {
           "name": "dependsOn",
@@ -88,7 +88,7 @@
         },
         "brandId": {
           "name": "brandId",
-          "type": "serial",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -204,20 +204,14 @@
       "name": "Equipment_operational_location",
       "schema": "",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "equipmentId": {
-          "name": "equipmentId",
+        "equipmentUuid": {
+          "name": "equipmentUuid",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "locationId": {
-          "name": "locationId",
+        "locationTechnicalCode": {
+          "name": "locationTechnicalCode",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -244,12 +238,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "Equipment_operational_location_equipmentId_Equipment_uuid_fk": {
-          "name": "Equipment_operational_location_equipmentId_Equipment_uuid_fk",
+        "Equipment_operational_location_equipmentUuid_Equipment_uuid_fk": {
+          "name": "Equipment_operational_location_equipmentUuid_Equipment_uuid_fk",
           "tableFrom": "Equipment_operational_location",
           "tableTo": "Equipment",
           "columnsFrom": [
-            "equipmentId"
+            "equipmentUuid"
           ],
           "columnsTo": [
             "uuid"
@@ -257,12 +251,12 @@
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
-        "Equipment_operational_location_locationId_Technical_location_technicalCode_fk": {
-          "name": "Equipment_operational_location_locationId_Technical_location_technicalCode_fk",
+        "Equipment_operational_location_locationTechnicalCode_Technical_location_technicalCode_fk": {
+          "name": "Equipment_operational_location_locationTechnicalCode_Technical_location_technicalCode_fk",
           "tableFrom": "Equipment_operational_location",
           "tableTo": "Technical_location",
           "columnsFrom": [
-            "locationId"
+            "locationTechnicalCode"
           ],
           "columnsTo": [
             "technicalCode"
@@ -271,7 +265,15 @@
           "onUpdate": "cascade"
         }
       },
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "Equipment_operational_location_equipmentUuid_locationTechnicalCode_pk": {
+          "name": "Equipment_operational_location_equipmentUuid_locationTechnicalCode_pk",
+          "columns": [
+            "equipmentUuid",
+            "locationTechnicalCode"
+          ]
+        }
+      },
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
@@ -496,7 +498,7 @@
         },
         "type": {
           "name": "type",
-          "type": "serial",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -564,6 +566,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "fields": {
+          "name": "fields",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "nameTemplate": {
           "name": "nameTemplate",
           "type": "text",
@@ -625,7 +633,14 @@
         },
         "speciality": {
           "name": "speciality",
-          "type": "text",
+          "type": "technician_speciality",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "leaderId": {
+          "name": "leaderId",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -651,17 +666,17 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "Technical_team_speciality_Technician_specialties_codeName_fk": {
-          "name": "Technical_team_speciality_Technician_specialties_codeName_fk",
+        "Technical_team_leaderId_Technician_uuid_fk": {
+          "name": "Technical_team_leaderId_Technician_uuid_fk",
           "tableFrom": "Technical_team",
-          "tableTo": "Technician_specialties",
+          "tableTo": "Technician",
           "columnsFrom": [
-            "speciality"
+            "leaderId"
           ],
           "columnsTo": [
-            "codeName"
+            "uuid"
           ],
-          "onDelete": "cascade",
+          "onDelete": "set null",
           "onUpdate": "cascade"
         }
       },
@@ -695,7 +710,14 @@
         },
         "speciality": {
           "name": "speciality",
-          "type": "text",
+          "type": "technician_speciality",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "technicalTeamId": {
+          "name": "technicalTeamId",
+          "type": "serial",
           "primaryKey": false,
           "notNull": true
         },
@@ -734,17 +756,17 @@
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
-        "Technician_speciality_Technician_specialties_codeName_fk": {
-          "name": "Technician_speciality_Technician_specialties_codeName_fk",
+        "Technician_technicalTeamId_Technical_team_id_fk": {
+          "name": "Technician_technicalTeamId_Technical_team_id_fk",
           "tableFrom": "Technician",
-          "tableTo": "Technician_specialties",
+          "tableTo": "Technical_team",
           "columnsFrom": [
-            "speciality"
+            "technicalTeamId"
           ],
           "columnsTo": [
-            "codeName"
+            "id"
           ],
-          "onDelete": "cascade",
+          "onDelete": "set null",
           "onUpdate": "cascade"
         }
       },
@@ -758,31 +780,6 @@
           ]
         }
       },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.Technician_specialties": {
-      "name": "Technician_specialties",
-      "schema": "",
-      "columns": {
-        "codeName": {
-          "name": "codeName",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -801,7 +798,7 @@
           "name": "name",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "email": {
           "name": "email",
@@ -859,14 +856,14 @@
       "name": "equipment_state",
       "schema": "public",
       "values": [
-        "installed",
-        "in_maintenance",
-        "maintenance_pending",
-        "in_repair",
-        "repair_pending",
-        "in_stock",
-        "decommissioned",
-        "transfer_pending"
+        "instalado",
+        "en_mantenimiento",
+        "mantenimiento_pendiente",
+        "en_reparaciones",
+        "reparaciones_pendientes",
+        "en_inventario",
+        "descomisionado",
+        "transferencia_pendiente"
       ]
     },
     "public.Report_Origin_Source": {
@@ -915,6 +912,18 @@
         "technician",
         "coordinator",
         "admin"
+      ]
+    },
+    "public.technician_speciality": {
+      "name": "technician_speciality",
+      "schema": "public",
+      "values": [
+        "Electricidad",
+        "Refrigeracion",
+        "Iluminacion",
+        "Pintura",
+        "Protocolo",
+        "IT"
       ]
     }
   },

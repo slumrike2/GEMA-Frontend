@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/Pages/equipos&ubicaciones/widgets/tipo_details.dart';
+import 'package:frontend/Models/backend_types.dart';
 
 enum DeleteTypeAction { cascade, moveToOtherType, keepAndEditLater }
 
 class DeleteTypeDialog extends StatefulWidget {
-  final LocationTemplate type;
+  final LocationType type;
   final int locationCount;
-  final List<LocationTemplate> otherTypes;
+  final List<LocationType> otherTypes;
   final List<String> locationsToDelete;
-  final void Function(DeleteTypeAction action, LocationTemplate? selectedType)
+  final void Function(DeleteTypeAction action, LocationType? selectedType)
   onDelete;
 
   const DeleteTypeDialog({
@@ -26,7 +26,7 @@ class DeleteTypeDialog extends StatefulWidget {
 
 class _DeleteTypeDialogState extends State<DeleteTypeDialog> {
   DeleteTypeAction action = DeleteTypeAction.cascade;
-  LocationTemplate? selectedType;
+  LocationType? selectedType;
 
   @override
   Widget build(BuildContext context) {
@@ -73,13 +73,13 @@ class _DeleteTypeDialogState extends State<DeleteTypeDialog> {
               title: const Text('Mover a otro tipo'),
               subtitle: Row(
                 children: [
-                  DropdownButton<LocationTemplate>(
+                  DropdownButton<LocationType>(
                     value: selectedType,
                     hint: const Text('Selecciona tipo'),
                     items:
                         widget.otherTypes
                             .map(
-                              (t) => DropdownMenuItem(
+                              (t) => DropdownMenuItem<LocationType>(
                                 value: t,
                                 child: Text(t.name),
                               ),

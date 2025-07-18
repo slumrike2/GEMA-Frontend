@@ -52,6 +52,7 @@ class _CrearUbicacionModalState extends State<CrearUbicacionModal> {
       orElse:
           () => TechnicalLocation(
             technicalCode: '',
+            abbreviatedTechnicalCode: '',
             name: '',
             type: 0,
             parentTechnicalCode: null,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/Models/backend_types.dart';
-import 'package:frontend/Models/initial_data.dart';
 import 'package:frontend/Services/technical_location_service.dart';
 import 'package:frontend/Services/technical_location_type_service.dart';
 import 'package:frontend/Services/equipment_service.dart';
@@ -27,9 +26,7 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
   Map<String, Equipment> equipment = {};
   Map<int, Brand> brands = {};
   Map<String, LocationType> locationTypes = {};
-  List<EquipmentOperationalLocation> operationalLocations = List.from(
-    InitialData.operationalLocations,
-  );
+  List<EquipmentOperationalLocation> operationalLocations = [];
 
   // UI State
   String searchTerm = "";
@@ -77,6 +74,59 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
     }
   }
 
+  _refetchEquipment() async {
+    try {
+      final equipments = await EquipmentService.getAll();
+      setState(() {
+        equipment = {for (var e in equipments) e.technicalCode: e};
+      });
+    } catch (e) {
+      print('Error fetching equipment: $e');
+    }
+  }
+
+  _refetchLocations() async {
+    try {
+      final locs = await TechnicalLocationService.getAll();
+      setState(() {
+        locations = {for (var l in locs) l.technicalCode: l};
+        // Re-expand root nodes
+        expandedNodes =
+            locs
+                .where((l) => l.parentTechnicalCode == null)
+                .map((l) => l.technicalCode)
+                .toSet();
+      });
+    } catch (e) {
+      print('Error fetching locations: $e');
+    }
+  }
+
+  _refetchLocationTypes() async {
+    try {
+      final types = await TechnicalLocationTypeService.getAll();
+      setState(() {
+        locationTypes = {for (var t in types) t.name: t};
+      });
+    } catch (e) {
+      print('Error fetching location types: $e');
+    }
+  }
+
+  _refetchBrands() async {
+    try {
+      final brandsList = await BrandService.getAll();
+      setState(() {
+        brands = {
+          for (var b in brandsList)
+            if (b.id != null) b.id!: b,
+        };
+      });
+    } catch (e) {
+      print('Error fetching brands: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -109,6 +159,10 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
                       locations: locations,
                       equipment: equipment,
                       brands: brands,
+                      refetchEquipment: _refetchEquipment,
+                      refetchLocations: _refetchLocations,
+                      refetchLocationTypes: _refetchLocationTypes,
+                      refetchBrands: _refetchBrands,
                       locationTypes: locationTypes,
                       expandedNodes: expandedNodes,
                       selectedItem: selectedItem,
@@ -187,6 +241,7 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
       return MarcaDetailsPage(
         brands: brands.values.toList(),
         equipmentCountByBrand: equipmentCountByBrand,
+        refetchBrands: _refetchBrands,
         onClose: () {
           setState(() {
             activeTab = "locations";

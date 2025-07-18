@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/Models/backend_types.dart';
 import 'package:frontend/Modals/delete_brand_dialog.dart';
+import 'package:frontend/Services/brand_service.dart';
 
 class MarcaDetailsPage extends StatefulWidget {
   final List<Brand> brands;
   final Map<int, int> equipmentCountByBrand; // brandId -> count
   final VoidCallback? onClose;
+  final VoidCallback refetchBrands;
   const MarcaDetailsPage({
     Key? key,
     required this.brands,
     required this.equipmentCountByBrand,
+
     this.onClose,
+    required this.refetchBrands,
   }) : super(key: key);
 
   @override
@@ -40,11 +44,11 @@ class _MarcaDetailsPageState extends State<MarcaDetailsPage> {
               onPressed: () {
                 if (name.trim().isNotEmpty) {
                   setState(() {
-                    final idx = _brands.indexWhere(
+                    final idx = widget.brands.indexWhere(
                       (b) => b.id == brand.id && b.name == brand.name,
                     );
                     if (idx != -1) {
-                      _brands[idx] = Brand(id: brand.id, name: name.trim());
+                      widget.brands[idx] = Brand(id: brand.id, name: name.trim());
                     }
                   });
                   Navigator.of(context).pop();
@@ -59,7 +63,7 @@ class _MarcaDetailsPageState extends State<MarcaDetailsPage> {
   }
 
   void _deleteBrand(Brand brand) {
-    final otherBrands = _brands.where((b) => b.id != brand.id).toList();
+    final otherBrands = widget.brands.where((b) => b.id != brand.id).toList();
     final equipmentCount =
         brand.id != null ? (widget.equipmentCountByBrand[brand.id!] ?? 0) : 0;
     showDialog(
@@ -72,7 +76,7 @@ class _MarcaDetailsPageState extends State<MarcaDetailsPage> {
           onDelete: (moveToNoMarca, selectedBrand) {
             // Here you would update the equipment's brandId in a real app
             setState(() {
-              _brands.removeWhere(
+              widget.brands.removeWhere(
                 (b) => b.id == brand.id && b.name == brand.name,
               );
             });
@@ -83,12 +87,11 @@ class _MarcaDetailsPageState extends State<MarcaDetailsPage> {
     );
   }
 
-  late List<Brand> _brands;
+
 
   @override
   void initState() {
     super.initState();
-    _brands = List.from(widget.brands);
   }
 
   void _showCreateDialog() {
@@ -109,12 +112,18 @@ class _MarcaDetailsPageState extends State<MarcaDetailsPage> {
               child: const Text('Cancelar'),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 if (name.trim().isNotEmpty) {
-                  setState(() {
-                    _brands.add(Brand(id: null, name: name.trim()));
-                  });
-                  Navigator.of(context).pop();
+                  try {
+                    await BrandService.create({"name": name.trim()});
+                    widget.refetchBrands();
+                    Navigator.of(context).pop();
+                  } catch (e) {
+                    // Optionally show error to user
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error al agregar marca: $e')),
+                    );
+                  }
                 }
               },
               child: const Text('Agregar'),
@@ -215,7 +224,7 @@ class _MarcaDetailsPageState extends State<MarcaDetailsPage> {
                       Expanded(
                         child: SingleChildScrollView(
                           child:
-                              _brands.isEmpty
+                              widget.brands.isEmpty
                                   ? Center(
                                     child: Column(
                                       mainAxisAlignment:
@@ -248,7 +257,7 @@ class _MarcaDetailsPageState extends State<MarcaDetailsPage> {
                                     ),
                                   )
                                   : GridView.builder(
-                                    itemCount: _brands.length,
+                                    itemCount: widget.brands.length,
                                     gridDelegate:
                                         SliverGridDelegateWithFixedCrossAxisCount(
                                           crossAxisCount: crossAxisCount,
@@ -262,7 +271,7 @@ class _MarcaDetailsPageState extends State<MarcaDetailsPage> {
                                     physics:
                                         const NeverScrollableScrollPhysics(),
                                     itemBuilder: (context, index) {
-                                      final brand = _brands[index];
+                                      final brand = widget.brands[index];
                                       final count =
                                           brand.id != null
                                               ? (widget

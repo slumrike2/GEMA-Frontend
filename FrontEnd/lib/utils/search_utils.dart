@@ -2,12 +2,12 @@ import 'package:frontend/Models/backend_types.dart';
 import 'template_processor.dart';
 
 class SearchUtils {
-  static Map<String, TechnicalLocation> filterLocations(
+  static List<TechnicalLocation> filterLocations(
     String searchTerm,
     Map<String, TechnicalLocation> locations,
     Map<String, LocationType> locationTypes,
   ) {
-    if (searchTerm.isEmpty) return locations;
+    if (searchTerm.isEmpty) return locations.values.toList();
 
     final Map<String, TechnicalLocation> filtered = {};
 
@@ -16,10 +16,12 @@ class SearchUtils {
         location.technicalCode,
         locations,
       );
-      final typeName = TemplateProcessor.getLocationTypeName(
-        location.type,
-        locationTypes,
-      );
+      final typeName = locationTypes.containsKey(location.type)
+          ? TemplateProcessor.getLocationTypeName(
+              location.type,
+              locationTypes,
+            )
+          : '';
 
       final matchesSearch =
           location.name.toLowerCase().contains(searchTerm.toLowerCase()) ||
@@ -45,7 +47,7 @@ class SearchUtils {
       }
     }
 
-    return filtered;
+    return filtered.values.toList();
   }
 
   static Map<String, Equipment> filterEquipment(
