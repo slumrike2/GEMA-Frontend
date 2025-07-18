@@ -297,6 +297,13 @@ export const technicalLocation = pgTable(
 			name: 'Technical_location_type_Technical_location_types_id_fk'
 		})
 			.onUpdate('cascade')
+			.onDelete('cascade'),
+		foreignKey({
+			columns: [table.parentTechnicalCode],
+			foreignColumns: [table.technicalCode],
+			name: 'Technical_location_parentTechnicalCode_Technical_location_technicalCode_fk'
+		})
+			.onUpdate('cascade')
 			.onDelete('cascade')
 	]
 );

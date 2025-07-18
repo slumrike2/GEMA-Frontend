@@ -257,7 +257,7 @@ export const technicalTeam = pgTable(
 		updatedAt: timestamp({ mode: 'string' }),
 		createdAt: timestamp({ mode: 'string' }).defaultNow().notNull(),
 		deletedAt: timestamp({ mode: 'string' }),
-		leaderId: uuid().notNull()
+		leaderId: uuid()
 	},
 	(table) => [
 		foreignKey({
@@ -284,6 +284,13 @@ export const technicalLocation = pgTable(
 			columns: [table.type],
 			foreignColumns: [technicalLocationTypes.id],
 			name: 'Technical_location_type_Technical_location_types_id_fk'
+		})
+			.onUpdate('cascade')
+			.onDelete('cascade'),
+		foreignKey({
+			columns: [table.parentTechnicalCode],
+			foreignColumns: [table.technicalCode],
+			name: 'Technical_location_parentTechnicalCode_Technical_location_technicalCode_fk'
 		})
 			.onUpdate('cascade')
 			.onDelete('cascade')

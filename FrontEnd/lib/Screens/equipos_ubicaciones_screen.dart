@@ -312,6 +312,7 @@ class _EquiposUbicacionesScreenState extends State<EquiposUbicacionesScreen> {
         brands: brands,
         operationalLocations: operationalLocations,
         getFullPath: (code) => TemplateProcessor.getFullPath(code, locations),
+        refetchLocations: _refetchLocations,
       );
     } else {
       final eq = equipment[selectedItem!];

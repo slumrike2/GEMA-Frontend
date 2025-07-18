@@ -4,6 +4,7 @@ import 'package:frontend/Components/status_chip.dart';
 import 'package:frontend/Models/backend_types.dart';
 import 'package:frontend/Modals/assign_location_modal.dart';
 import 'package:frontend/Modals/schedule_move_modal.dart';
+import 'package:frontend/Services/equipment_service.dart';
 import 'package:frontend/constants/app_constnats.dart';
 import 'package:frontend/utils/template_processor.dart';
 
@@ -126,6 +127,17 @@ class EquipmentDetails extends StatelessWidget {
                 style: IconButton.styleFrom(
                   backgroundColor: AppColors.primary.withOpacity(0.1),
                   foregroundColor: AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                onPressed: () {
+                  _showDeleteDialog(context);
+                },
+                icon: const Icon(Icons.delete),
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.red.withOpacity(0.1),
+                  foregroundColor: Colors.red,
                 ),
               ),
             ],
@@ -327,6 +339,49 @@ class EquipmentDetails extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Eliminar equipo'),
+            content: const Text(
+              '¿Estás seguro de que deseas eliminar este equipo? Esta acción no se puede deshacer.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.of(ctx).pop();
+                  try {
+                    await EquipmentService.delete(equipment.uuid ?? '');
+                    onRefetch();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Equipo eliminado correctamente'),
+                      ),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error al eliminar el equipo: $e'),
+                      ),
+                    );
+                  }
+                },
+                child: const Text(
+                  'Eliminar',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
+          ),
     );
   }
 }

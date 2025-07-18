@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/Components/custom_card.dart';
 import 'package:frontend/Components/status_chip.dart';
 import 'package:frontend/Models/backend_types.dart';
+import 'package:frontend/Services/technical_location_service.dart';
 import 'package:frontend/constants/app_constnats.dart';
 import 'package:frontend/utils/template_processor.dart';
 
@@ -13,6 +14,7 @@ class LocationDetails extends StatelessWidget {
   final Map<int, Brand> brands;
   final List<EquipmentOperationalLocation> operationalLocations;
   final String Function(String) getFullPath;
+  final VoidCallback refetchLocations;
 
   const LocationDetails({
     super.key,
@@ -23,6 +25,7 @@ class LocationDetails extends StatelessWidget {
     required this.brands,
     required this.operationalLocations,
     required this.getFullPath,
+    required this.refetchLocations,
   });
 
   @override
@@ -115,6 +118,17 @@ class LocationDetails extends StatelessWidget {
                 style: IconButton.styleFrom(
                   backgroundColor: AppColors.primary.withOpacity(0.1),
                   foregroundColor: AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                onPressed: () {
+                  _showDeleteDialog(context);
+                },
+                icon: const Icon(Icons.delete),
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.red.withOpacity(0.1),
+                  foregroundColor: Colors.red,
                 ),
               ),
             ],
@@ -374,6 +388,177 @@ class LocationDetails extends StatelessWidget {
                   ),
         ),
       ],
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context) {
+    final childLocations =
+        TemplateProcessor.getChildLocations(location.technicalCode, locations)
+            .map((code) => locations[code])
+            .where((loc) => loc != null)
+            .cast<TechnicalLocation>()
+            .toList();
+
+    String? selectedParent;
+    String? deleteOption;
+    final ScrollController scrollController = ScrollController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setState) {
+            return AlertDialog(
+              title: const Text('Eliminar ubicación'),
+              content: SizedBox(
+                width: 400,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Esta ubicación tiene las siguientes ubicaciones hijas:',
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      height: 120,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Scrollbar(
+                        controller: scrollController,
+                        child: ListView.builder(
+                          controller: scrollController,
+                          itemCount: childLocations.length,
+                          itemBuilder: (context, index) {
+                            final child = childLocations[index];
+                            return ListTile(
+                              leading: Icon(
+                                Icons.location_on,
+                                color: AppColors.primary,
+                              ),
+                              title: Text(child.name),
+                              subtitle: Text(child.technicalCode),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Opciones de eliminación:'),
+                    RadioListTile<String>(
+                      title: const Text(
+                        'Eliminar solo esta ubicación y reasignar las hijas a otra ubicación',
+                      ),
+                      value: 'reassign',
+                      groupValue: deleteOption,
+                      onChanged: (val) {
+                        setState(() {
+                          deleteOption = val;
+                        });
+                      },
+                    ),
+                    if (deleteOption == 'reassign') ...[
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        decoration: const InputDecoration(
+                          labelText: 'Nueva ubicación padre',
+                        ),
+                        items:
+                            locations.values
+                                .where(
+                                  (loc) =>
+                                      loc.technicalCode !=
+                                      location.technicalCode,
+                                )
+                                .map(
+                                  (loc) => DropdownMenuItem(
+                                    value: loc.technicalCode,
+                                    child: Text(loc.name),
+                                  ),
+                                )
+                                .toList(),
+                        onChanged: (val) {
+                          setState(() {
+                            selectedParent = val;
+                          });
+                        },
+                      ),
+                    ],
+                    RadioListTile<String>(
+                      title: const Text(
+                        'Eliminar en cascada (todas las hijas y dependencias)',
+                      ),
+                      value: 'cascade',
+                      groupValue: deleteOption,
+                      onChanged: (val) {
+                        setState(() {
+                          deleteOption = val;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Cancelar'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    Navigator.of(ctx).pop();
+                    try {
+                      if (deleteOption == 'cascade') {
+                        await TechnicalLocationService.delete(
+                          location.technicalCode,
+                        );
+                      } else if (deleteOption == 'reassign' &&
+                          selectedParent != null) {
+                        // Reassign children to selectedParent
+                        for (final child in childLocations) {
+                          final location = TechnicalLocation(
+                            technicalCode: child.technicalCode,
+                            parentTechnicalCode: selectedParent,
+                            abbreviatedTechnicalCode:
+                                child.abbreviatedTechnicalCode,
+                            name: child.name,
+                            type: child.type,
+                          );
+                          await TechnicalLocationService.update(
+                            child.technicalCode,
+                            location.toJson(),
+                          );
+                        }
+                        await TechnicalLocationService.delete(
+                          location.technicalCode,
+                        );
+                      }
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Ubicación eliminada correctamente'),
+                        ),
+                      );
+                      refetchLocations();
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error al eliminar la ubicación: $e'),
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text(
+                    'Eliminar',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
