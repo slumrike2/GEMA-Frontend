@@ -4,6 +4,7 @@ import 'package:frontend/Services/user_service.dart';
 import 'package:frontend/Models/backend_types.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:frontend/Screens/equipos_ubicaciones_screen.dart';
+import 'package:frontend/constants.dart';
 
 import 'mantenimientos_screen.dart';
 import 'cuadrillas_screen.dart';
@@ -74,9 +75,9 @@ class _AdminScreenState extends State<AdminScreen> {
   @override
   Widget build(BuildContext context) {
     final List<Color> navColors = [
-      const Color(0xFFFCC430), // Cuadrillas
-      const Color(0xFF007934), // Equipos y Ubicaciones
-      const Color(0xFF37B4E3), // Cuadrillas
+      primaryYellow,
+      primaryGreen,
+      primaryBlue,
       const Color.fromARGB(255, 146, 146, 146), // Mantenimientos
     ];
     List<Image> navIcons = [
@@ -135,7 +136,7 @@ class _AdminScreenState extends State<AdminScreen> {
                   const SizedBox(height: 8),
                   const Text(
                     'Panel',
-                    style: TextStyle(color: Colors.black, fontSize: 18),
+                    style: TextStyle(color: Colors.white, fontSize: 18),
                   ),
                 ],
               ),
@@ -143,7 +144,7 @@ class _AdminScreenState extends State<AdminScreen> {
             trailing: Padding(
               padding: const EdgeInsets.only(bottom: 24.0),
               child: IconButton(
-                icon: const Icon(Icons.logout, color: Colors.black, size: 28),
+                icon: const Icon(Icons.logout, color: Colors.white, size: 28),
                 tooltip: 'Cerrar sesión',
                 onPressed: _handleLogout,
               ),
@@ -151,12 +152,12 @@ class _AdminScreenState extends State<AdminScreen> {
             destinations: List.generate(
               navIconsFiltered.length,
               (i) => NavigationRailDestination(
-                icon: Icon(navIconsFiltered[i], color: Colors.black),
+                icon: Icon(navIconsFiltered[i], color: Colors.white),
                 selectedIcon: Icon(navIconsFiltered[i], color: Colors.black),
                 label: Text(
                   navLabelsFiltered[i],
                   style: TextStyle(
-                    color: Colors.black,
+                    color: Colors.white,
                     fontWeight:
                         i == safeSelectedIndex
                             ? FontWeight.bold
@@ -170,7 +171,7 @@ class _AdminScreenState extends State<AdminScreen> {
               size: 28,
             ),
             unselectedIconTheme: const IconThemeData(
-              color: Colors.black,
+              color: Colors.white,
               size: 28,
             ),
             labelType: NavigationRailLabelType.all,
