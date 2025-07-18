@@ -78,7 +78,7 @@ class _AdminScreenState extends State<AdminScreen> {
       primaryYellow,
       primaryGreen,
       primaryBlue,
-      const Color.fromARGB(255, 146, 146, 146), // Mantenimientos
+      primaryGray, // Mantenimientos
     ];
     List<Image> navIcons = [
       Image.asset('assets/images/IconMantenimientos.png'),
