@@ -74,7 +74,7 @@ class LocationType {
 
 class User {
   final String? uuid;
-  final String name;
+  final String? name;
   final String email;
   final UserRole? role;
   final DateTime? updatedAt;
@@ -83,7 +83,7 @@ class User {
 
   User({
     this.uuid,
-    required this.name,
+    this.name,
     required this.email,
     this.role,
     this.updatedAt,
@@ -93,7 +93,7 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) => User(
     uuid: json['uuid'],
-    name: json['name'],
+    name: json['name'] ?? "Sin nombre",
     email: json['email'],
     role: json['role'] != null ? UserRole.values.byName(json['role']) : null,
     updatedAt:
@@ -105,7 +105,7 @@ class User {
   );
   Map<String, dynamic> toJson() => {
     if (uuid != null) 'uuid': uuid,
-    'name': name,
+    'name': name ?? "Sin nombre",
     'email': email,
     if (role != null) 'role': role!.name,
     if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
