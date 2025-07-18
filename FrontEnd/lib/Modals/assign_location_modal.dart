@@ -350,6 +350,7 @@ class _AssignLocationModalState extends State<AssignLocationModal> {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
+                    style: TextButton.styleFrom(foregroundColor: Colors.black),
                     child: const Text('Cancelar'),
                   ),
                   const SizedBox(width: 8),
@@ -360,9 +361,15 @@ class _AssignLocationModalState extends State<AssignLocationModal> {
                         final equipmentId = widget.equipment.uuid ?? '';
                         if (equipmentId.isNotEmpty &&
                             selectedTechnicalLocation != null) {
-                          await EquipmentService.assignTechnicalLocation(
+                          await EquipmentService.update(
                             equipmentId,
-                            selectedTechnicalLocation!,
+                            Equipment(
+                              technicalCode: widget.equipment.technicalCode,
+                              name: widget.equipment.name,
+                              serialNumber: widget.equipment.serialNumber,
+                              brandId: widget.equipment.brandId,
+                              technicalLocation: selectedTechnicalLocation,
+                            ),
                           );
                         }
                         // Assign operational locations
@@ -388,7 +395,8 @@ class _AssignLocationModalState extends State<AssignLocationModal> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green.shade700,
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
                     ),
                     child: const Text('Guardar Asignaciones'),
                   ),

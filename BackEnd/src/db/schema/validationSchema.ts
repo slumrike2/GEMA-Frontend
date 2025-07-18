@@ -153,7 +153,7 @@ export const technicalLocationSchema = z.object({
 	name: z.string().min(1),
 	abbreviatedTechnicalCode: z.string().min(1).optional(),
 	type: z.number().int(),
-	parentTechnicalCode: z.string().min(1).optional()
+	parentTechnicalCode: z.string().min(1).optional().nullable()
 });
 
 /**

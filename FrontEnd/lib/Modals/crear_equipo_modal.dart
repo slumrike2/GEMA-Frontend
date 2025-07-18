@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/Models/backend_types.dart';
 import 'package:frontend/Components/searchable_combobox.dart';
+import 'package:frontend/Services/equipment_service.dart';
 
 class CrearEquipoModal extends StatefulWidget {
   final List<Brand> brands;
   final List<TechnicalLocation> locations;
   final void Function(Map<String, dynamic>) onCreate;
+  final VoidCallback refetchEquipments;
 
   const CrearEquipoModal({
     super.key,
     required this.brands,
     required this.locations,
+    required this.refetchEquipments,
     required this.onCreate,
   });
 
@@ -24,7 +27,7 @@ class _CrearEquipoModalState extends State<CrearEquipoModal> {
   String serie = '';
   String nombre = '';
   Brand? marca;
-  String estado = 'En Inventario';
+  String estado = 'en_inventario';
   TechnicalLocation? ubicacion;
   String descripcion = '';
 
@@ -160,7 +163,57 @@ class _CrearEquipoModalState extends State<CrearEquipoModal> {
                         value: estado,
                         items: const [
                           DropdownMenuItem(
-                            value: 'En Inventario',
+                            value: 'instalado',
+                            child: Text(
+                              'Instalado',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'en_mantenimiento',
+                            child: Text(
+                              'En Mantenimiento',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'mantenimiento_pendiente',
+                            child: Text(
+                              'Mantenimiento Pendiente',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'en_reparaciones',
+                            child: Text(
+                              'En Reparaciones',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'reparaciones_pendientes',
+                            child: Text(
+                              'Reparaciones Pendientes',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'en_inventario',
                             child: Text(
                               'En Inventario',
                               style: TextStyle(
@@ -170,9 +223,9 @@ class _CrearEquipoModalState extends State<CrearEquipoModal> {
                             ),
                           ),
                           DropdownMenuItem(
-                            value: 'En Uso',
+                            value: 'descomisionado',
                             child: Text(
-                              'En Uso',
+                              'Descomisionado',
                               style: TextStyle(
                                 fontSize: 13,
                                 color: Colors.black,
@@ -180,9 +233,9 @@ class _CrearEquipoModalState extends State<CrearEquipoModal> {
                             ),
                           ),
                           DropdownMenuItem(
-                            value: 'En Mantenimiento',
+                            value: 'transferencia_pendiente',
                             child: Text(
-                              'En Mantenimiento',
+                              'Transferencia Pendiente',
                               style: TextStyle(
                                 fontSize: 13,
                                 color: Colors.black,
@@ -192,7 +245,8 @@ class _CrearEquipoModalState extends State<CrearEquipoModal> {
                         ],
                         onChanged:
                             (v) =>
-                                setState(() => estado = v ?? 'En Inventario'),
+                                setState(() => estado = v ?? 'en_inventario'),
+                        validator: (v) => v == null ? 'Requerido' : null,
                       ),
                     ),
                   ],
@@ -260,18 +314,38 @@ class _CrearEquipoModalState extends State<CrearEquipoModal> {
                         ),
                         textStyle: const TextStyle(fontSize: 13),
                       ),
-                      onPressed: () {
+                      onPressed: () async {
                         if (_formKey.currentState?.validate() ?? false) {
-                          widget.onCreate({
-                            'codigo': codigo,
-                            'serie': serie,
-                            'nombre': nombre,
-                            'marca': marca,
-                            'estado': estado,
-                            'ubicacion': ubicacion,
-                            'descripcion': descripcion,
-                          });
-                          Navigator.of(context).pop();
+                          try {
+                            await EquipmentService.create({
+                              'technicalCode': codigo,
+                              'serialNumber': serie,
+                              'name': nombre,
+                              'brandId': marca?.id,
+                              'state': estado,
+                              'technicalLocation': ubicacion?.technicalCode,
+                              'description': descripcion,
+                            });
+                            widget.onCreate({
+                              'codigo': codigo,
+                              'serie': serie,
+                              'nombre': nombre,
+                              'marca': marca,
+                              'estado': estado,
+                              'ubicacion': ubicacion,
+                              'descripcion': descripcion,
+                            });
+                            if (widget.refetchEquipments != null) {
+                              widget.refetchEquipments!();
+                            }
+                            Navigator.of(context).pop();
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error al crear equipo: $e'),
+                              ),
+                            );
+                          }
                         }
                       },
                       child: const Text('Crear Equipo'),

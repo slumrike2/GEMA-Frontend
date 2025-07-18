@@ -57,12 +57,12 @@ class EquipmentService {
   }
 
   // Actualizar un equipo
-  static Future<void> update(String uuid, Map<String, dynamic> data) async {
+  static Future<void> update(String uuid, Equipment data) async {
     try {
       final response = await http.put(
         Uri.parse('$baseUrl/$uuid'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(data),
+        body: jsonEncode(data.toJson()),
       );
       if (response.statusCode != 200) {
         throw Exception(

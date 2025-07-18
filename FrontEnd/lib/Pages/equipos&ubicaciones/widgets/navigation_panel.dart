@@ -246,6 +246,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
                   context: context,
                   builder:
                       (context) => CrearEquipoModal(
+                        refetchEquipments: widget.refetchEquipment,
                         brands: widget.brands.values.toList(),
                         locations: widget.locations.values.toList(),
                         onCreate: (data) {
