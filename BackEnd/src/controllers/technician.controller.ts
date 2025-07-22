@@ -14,6 +14,32 @@ const baseTechnicianController = createCrud({
 export const technicianController = {
 	...baseTechnicianController,
 
+	// GET /api/technicians/view
+	async getTechnicianUserView(req: Request, res: Response) {
+		try {
+			// Import user and join with technician
+			const { user } = await import('../db/schema/schema');
+			const result = await db
+				.select({
+					userId: user.uuid,
+					userName: user.name,
+					userEmail: user.email,
+					personalId: technician.personalId,
+					contact: technician.contact,
+					speciality: technician.speciality,
+					technicalTeamId: technician.technicalTeamId
+				})
+				.from(technician)
+				.innerJoin(user, eq(user.uuid, technician.uuid));
+
+			res.status(200).json(result);
+		} catch (error) {
+			console.error('Error getting technician user view:', error);
+			res.status(500).json({ error: 'Internal server error' });
+		}
+	},
+
+	
 	async getByTechnicalTeam(req: Request, res: Response) {
 		const technicalTeamId = req.params.technicalTeamId;
 		try {

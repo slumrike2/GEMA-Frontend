@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/Models/backend_types.dart';
+import 'package:frontend/constants/app_constnats.dart';
 
 class CrearTipoUbicacionModal extends StatefulWidget {
   final void Function(LocationType locationType) onCreate;
@@ -14,8 +15,14 @@ class CrearTipoUbicacionModal extends StatefulWidget {
 
 class _CrearTipoUbicacionModalState extends State<CrearTipoUbicacionModal> {
   final ScrollController _scrollController = ScrollController();
-  // Custom widget for autocomplete in format fields
-  // Controllers and focus nodes for autocomplete fields
+  String selectedIconKey = LocationTypeEnum.locationOn.name;
+  String nombre = '';
+  String descripcion = '';
+  String formatoCodigo = '';
+  String formatoNombre = '';
+  List<Map<String, String?>> campos = [
+    {'id': '', 'name': '', 'type': 'text', 'defaultValue': ''},
+  ];
   late final TextEditingController _formatoCodigoController;
   late final FocusNode _formatoCodigoFocusNode;
   late final TextEditingController _formatoNombreController;
@@ -257,13 +264,6 @@ class _CrearTipoUbicacionModalState extends State<CrearTipoUbicacionModal> {
   }
 
   final _formKey = GlobalKey<FormState>();
-  String nombre = '';
-  String descripcion = '';
-  String formatoCodigo = '';
-  String formatoNombre = '';
-  List<Map<String, String?>> campos = [
-    {'id': '', 'name': '', 'type': 'text', 'defaultValue': ''},
-  ];
 
   void addCampo() {
     setState(() {
@@ -742,7 +742,50 @@ class _CrearTipoUbicacionModalState extends State<CrearTipoUbicacionModal> {
                       },
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      const Text(
+                        'Icono',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: selectedIconKey,
+                          decoration: const InputDecoration(
+                            labelText: 'Selecciona un icono',
+                          ),
+                          items:
+                              LocationTypeEnum.values.map((enumValue) {
+                                return DropdownMenuItem<String>(
+                                  value: enumValue.name,
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        locationTypeIcons[enumValue],
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(enumValue.name),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                          onChanged: (val) {
+                            setState(() {
+                              selectedIconKey =
+                                  val ?? LocationTypeEnum.locationOn.name;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -783,7 +826,7 @@ class _CrearTipoUbicacionModalState extends State<CrearTipoUbicacionModal> {
                             }
                             final locationType = LocationType(
                               name: nombre.trim(),
-                              icon: 'settings',
+                              icon: selectedIconKey,
                               description:
                                   descripcion.trim().isEmpty
                                       ? null

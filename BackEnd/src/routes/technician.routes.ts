@@ -3,6 +3,10 @@ import { technicianController } from '../controllers/technician.controller';
 
 const router = Router();
 
+
+// View endpoint: user + technician info
+router.get('/view', technicianController.getTechnicianUserView);
+
 router.get('/', technicianController.getAll);
 router.get('/:uuid', technicianController.getByPk);
 router.post('/', technicianController.insert);
