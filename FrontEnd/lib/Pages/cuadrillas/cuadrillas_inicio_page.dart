@@ -1,301 +1,600 @@
 import 'package:flutter/material.dart';
+import '../../Models/backend_types.dart';
+import '../../Modals/create_technician_modal.dart';
+import 'package:frontend/Services/technician_service.dart';
+import 'package:frontend/Services/user_service.dart';
+import 'package:frontend/Services/technician_speciality_service.dart';
+import 'package:frontend/constants/app_constnats.dart';
 
-class CuadrillasInicioPage extends StatelessWidget {
-  final TextEditingController searchController;
-  final String searchType;
-  final List<String> searchTypes;
-  final List<Map<String, dynamic>> cuadrillas;
-  final void Function() onCrearCuadrilla;
-  final void Function() onCrearOModificarPersona;
-  final void Function(int) onVerMantenimientos;
-  final void Function(int) onModificar;
+class CuadrillasInicioPage extends StatefulWidget {
+  final List<TechnicalTeam> cuadrillas;
+  final VoidCallback onCrearCuadrilla;
+  final Future<void> Function() onRefresh;
+  final void Function(TechnicalTeam) onVerMantenimientos;
+  final void Function(TechnicalTeam) onModificar;
 
   const CuadrillasInicioPage({
     super.key,
-    required this.searchController,
-    required this.searchType,
-    required this.searchTypes,
     required this.cuadrillas,
     required this.onCrearCuadrilla,
-    required this.onCrearOModificarPersona,
+    required this.onRefresh,
     required this.onVerMantenimientos,
     required this.onModificar,
   });
 
   @override
+  State<CuadrillasInicioPage> createState() => _CuadrillasInicioPageState();
+}
+
+class _CuadrillasInicioPageState extends State<CuadrillasInicioPage> {
+  // Cache de info de líderes por uuid
+  final Map<String, User?> _leadersInfo = {};
+  final Set<String> _loadingLeaders = {};
+
+  Future<void> _fetchLeaderInfo(String? uuid) async {
+    if (uuid == null ||
+        _leadersInfo.containsKey(uuid) ||
+        _loadingLeaders.contains(uuid))
+      return;
+    _loadingLeaders.add(uuid);
+    try {
+      final user = await UserService.getById(uuid);
+      setState(() {
+        _leadersInfo[uuid] = user;
+      });
+    } catch (e) {
+      setState(() {
+        _leadersInfo[uuid] = null;
+      });
+    } finally {
+      _loadingLeaders.remove(uuid);
+    }
+  }
+
+  bool _loadingModal = false;
+  List<User> _usuariosDisponibles = [];
+  List<String> _especialidades = [];
+
+  Future<void> _abrirModalCrearModificarPersona() async {
+    setState(() => _loadingModal = true);
+    try {
+      final especialidades = await TechnicianSpecialityService.getAll();
+      final usuariosDisponibles = await UserService.getAvailableUsers();
+
+      if (!mounted) return;
+
+      setState(() {
+        _especialidades = especialidades;
+        _usuariosDisponibles = usuariosDisponibles;
+        _loadingModal = false;
+      });
+
+      await showDialog(
+        context: context,
+        builder:
+            (context) => CreateTechnicianModal(
+              especialidades: _especialidades,
+              usuariosDisponibles: _usuariosDisponibles,
+              onCreate: (data) async {
+                try {
+                  final cleanData = data.map(
+                    (k, v) => MapEntry(k, v?.toString()),
+                  );
+                  await TechnicianService.create(cleanData);
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Técnico creado/actualizado')),
+                  );
+                  Navigator.of(context).pop();
+                  await widget.onRefresh();
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error al crear técnico: $e')),
+                  );
+                }
+              },
+              onCancel: () {
+                if (mounted) Navigator.of(context).pop();
+              },
+            ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loadingModal = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al cargar datos para técnico: $e')),
+      );
+    }
+  }
+
+  String _searchText = '';
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(vertical: 24),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1000),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Título
-              Padding(
-                padding: const EdgeInsets.fromLTRB(35, 8, 0, 12),
-                child: Text(
-                  'Cuadrillas',
-                  style: const TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.black,
-                    fontFamily: "Arial",
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              // Botones superiores
-              Padding(
-                padding: const EdgeInsets.only(right: 35.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    ElevatedButton(
-                      onPressed: onCrearCuadrilla,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2196B6),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 26,
-                          vertical: 8,
-                        ),
-                        textStyle: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(9),
-                        ),
+    // Filtrar cuadrillas según búsqueda
+    final cuadrillasFiltradas =
+        widget.cuadrillas.where((cuadrilla) {
+          final nombre = cuadrilla.name.toLowerCase();
+          final especialidad = (cuadrilla.speciality ?? '').toLowerCase();
+          return nombre.contains(_searchText.toLowerCase()) ||
+              especialidad.contains(_searchText.toLowerCase());
+        }).toList();
+
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(vertical: 24),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1000),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Título principal
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(10, 8, 0, 12),
+                    child: Text(
+                      'Cuadrillas',
+                      style: TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                        fontFamily: "Arial",
                       ),
-                      child: const Text("Crear Cuadrilla"),
                     ),
-                    const SizedBox(width: 12),
-                    ElevatedButton(
-                      onPressed: onCrearOModificarPersona,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2196B6),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 22,
-                          vertical: 8,
-                        ),
-                        textStyle: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(9),
-                        ),
-                      ),
-                      child: const Text("Crear o Modificar Persona"),
+                  ),
+                  // Barra de búsqueda y botones
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 22),
-              // Buscador
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 36),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Buscar...',
-                        style: TextStyle(fontSize: 18, color: Colors.black87),
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          const Text('Por ', style: TextStyle(fontSize: 16)),
-                          DropdownButton<String>(
-                            value: searchType,
-                            borderRadius: BorderRadius.circular(8),
-                            items: searchTypes
-                                .map((tipo) => DropdownMenuItem(
-                                      value: tipo,
-                                      child: Text(tipo),
-                                    ))
-                                .toList(),
-                            onChanged: null, // El control lo tiene el padre
-                          ),
-                          const Text(' : ', style: TextStyle(fontSize: 16)),
-                          Expanded(
-                            child: TextField(
-                              controller: searchController,
-                              style: const TextStyle(fontSize: 16),
-                              decoration: InputDecoration(
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 3,
-                                  horizontal: 12,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: Colors.teal,
-                                  ),
-                                  borderRadius: BorderRadius.circular(3.5),
-                                ),
-                              ),
-                              enabled: false, // El control lo tiene el padre
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 26),
-              // Cuadrillas
-              ...List.generate(cuadrillas.length, (i) {
-                final cuadrilla = cuadrillas[i];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 30,
-                    vertical: 12,
-                  ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(17),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
                       children: [
-                        // Encabezado cuadrilla
-                        Container(
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF93D7F3),
-                            borderRadius: BorderRadius.vertical(
-                              top: Radius.circular(17),
-                            ),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 8,
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  cuadrilla["nombre"],
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    color: Color(0xFF22356A),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
+                        // Barra de búsqueda
+                        Expanded(
+                          child: TextField(
+                            controller: _searchController,
+                            onChanged: (value) {
+                              setState(() {
+                                _searchText = value;
+                              });
+                            },
+                            decoration: InputDecoration(
+                              prefixIcon: const Icon(Icons.search),
+                              hintText:
+                                  'Buscar cuadrillas, técnicos o especialidades...',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              if (cuadrilla["especialidad"] != null)
-                                Text(
-                                  "Especialidad: ${cuadrilla["especialidad"]}",
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    color: Color(0xFF22356A),
-                                  ),
-                                ),
-                            ],
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 0,
+                                horizontal: 12,
+                              ),
+                            ),
                           ),
                         ),
-                        // Miembros
-                        ...cuadrilla["miembros"].map<Widget>((m) {
-                          return Container(
-                            decoration: const BoxDecoration(
-                              border: Border(
-                                bottom: BorderSide(
-                                  color: Color(0xFF26384D),
-                                  width: 0.5,
-                                ),
-                              ),
-                            ),
+                        const SizedBox(width: 10),
+                        // Botón de refresh
+                        IconButton(
+                          icon: const Icon(
+                            Icons.refresh,
+                            color: Color(0xFF2196B6),
+                          ),
+                          tooltip: 'Refrescar',
+                          onPressed: widget.onRefresh,
+                        ),
+                        const SizedBox(width: 10),
+                        // Botón crear cuadrilla
+                        ElevatedButton(
+                          onPressed: widget.onCrearCuadrilla,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2196B6),
+                            foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 6,
+                              horizontal: 18,
+                              vertical: 10,
                             ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    m["nombre"],
-                                    style: const TextStyle(
-                                      fontSize: 17,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
-                                if (m["ci"] != null)
-                                  Text(
-                                    "CI: ${m["ci"]}",
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                              ],
+                            textStyle: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
                             ),
-                          );
-                        }).toList(),
-                        const SizedBox(height: 20),
-                        // Botones de acción
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ElevatedButton(
-                              onPressed: () => onVerMantenimientos(i),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF2293B4),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: 7,
-                                ),
-                                textStyle: const TextStyle(fontSize: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(9),
-                                ),
-                              ),
-                              child: const Text("Ver Mantenimientos"),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            const SizedBox(width: 22),
-                            ElevatedButton(
-                              onPressed: () => onModificar(i),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF2293B4),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: 7,
-                                ),
-                                textStyle: const TextStyle(fontSize: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(9),
-                                ),
-                              ),
-                              child: const Text("Modificar"),
-                            ),
-                          ],
+                          ),
+                          child: const Text("Crear Cuadrilla"),
                         ),
-                        const SizedBox(height: 18),
+                        const SizedBox(width: 8),
+                        // Botón crear/modificar persona
+                        ElevatedButton(
+                          onPressed:
+                              _loadingModal
+                                  ? null
+                                  : _abrirModalCrearModificarPersona,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2196B6),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 10,
+                            ),
+                            textStyle: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text("Crear o Modificar Persona"),
+                        ),
                       ],
                     ),
                   ),
-                );
-              }),
-              const SizedBox(height: 30),
-            ],
+                  const SizedBox(height: 10),
+                  // ...existing code...
+                  // Listado de cuadrillas
+                  ...cuadrillasFiltradas.map((cuadrilla) {
+                    final String nombre =
+                        cuadrilla.name.trim().isNotEmpty
+                            ? cuadrilla.name
+                            : 'Sin nombre';
+                    final String? especialidad = cuadrilla.speciality;
+
+                    final String? leaderId = cuadrilla.leaderId;
+                    User? leader =
+                        leaderId != null ? _leadersInfo[leaderId] : null;
+                    if (leaderId != null &&
+                        !_leadersInfo.containsKey(leaderId)) {
+                      _fetchLeaderInfo(leaderId);
+                    }
+                    final List miembros = const []; // No existe en modelo
+                    final int pendientes = 0;
+                    final int completados = 0;
+                    final String ubicacion = 'Ubicación no disponible';
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 10,
+                      ),
+                      child: Card(
+                        elevation: 1.5,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        color: Colors.white,
+                        child: Padding(
+                          padding: const EdgeInsets.all(18),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Header cuadrilla
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: AppColors.secondaryBlue,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    padding: const EdgeInsets.all(8),
+                                    child: Icon(
+                                      Icons.groups,
+                                      color: AppColors.iconBlue,
+                                      size: 28,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          '$nombre',
+                                          style: AppTextStyles.sectionTitle(
+                                            color: AppColors.primaryBlue,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        if (especialidad != null &&
+                                            especialidad.isNotEmpty)
+                                          Container(
+                                            margin: const EdgeInsets.only(
+                                              right: 4,
+                                            ),
+                                            child: Chip(
+                                              label: Text(
+                                                especialidad,
+                                                style: AppTextStyles.label(
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                              backgroundColor:
+                                                  AppColors.accentBlue,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 6,
+                                                  ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              // Líder de cuadrilla
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Icon(
+                                    Icons.emoji_events,
+                                    color: AppColors.iconBlue,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Líder de Cuadrilla',
+                                    style: AppTextStyles.bodySmall(
+                                      color: AppColors.primaryBlue,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Card(
+                                color: AppColors.secondaryBlue,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundColor: AppColors.iconBlue,
+                                    child:
+                                        leader == null
+                                            ? const SizedBox(
+                                              width: 18,
+                                              height: 18,
+                                              child: CircularProgressIndicator(
+                                                color: Colors.white,
+                                                strokeWidth: 2.2,
+                                              ),
+                                            )
+                                            : Text(
+                                              (leader.name != null && leader.name!.isNotEmpty)
+                                                  ? leader.name![0]
+                                                  : '?',
+                                              style: AppTextStyles.body(
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                  ),
+                                  title: Text(
+                                    leader == null
+                                        ? 'Cargando líder...'
+                                        : (leader.name ?? 'Sin nombre'),
+                                    style: AppTextStyles.body(),
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        leader == null
+                                            ? 'Cargando correo...'
+                                            : leader.email,
+                                        style: AppTextStyles.bodySmall(),
+                                      ),
+                                    ],
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 4,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              // Miembros
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Icon(
+                                    Icons.people,
+                                    color: AppColors.iconBlue,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Miembros (${miembros.length})',
+                                    style: AppTextStyles.bodySmall(
+                                      color: AppColors.primaryBlue,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Container(
+                                constraints: const BoxConstraints(
+                                  maxHeight: 110,
+                                ),
+                                child: ListView.builder(
+                                  shrinkWrap: true,
+                                  itemCount: miembros.length,
+                                  itemBuilder: (context, idx) {
+                                    final miembro = miembros[idx];
+                                    return Card(
+                                      color: AppColors.secondaryBlue,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      margin: const EdgeInsets.symmetric(
+                                        vertical: 2,
+                                      ),
+                                      child: ListTile(
+                                        leading: CircleAvatar(
+                                          backgroundColor: AppColors.iconBlue,
+                                          child: Text(
+                                            miembro.name.isNotEmpty
+                                                ? miembro.name[0]
+                                                : '?',
+                                            style: AppTextStyles.body(
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                        title: Text(
+                                          miembro.name,
+                                          style: AppTextStyles.body(),
+                                        ),
+                                        subtitle: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              '${miembro.speciality ?? ''} • CI: ${miembro.ci ?? ''}',
+                                              style: AppTextStyles.bodySmall(),
+                                            ),
+                                          ],
+                                        ),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 2,
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 6,
+                                ),
+                                child: OutlinedButton.icon(
+                                  onPressed:
+                                      () {}, // TODO: implementar agregar miembro
+                                  icon: const Icon(
+                                    Icons.add,
+                                    color: AppColors.iconBlue,
+                                  ),
+                                  label: const Text('Agregar Miembro'),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: AppColors.iconBlue,
+                                    side: const BorderSide(
+                                      color: AppColors.iconBlue,
+                                    ),
+                                    textStyle: AppTextStyles.bodySmall(),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              // Mantenimientos y ubicación
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    children: [
+                                      Text(
+                                        '$pendientes',
+                                        style: AppTextStyles.sectionTitle(
+                                          color: AppColors.primaryBlue,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Mantenimientos Pendientes',
+                                        style: AppTextStyles.bodySmall(),
+                                      ),
+                                    ],
+                                  ),
+                                  Column(
+                                    children: [
+                                      Text(
+                                        '$completados',
+                                        style: AppTextStyles.sectionTitle(
+                                          color: AppColors.success,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Completados',
+                                        style: AppTextStyles.bodySmall(),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              // Botones de acción
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  ElevatedButton.icon(
+                                    onPressed:
+                                        () => widget.onVerMantenimientos(
+                                          cuadrilla,
+                                        ),
+                                    icon: const Icon(Icons.list_alt, size: 18),
+                                    label: const Text("Ver Mantenimientos"),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.botonBlue,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 8,
+                                        horizontal: 12,
+                                      ),
+                                      textStyle: AppTextStyles.button(),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(9),
+                                      ),
+                                    ),
+                                  ),
+                                  OutlinedButton.icon(
+                                    onPressed:
+                                        () => widget.onModificar(cuadrilla),
+                                    icon: const Icon(Icons.edit, size: 18),
+                                    label: const Text('Modificar'),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: AppColors.iconBlue,
+                                      side: const BorderSide(
+                                        color: AppColors.iconBlue,
+                                      ),
+                                      textStyle: AppTextStyles.button(),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                  const SizedBox(height: 30),
+                ],
+              ),
+            ),
           ),
         ),
-      ),
+        if (_loadingModal)
+          const Positioned.fill(
+            child: ColoredBox(
+              color: Colors.black38,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          ),
+      ],
     );
   }
 }

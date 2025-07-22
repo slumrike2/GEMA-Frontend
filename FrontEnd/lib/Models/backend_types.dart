@@ -177,6 +177,7 @@ class TechnicalTeam {
   final int? id;
   final String name;
   final String? speciality;
+  final String? leaderId;
   final DateTime? updatedAt;
   final DateTime? createdAt;
   final DateTime? deletedAt;
@@ -188,12 +189,14 @@ class TechnicalTeam {
     this.updatedAt,
     this.createdAt,
     this.deletedAt,
+    this.leaderId,
   });
 
   factory TechnicalTeam.fromJson(Map<String, dynamic> json) => TechnicalTeam(
     id: json['id'],
     name: json['name'],
     speciality: json['speciality'],
+    leaderId: json['leaderId'],
     updatedAt:
         json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
     createdAt:
@@ -205,6 +208,7 @@ class TechnicalTeam {
     if (id != null) 'id': id,
     'name': name,
     if (speciality != null) 'speciality': speciality,
+    if (leaderId != null) 'leaderId': leaderId,
     if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
     if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
     if (deletedAt != null) 'deletedAt': deletedAt!.toIso8601String(),

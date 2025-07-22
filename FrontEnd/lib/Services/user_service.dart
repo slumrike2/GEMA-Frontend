@@ -106,4 +106,23 @@ class UserService {
       );
     }
   }
+
+  static Future<List<User>> getAvailableUsers() async {
+    final response = await http.get(Uri.parse('$baseUrl/available'));
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data
+          .map((e) => User.fromJson(e))
+          .where(
+            (user) =>
+                (user.name?.trim().isNotEmpty ?? false) &&
+                (user.email?.trim().isNotEmpty ?? false),
+          )
+          .toList();
+    } else {
+      throw Exception(
+        'Error al obtener usuarios disponibles: ${response.statusCode}',
+      );
+    }
+  }
 }

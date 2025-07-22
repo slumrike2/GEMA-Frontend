@@ -25,4 +25,21 @@ class TechnicianSpecialityService {
       throw Exception('Error al obtener especialidades: $e');
     }
   }
+
+  static Future<void> create(String speciality) async {
+    try {
+      final response = await http.post(
+        Uri.parse(baseUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'speciality': speciality}),
+      );
+      if (response.statusCode != 201) {
+        throw Exception(
+          'Error al crear especialidad: ${response.statusCode} - ${response.body}',
+        );
+      }
+    } catch (e) {
+      throw Exception('Error al crear especialidad: $e');
+    }
+  }
 } 

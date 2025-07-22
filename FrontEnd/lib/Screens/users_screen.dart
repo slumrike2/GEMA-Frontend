@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/constants/app_constnats.dart';
 import '../Modals/create_user_modal.dart';
 import '../Services/user_service.dart';
 import '../Models/backend_types.dart';
-import '../constants.dart';
 
 class UsersScreen extends StatefulWidget {
   const UsersScreen({super.key});
@@ -221,7 +221,10 @@ class _UserManagerState extends State<UserManager> {
           setState(() => selectedTab = index);
         },
         style: TextButton.styleFrom(
-          foregroundColor: selectedTab == index ? Colors.green : Colors.black,
+          foregroundColor:
+              selectedTab == index
+                  ? AppColors.primaryGreen
+                  : AppColors.onSurface,
           textStyle: TextStyle(fontWeight: FontWeight.bold),
         ),
         child: Text(label),
@@ -249,21 +252,25 @@ class _UserManagerState extends State<UserManager> {
         children: [
           Row(
             children: [
-              const Text(
+              Text(
                 'Usuarios',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: Colors.green,
+                  color: AppColors.primaryGreen,
                 ),
               ),
               const Spacer(),
               IconButton(
-                icon: Icon(Icons.refresh, size: 24, color: Colors.green),
+                icon: Icon(
+                  Icons.refresh,
+                  size: 24,
+                  color: AppColors.primaryGreen,
+                ),
                 tooltip: 'Refrescar',
                 onPressed: isLoading ? null : _fetchUsers,
                 style: IconButton.styleFrom(
-                  backgroundColor: Colors.white,
+                  backgroundColor: AppColors.surface,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -279,7 +286,7 @@ class _UserManagerState extends State<UserManager> {
                     style: TextStyle(fontSize: 16, color: Colors.white),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: botonGreen,
+                    backgroundColor: AppColors.botonGreen,
                     padding: EdgeInsets.symmetric(horizontal: 20),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -365,14 +372,14 @@ class _UserManagerState extends State<UserManager> {
                             children: [
                               CircleAvatar(
                                 radius: 20,
-                                backgroundColor: Colors.grey[200],
+                                backgroundColor: AppColors.secondaryGreen,
                                 child: Text(
                                   userName.isNotEmpty
                                       ? userName[0].toUpperCase()
                                       : '?',
                                   style: TextStyle(
                                     fontSize: 18,
-                                    color: Colors.black,
+                                    color: AppColors.onSurface,
                                   ),
                                 ),
                               ),
@@ -409,8 +416,8 @@ class _UserManagerState extends State<UserManager> {
                                           decoration: BoxDecoration(
                                             color:
                                                 userName.isNotEmpty
-                                                    ? Colors.green[100]
-                                                    : Colors.grey[300],
+                                                    ? AppColors.secondaryGreen
+                                                    : AppColors.secondaryYellow,
                                             borderRadius: BorderRadius.circular(
                                               12,
                                             ),
@@ -422,8 +429,8 @@ class _UserManagerState extends State<UserManager> {
                                             style: TextStyle(
                                               color:
                                                   userName.isNotEmpty
-                                                      ? Colors.green[800]
-                                                      : Colors.grey[800],
+                                                      ? AppColors.primaryGreen
+                                                      : AppColors.primaryYellow,
                                               fontWeight: FontWeight.w600,
                                               fontSize: 12,
                                             ),
@@ -449,7 +456,7 @@ class _UserManagerState extends State<UserManager> {
                                       ? IconButton(
                                         icon: Icon(
                                           Icons.edit,
-                                          color: Colors.blue,
+                                          color: AppColors.primaryBlue,
                                         ),
                                         tooltip: 'Editar',
                                         onPressed: () => _startEditUser(i),
