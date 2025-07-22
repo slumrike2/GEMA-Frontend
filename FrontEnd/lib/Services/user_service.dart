@@ -93,4 +93,17 @@ class UserService {
       throw Exception('Error al eliminar usuario: \\${response.statusCode}');
     }
   }
+
+  static Future<void> updateName(String uuid, String name) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/name/$uuid'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'name': name}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception(
+        'Error al actualizar nombre de usuario: \\${response.statusCode}',
+      );
+    }
+  }
 }
