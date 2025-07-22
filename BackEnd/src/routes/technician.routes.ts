@@ -3,7 +3,6 @@ import { technicianController } from '../controllers/technician.controller';
 
 const router = Router();
 
-
 // View endpoint: user + technician info
 router.get('/view', technicianController.getTechnicianUserView);
 
@@ -12,6 +11,9 @@ router.get('/:uuid', technicianController.getByPk);
 router.post('/', technicianController.insert);
 router.put('/:uuid', technicianController.update);
 router.delete('/:uuid', technicianController.delete);
-router.get('/technical-team/:technicalTeamId', technicianController.getByTechnicalTeam);
+router.get(
+	'/technical-team/:technicalTeamId',
+	technicianController.getByTechnicalTeam
+);
 
 export default router;
