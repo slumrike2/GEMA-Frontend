@@ -76,15 +76,37 @@ class _NavigationPanelState extends State<NavigationPanel> {
             locationTypes: widget.locationTypes.values.toList(),
             preselectedParentCode: parentCode,
             onRefetchLocations: widget.refetchLocations,
-            onCreate: ({
+            onSubmit: ({
               required name,
               required technicalCode,
               required type,
               required parentTechnicalCode,
+              required abbreviatedTechnicalCode,
+              TechnicalLocation? originalLocation,
             }) {
-              // TODO: handle location creation logic here
+              // You can add any additional logic here if needed after creation
             },
           ),
+    );
+  }
+
+  void _showEditarUbicacionModal(TechnicalLocation location) {
+    CrearUbicacionModal.showEdit(
+      context: context,
+      locations: widget.locations.values.toList(),
+      locationTypes: widget.locationTypes.values.toList(),
+      location: location,
+      onRefetchLocations: widget.refetchLocations,
+      onSubmit: ({
+        required name,
+        required technicalCode,
+        required type,
+        required parentTechnicalCode,
+        required abbreviatedTechnicalCode,
+        TechnicalLocation? originalLocation,
+      }) {
+        // You can add any additional logic here if needed after edit
+      },
     );
   }
 

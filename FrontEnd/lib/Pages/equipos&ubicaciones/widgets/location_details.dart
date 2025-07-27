@@ -3,6 +3,7 @@ import 'package:frontend/Components/custom_card.dart';
 import 'package:frontend/Components/status_chip.dart';
 import 'package:frontend/Models/backend_types.dart';
 import 'package:frontend/Services/technical_location_service.dart';
+import 'package:frontend/Modals/crear_ubicacion_modal.dart';
 import 'package:frontend/constants/app_constnats.dart';
 import 'package:frontend/utils/template_processor.dart';
 
@@ -112,7 +113,23 @@ class LocationDetails extends StatelessWidget {
               ),
               IconButton(
                 onPressed: () {
-                  // Edit functionality
+                  CrearUbicacionModal.showEdit(
+                    context: context,
+                    locations: locations.values.toList(),
+                    locationTypes: locationTypes.values.toList(),
+                    location: location,
+                    onRefetchLocations: refetchLocations,
+                    onSubmit: ({
+                      required name,
+                      required technicalCode,
+                      required type,
+                      required parentTechnicalCode,
+                      required abbreviatedTechnicalCode,
+                      TechnicalLocation? originalLocation,
+                    }) {
+                      // Optionally handle after edit
+                    },
+                  );
                 },
                 icon: const Icon(Icons.edit),
                 style: IconButton.styleFrom(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/Models/backend_types.dart';
+
 import 'package:frontend/Services/technical_location_service.dart';
+import 'package:collection/collection.dart';
 
 class CrearUbicacionModal extends StatefulWidget {
   final List<TechnicalLocation> locations;
@@ -10,19 +12,56 @@ class CrearUbicacionModal extends StatefulWidget {
     required String technicalCode,
     required int type,
     required String? parentTechnicalCode,
+    required String abbreviatedTechnicalCode,
+    TechnicalLocation? originalLocation,
   })
-  onCreate;
+  onSubmit;
   final VoidCallback onRefetchLocations;
   final String? preselectedParentCode;
+  final bool isEdit;
+  final TechnicalLocation? initialLocation;
 
   const CrearUbicacionModal({
     Key? key,
     required this.locations,
     required this.locationTypes,
-    required this.onCreate,
+    required this.onSubmit,
     this.preselectedParentCode,
     required this.onRefetchLocations,
+    this.isEdit = false,
+    this.initialLocation,
   }) : super(key: key);
+
+  static Future<void> showEdit({
+    required BuildContext context,
+    required List<TechnicalLocation> locations,
+    required List<LocationType> locationTypes,
+    required TechnicalLocation location,
+    required VoidCallback onRefetchLocations,
+    required void Function({
+      required String name,
+      required String technicalCode,
+      required int type,
+      required String? parentTechnicalCode,
+      required String abbreviatedTechnicalCode,
+      TechnicalLocation? originalLocation,
+    })
+    onSubmit,
+  }) async {
+    await showDialog(
+      context: context,
+      builder:
+          (ctx) => CrearUbicacionModal(
+            locations: locations,
+            locationTypes: locationTypes,
+            onSubmit: onSubmit,
+            onRefetchLocations: onRefetchLocations,
+            isEdit: true,
+            initialLocation: location,
+            preselectedParentCode: location.parentTechnicalCode,
+          ),
+    );
+  }
 
   @override
   State<CrearUbicacionModal> createState() => _CrearUbicacionModalState();
@@ -30,7 +69,7 @@ class CrearUbicacionModal extends StatefulWidget {
 
 class _CrearUbicacionModalState extends State<CrearUbicacionModal> {
   final _formKey = GlobalKey<FormState>();
-  String? _parentCode;
+  late String? _parentCode;
   String _searchParentLocation = '';
   String? _abbreviatedCode;
   LocationType? _selectedType;
@@ -41,7 +80,19 @@ class _CrearUbicacionModalState extends State<CrearUbicacionModal> {
   @override
   void initState() {
     super.initState();
-    _parentCode = widget.preselectedParentCode;
+    if (widget.isEdit && widget.initialLocation != null) {
+      final loc = widget.initialLocation!;
+      _parentCode = loc.parentTechnicalCode;
+      _abbreviatedCode = loc.abbreviatedTechnicalCode;
+      _previewCode = loc.technicalCode;
+      _previewName = loc.name;
+      _selectedType =
+          widget.locationTypes.firstWhereOrNull((t) => t.id == loc.type) ??
+          widget.locationTypes.first;
+      // Try to extract variables from code/name if possible (optional, for advanced use)
+    } else {
+      _parentCode = widget.preselectedParentCode;
+    }
   }
 
   void _updatePreview() {
@@ -90,9 +141,11 @@ class _CrearUbicacionModalState extends State<CrearUbicacionModal> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Crear Nueva Ubicación',
-                        style: TextStyle(
+                      Text(
+                        widget.isEdit
+                            ? 'Editar Ubicación'
+                            : 'Crear Nueva Ubicación',
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -300,7 +353,6 @@ class _CrearUbicacionModalState extends State<CrearUbicacionModal> {
                           if (_formKey.currentState?.validate() != true ||
                               _selectedType == null)
                             return;
-                          // Construir el objeto para el backend
                           final technicalLocation = {
                             'name': _previewName,
                             'technicalCode': _previewCode,
@@ -310,17 +362,92 @@ class _CrearUbicacionModalState extends State<CrearUbicacionModal> {
                             'parentTechnicalCode': _parentCode,
                             'abbreviatedTechnicalCode': _abbreviatedCode,
                           };
-                          try {
-                            await TechnicalLocationService.create(
-                              technicalLocation,
+                          if (widget.isEdit && widget.initialLocation != null) {
+                            // Show confirmation dialog with before/after
+                            final before = widget.initialLocation!;
+                            final after = technicalLocation;
+                            final beforeType =
+                                widget.locationTypes
+                                    .firstWhereOrNull(
+                                      (t) => t.id == before.type,
+                                    )
+                                    ?.name ??
+                                before.type.toString();
+                            final afterType = _selectedType?.name ?? '';
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder:
+                                  (ctx) => AlertDialog(
+                                    title: const Text('Confirmar cambios'),
+                                    content: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Text('Antes:'),
+                                        Text('Nombre: ${before.name}'),
+                                        Text(
+                                          'Código Técnico: ${before.technicalCode}',
+                                        ),
+                                        Text('Tipo: $beforeType'),
+                                        Text(
+                                          'Abrev: ${before.abbreviatedTechnicalCode}',
+                                        ),
+                                        Text(
+                                          'Padre: ${before.parentTechnicalCode ?? "(ninguno)"}',
+                                        ),
+                                        const SizedBox(height: 12),
+                                        const Text('Después:'),
+                                        Text('Nombre: ${after['name']}'),
+                                        Text(
+                                          'Código Técnico: ${after['technicalCode']}',
+                                        ),
+                                        Text('Tipo: $afterType'),
+                                        Text(
+                                          'Abrev: ${after['abbreviatedTechnicalCode']}',
+                                        ),
+                                        Text(
+                                          'Padre: ${after['parentTechnicalCode'] ?? "(ninguno)"}',
+                                        ),
+                                      ],
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed:
+                                            () => Navigator.of(ctx).pop(false),
+                                        child: const Text('Cancelar'),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed:
+                                            () => Navigator.of(ctx).pop(true),
+                                        child: const Text('Confirmar'),
+                                      ),
+                                    ],
+                                  ),
                             );
-                            widget.onCreate(
+                            if (confirmed != true) return;
+                          }
+                          try {
+                            if (widget.isEdit &&
+                                widget.initialLocation != null) {
+                              await TechnicalLocationService.update(
+                                widget.initialLocation!.technicalCode,
+                                technicalLocation,
+                              );
+                            } else {
+                              await TechnicalLocationService.create(
+                                technicalLocation,
+                              );
+                            }
+                            widget.onSubmit(
                               name: _previewName,
                               technicalCode: _previewCode,
                               type:
                                   _selectedType!.id ??
                                   widget.locationTypes.indexOf(_selectedType!),
                               parentTechnicalCode: _parentCode,
+                              abbreviatedTechnicalCode: _abbreviatedCode ?? '',
+                              originalLocation: widget.initialLocation,
                             );
                             widget.onRefetchLocations();
                             Navigator.of(context).pop();
@@ -328,7 +455,9 @@ class _CrearUbicacionModalState extends State<CrearUbicacionModal> {
                             // Puedes mostrar un error aquí si lo deseas
                           }
                         },
-                        child: const Text('Crear Ubicación'),
+                        child: Text(
+                          widget.isEdit ? 'Guardar Cambios' : 'Crear Ubicación',
+                        ),
                       ),
                     ],
                   ),
