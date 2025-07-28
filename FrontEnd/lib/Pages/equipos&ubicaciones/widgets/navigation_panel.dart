@@ -266,17 +266,18 @@ class _NavigationPanelState extends State<NavigationPanel> {
               onTap: () {
                 showDialog(
                   context: context,
-                  builder:
-                      (context) => CrearEquipoModal(
-                        refetchEquipments: widget.refetchEquipment,
-                        brands: widget.brands.values.toList(),
-                        locations: widget.locations.values.toList(),
-                        onCreate: (data) {
-                          // TODO: handle equipo creation logic here
-                        },
-                      ),
+                  builder: (context) => CrearEquipoModal(
+                    refetchEquipments: widget.refetchEquipment,
+                    brands: widget.brands.values.toList(),
+                    locations: widget.locations.values.toList(),
+                    onSubmit: (data, {originalEquipment}) {
+                      // You can add any additional logic here if needed after creation
+                    },
+                  ),
                 );
               },
+
+
               borderRadius: BorderRadius.circular(16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -401,6 +402,20 @@ class _NavigationPanelState extends State<NavigationPanel> {
           ),
         ),
       ),
+    );
+  }
+
+    // Helper for editing equipment (to be used in EquipmentDetails)
+  void showEditarEquipoModal(Equipment equipment) {
+    CrearEquipoModal.showEdit(
+      context: context,
+      brands: widget.brands.values.toList(),
+      locations: widget.locations.values.toList(),
+      equipment: equipment,
+      refetchEquipments: widget.refetchEquipment,
+      onSubmit: (data, {originalEquipment}) {
+        // You can add any additional logic here if needed after edit
+      },
     );
   }
 

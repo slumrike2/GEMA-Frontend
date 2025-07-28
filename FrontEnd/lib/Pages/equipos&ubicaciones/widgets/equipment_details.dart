@@ -7,6 +7,7 @@ import 'package:frontend/Modals/schedule_move_modal.dart';
 import 'package:frontend/Services/equipment_service.dart';
 import 'package:frontend/constants/app_constnats.dart';
 import 'package:frontend/utils/template_processor.dart';
+import 'package:frontend/Modals/crear_equipo_modal.dart';
 
 class EquipmentDetails extends StatelessWidget {
   final Equipment equipment;
@@ -120,8 +121,17 @@ class EquipmentDetails extends StatelessWidget {
                 ),
               ),
               IconButton(
-                onPressed: () {
-                  // Edit functionality
+                onPressed: () async {
+                  await CrearEquipoModal.showEdit(
+                    context: context,
+                    brands: brands.values.toList(),
+                    locations: locations.values.toList(),
+                    equipment: equipment,
+                    refetchEquipments: onRefetch,
+                    onSubmit: (data, {originalEquipment}) {
+                      // Optionally handle after edit
+                    },
+                  );
                 },
                 icon: const Icon(Icons.edit),
                 style: IconButton.styleFrom(
