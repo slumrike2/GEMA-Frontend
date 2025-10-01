@@ -184,23 +184,22 @@ class _UserManagerState extends State<UserManager> {
   List<User> get filteredUsers {
     List<User> baseList;
     if (selectedTab == 1) {
+      // Registrados: tienen nombre no vacío (ignorando espacios)
       baseList =
-          users
-              .where(
-                (u) =>
-                    (u.name ?? '').trim().isNotEmpty &&
-                    (u.name ?? '').toLowerCase() != 'no registrado',
-              )
-              .toList();
+          users.where((u) {
+            final isRegistrado = (u.name ?? '').trim().isNotEmpty;
+            // Depuración:
+            // print('Usuario: "${u.name}" registrado? $isRegistrado');
+            return isRegistrado;
+          }).toList();
     } else if (selectedTab == 2) {
+      // Pendientes: no tienen nombre (o solo espacios)
       baseList =
-          users
-              .where(
-                (u) =>
-                    (u.name ?? '').trim().isEmpty ||
-                    (u.name ?? '').toLowerCase() == 'no registrado',
-              )
-              .toList();
+          users.where((u) {
+            final isRegistrado = (u.name ?? '').trim().isNotEmpty;
+            // print('Usuario: "${u.name}" registrado? $isRegistrado');
+            return !isRegistrado;
+          }).toList();
     } else {
       baseList = users;
     }
@@ -359,10 +358,13 @@ class _UserManagerState extends State<UserManager> {
                       separatorBuilder: (_, __) => Divider(),
                       itemBuilder: (context, i) {
                         final user = filteredUsers[i];
-                        final userName = (user.name ?? '').trim();
+                        final userNameRaw = user.name ?? '';
+                        final userName = userNameRaw.trim();
                         final userEmail = user.email;
                         final userRole =
                             user.role?.name == 'admin' ? 'Admin' : 'Usuario';
+                        final isRegistrado = userName.isNotEmpty;
+                        // print('Render usuario: "$userNameRaw" registrado? $isRegistrado');
                         return Container(
                           padding: EdgeInsets.symmetric(
                             vertical: 8,
@@ -374,7 +376,7 @@ class _UserManagerState extends State<UserManager> {
                                 radius: 20,
                                 backgroundColor: AppColors.secondaryGreen,
                                 child: Text(
-                                  userName.isNotEmpty
+                                  isRegistrado
                                       ? userName[0].toUpperCase()
                                       : '?',
                                   style: TextStyle(
@@ -392,7 +394,7 @@ class _UserManagerState extends State<UserManager> {
                                       children: [
                                         Flexible(
                                           child: Text(
-                                            (userName.isNotEmpty
+                                            (isRegistrado
                                                     ? userName
                                                     : 'No registrado') +
                                                 ' · Rol: $userRole',
@@ -400,7 +402,7 @@ class _UserManagerState extends State<UserManager> {
                                               fontWeight: FontWeight.bold,
                                               fontSize: 16,
                                               color:
-                                                  userName.isNotEmpty
+                                                  isRegistrado
                                                       ? Colors.black
                                                       : Colors.red,
                                               overflow: TextOverflow.ellipsis,
@@ -415,7 +417,7 @@ class _UserManagerState extends State<UserManager> {
                                           ),
                                           decoration: BoxDecoration(
                                             color:
-                                                userName.isNotEmpty
+                                                isRegistrado
                                                     ? AppColors.secondaryGreen
                                                     : AppColors.secondaryYellow,
                                             borderRadius: BorderRadius.circular(
@@ -423,12 +425,12 @@ class _UserManagerState extends State<UserManager> {
                                             ),
                                           ),
                                           child: Text(
-                                            userName.isNotEmpty
+                                            isRegistrado
                                                 ? 'Registrado'
                                                 : 'Pendiente',
                                             style: TextStyle(
                                               color:
-                                                  userName.isNotEmpty
+                                                  isRegistrado
                                                       ? AppColors.primaryGreen
                                                       : AppColors.primaryYellow,
                                               fontWeight: FontWeight.w600,
@@ -452,7 +454,7 @@ class _UserManagerState extends State<UserManager> {
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  userName.isNotEmpty
+                                  isRegistrado
                                       ? IconButton(
                                         icon: Icon(
                                           Icons.edit,

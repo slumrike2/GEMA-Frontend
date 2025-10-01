@@ -86,10 +86,7 @@ class LoginScreenState extends State<LoginScreen> {
     setState(() => _loading = true);
     try {
       final supabase = widget.injectedClient ?? Supabase.instance.client;
-      final response = await supabase.auth.signInWithPassword(
-        email: email,
-        password: password,
-      );
+      await supabase.auth.signInWithPassword(email: email, password: password);
 
       // Si el login fue exitoso, verificar si el usuario tiene nombre
       await _checkUserStatus();

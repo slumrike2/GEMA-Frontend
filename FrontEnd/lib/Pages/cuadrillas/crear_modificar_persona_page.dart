@@ -127,12 +127,23 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
         'speciality': selectedSpeciality,
       };
 
-      if (widget.personaData?['uuid'] != null) {
+      // Verificar si el técnico ya existe por UUID
+      bool exists = false;
+      String? uuid = widget.personaData?['uuid'];
+      if (uuid != null) {
+        try {
+          final technician = await TechnicianService.getByUuid(uuid);
+          if (technician != null) {
+            exists = true;
+          }
+        } catch (_) {
+          exists = false;
+        }
+      }
+
+      if (exists && uuid != null) {
         // Actualizar técnico existente
-        await TechnicianService.update(
-          widget.personaData!['uuid'],
-          technicianData,
-        );
+        await TechnicianService.update(uuid, technicianData);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Técnico actualizado exitosamente')),
         );
@@ -226,7 +237,7 @@ class _CrearModificarPersonaPageState extends State<CrearModificarPersonaPage> {
     if (isLoading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
-        backgroundColor: const Color(0xFFD6F3FB),
+        backgroundColor: Color(0xFFD6F3FB),
       );
     }
 

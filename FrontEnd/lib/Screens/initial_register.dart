@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/Services/user_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart';
+
 
 class InitialRegisterScreen extends StatefulWidget {
   const InitialRegisterScreen({super.key});
