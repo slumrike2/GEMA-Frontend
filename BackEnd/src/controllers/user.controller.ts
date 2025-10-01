@@ -17,11 +17,12 @@
  */
 
 import { createCrud } from './crudFactory';
-import { user } from '../db/schema/schema';
+import { technician, user } from '../db/schema/schema';
 import { userSchema } from '../db/schema/validationSchema';
 import { Request, Response } from 'express';
 import { db } from '../db';
 import { sendWelcomeEmail } from '../utils/mailer';
+import { eq, isNull } from 'drizzle-orm';
 
 /**
  * Controlador de usuarios creado usando el factory CRUD
@@ -48,7 +49,7 @@ const baseUserController = createCrud({
 export const userController = {
 	...baseUserController,
 
-	async createWithEmail(req: Request, res: Response) {
+	async createWithEmail(req: Request, res: Response): Promise<void> {
 		const { uuid, email, role, password } = req.body;
 
 		try {
@@ -59,10 +60,31 @@ export const userController = {
 			console.log('Antes de enviar correo');
 			await sendWelcomeEmail(email, password);
 			console.log('Después de enviar correo');
-			res.send(200).json(result[0]);
+			res.status(200).json(result[0]);
 		} catch (error) {
-			error: 'Error creating new user';
-			details: error.message;
+			console.error('[User] createWithEmail error:', error);
+			res.status(500).json({
+				error: 'Error creating new user',
+				details: (error as any)?.message ?? 'Unknown error'
+			});
+		}
+	},
+
+	// Extensión: obtener usuarios "disponibles" (no asociados a Technician)
+	async getAvailable(_req: Request, res: Response): Promise<void> {
+		try {
+			// Selecciona usuarios cuyo uuid no está en Technician.uuid
+			const techs = await db.select({ uuid: technician.uuid }).from(technician);
+			const taken = new Set(techs.map((t) => t.uuid));
+			const allUsers = await db.select().from(user);
+			const available = allUsers.filter((u) => !taken.has(u.uuid));
+			res.status(200).json(available);
+		} catch (error) {
+			console.error('[User] getAvailable error:', error);
+			res.status(500).json({
+				error: 'Error fetching available users',
+				details: (error as any)?.message ?? 'Unknown error'
+			});
 		}
 	}
 };

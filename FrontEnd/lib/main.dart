@@ -44,6 +44,7 @@ class MainApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: initialRoute,
       routes: {
+        
         // Ruta para la pantalla de login
         LoginScreen.routeName: (context) => const LoginScreen(),
 

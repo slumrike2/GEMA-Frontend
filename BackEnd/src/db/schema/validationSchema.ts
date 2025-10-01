@@ -114,7 +114,7 @@ export const technicianSchema = z.object({
 	personalId: z.string().min(1),
 	contact: z.string().min(1),
 	speciality: technicianSpecialityEnum,
-	technicalTeamId: z.number().int(),
+	technicalTeamId: z.number().int().nullable().optional(),
 	updatedAt: z.date().optional(),
 	createdAt: z.date().optional(),
 	deletedAt: z.date().optional()

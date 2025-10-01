@@ -38,6 +38,15 @@ const router = Router();
 router.get('/', userController.getAll);
 
 /**
+ * GET /api/users/available
+ * 
+ * Obtiene los usuarios disponibles para asignar como técnicos.
+ * Por defecto, retorna todos los usuarios que no están registrados
+ * en la tabla Technician (usuarios sin técnico asociado).
+ */
+router.get('/available', userController.getAvailable);
+
+/**
  * GET /api/users/:uuid
  * 
  * Obtiene un usuario específico por su UUID.

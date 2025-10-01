@@ -1,5 +1,5 @@
 import 'package:http/http.dart' as http;
-import 'package:uuid/uuid.dart';
+
 import 'dart:convert';
 import 'dart:math';
 import '../Models/backend_types.dart';
@@ -116,7 +116,7 @@ class UserService {
           .where(
             (user) =>
                 (user.name?.trim().isNotEmpty ?? false) &&
-                (user.email?.trim().isNotEmpty ?? false),
+                (user.email.trim().isNotEmpty),
           )
           .toList();
     } else {
