@@ -1,5 +1,8 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'technical_team_service.dart';
+import '../Models/backend_types.dart';
+import 'user_service.dart';
 
 // Tipo para la vista combinada de técnico y usuario
 class TechnicianUserView {
@@ -50,6 +53,24 @@ class TechnicianService {
       }
     } catch (e) {
       throw Exception('Error al obtener la vista de técnicos: $e');
+    }
+  }
+
+  // Asignar técnico a equipo (parcial) usando PATCH
+  static Future<void> assignToTeam(String uuid, int? technicalTeamId) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$baseUrl/$uuid/technical-team'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'technicalTeamId': technicalTeamId}),
+      );
+      if (response.statusCode != 200) {
+        throw Exception(
+          'Error al asignar técnico a equipo: ${response.statusCode} - ${response.body}',
+        );
+      }
+    } catch (e) {
+      throw Exception('Error al asignar técnico a equipo: $e');
     }
   }
 
@@ -153,5 +174,77 @@ class TechnicianService {
     } catch (e) {
       throw Exception('Error al obtener técnicos por equipo técnico: $e');
     }
+  }
+
+  // Obtener técnicos sin equipo y que NO son líderes, basado en la vista combinada
+  static Future<List<Map<String, dynamic>>> getUnassigned() async {
+    // 1) Vista combinada técnico+usuario (incluye userId, userName, userEmail, technicalTeamId)
+    final List<TechnicianUserView> techUser =
+        await TechnicianService.getTechnicianUserView();
+
+    // 2) IDs de líderes desde los equipos técnicos
+    final List<TechnicalTeam> allTeams = await TechnicalTeamService.getAll();
+    final Set<String> leaderIds =
+        allTeams
+            .map((t) => t.leaderId)
+            .where((id) => id != null && id.isNotEmpty)
+            .cast<String>()
+            .toSet();
+
+    // 3) Filtrar: sin equipo y cuyo userId NO esté en líderes
+    final filtered =
+        techUser
+            .where(
+              (t) => t.technicalTeamId == null && !leaderIds.contains(t.userId),
+            )
+            .toList();
+
+    // 4) Mapear a un shape consistente con el resto del front
+    final List<Map<String, dynamic>> base =
+        filtered
+            .map(
+              (t) => {
+                'uuid': t.userId, // usamos userId como uuid
+                'personalId': t.personalId,
+                'speciality': t.speciality,
+                'name': t.userName,
+                'email': t.userEmail,
+                'technicalTeamId': t.technicalTeamId,
+              },
+            )
+            .toList();
+
+    // 5) Enriquecer con role (y validar nombre/email) desde UserService.getById
+    final Set<String> uuids =
+        base
+            .map((e) => e['uuid'] as String?)
+            .where((id) => id != null && id.isNotEmpty)
+            .cast<String>()
+            .toSet();
+
+    final Map<String, User> usersById = {};
+    await Future.wait(
+      uuids.map((id) async {
+        try {
+          final user = await UserService.getById(id);
+          usersById[id] = user;
+        } catch (_) {}
+      }),
+    );
+
+    final enriched =
+        base.map((t) {
+          final uuid = t['uuid'] as String?;
+          final user = uuid != null ? usersById[uuid] : null;
+          return {
+            ...t,
+            'name': user?.name ?? t['name'],
+            'email':
+                (user?.email.isNotEmpty == true) ? user?.email : t['email'],
+            'role': user?.role?.name,
+          };
+        }).toList();
+
+    return enriched;
   }
 }

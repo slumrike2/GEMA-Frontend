@@ -1,10 +1,27 @@
 import 'package:flutter/material.dart';
 import '../../Models/backend_types.dart';
 import '../../Modals/create_technician_modal.dart';
+import '../../Modals/add_team_members_modal.dart';
 import 'package:frontend/Services/technician_service.dart';
+import 'package:frontend/Services/technical_team_service.dart';
 import 'package:frontend/Services/user_service.dart';
 import 'package:frontend/Services/technician_speciality_service.dart';
 import 'package:frontend/constants/app_constnats.dart';
+
+class _MemberView {
+  final String uuid;
+  final String name;
+  final String ci;
+  final String speciality;
+  final String? email;
+  _MemberView({
+    required this.uuid,
+    required this.name,
+    required this.ci,
+    required this.speciality,
+    this.email,
+  });
+}
 
 class CuadrillasInicioPage extends StatefulWidget {
   final List<TechnicalTeam> cuadrillas;
@@ -31,6 +48,12 @@ class _CuadrillasInicioPageState extends State<CuadrillasInicioPage> {
   final Map<String, User?> _leadersInfo = {};
   final Set<String> _loadingLeaders = {};
 
+  // Cache de miembros por equipo
+  final Map<int, List<_MemberView>> _teamMembers = {};
+  final Set<int> _loadingTeamMembers = {};
+  final Map<String, User> _userCache = {};
+  final Set<String> _removingMembers = {};
+  final Set<int> _deletingTeams = {};
   Future<void> _fetchLeaderInfo(String? uuid) async {
     if (uuid == null ||
         _leadersInfo.containsKey(uuid) ||
@@ -115,6 +138,154 @@ class _CuadrillasInicioPageState extends State<CuadrillasInicioPage> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _abrirModalAgregarMiembro(TechnicalTeam cuadrilla) async {
+    final result = await showDialog<List<String>>(
+      context: context,
+      builder: (context) => const AddTeamMembersModal(),
+    );
+
+    if (result == null || result.isEmpty) return;
+    if (cuadrilla.id == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se puede asignar: la cuadrilla no tiene ID'),
+        ),
+      );
+      return;
+    }
+
+    try {
+      await Future.wait(
+        result.map(
+          (uuid) => TechnicianService.assignToTeam(uuid, cuadrilla.id),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al asignar miembros: $e')));
+      return;
+    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Asignados ${result.length} miembro(s)')),
+    );
+    await widget.onRefresh();
+  }
+
+  Future<void> _ensureTeamMembersLoaded(int teamId) async {
+    if (_teamMembers.containsKey(teamId) ||
+        _loadingTeamMembers.contains(teamId))
+      return;
+    _loadingTeamMembers.add(teamId);
+    try {
+      final tecnicos = await TechnicianService.getByTechnicalTeam(
+        teamId.toString(),
+      );
+      final List<_MemberView> members = [];
+      for (final t in tecnicos) {
+        if (t is! Map<String, dynamic>) continue;
+        final String? uuid = t['uuid'] as String?;
+        final String ci = (t['personalId'] as String?) ?? '';
+        final String speciality = (t['speciality'] as String?) ?? '';
+        String name = 'Sin nombre';
+        String? email;
+        if (uuid != null) {
+          if (_userCache.containsKey(uuid)) {
+            final u = _userCache[uuid]!;
+            name = u.name ?? 'Sin nombre';
+            email = u.email;
+          } else {
+            try {
+              final u = await UserService.getById(uuid);
+              _userCache[uuid] = u;
+              name = u.name ?? 'Sin nombre';
+              email = u.email;
+            } catch (_) {}
+          }
+        }
+        members.add(
+          _MemberView(
+            uuid: uuid ?? '',
+            name: name,
+            ci: ci,
+            speciality: speciality,
+            email: email,
+          ),
+        );
+      }
+      if (!mounted) return;
+      setState(() {
+        _teamMembers[teamId] = members;
+      });
+    } finally {
+      _loadingTeamMembers.remove(teamId);
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _confirmAndDeleteTeam(TechnicalTeam team) async {
+    final id = team.id;
+    if (id == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se puede eliminar: el equipo no tiene ID'),
+        ),
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Eliminar equipo técnico'),
+            content: Text(
+              '¿Seguro que deseas eliminar "${team.name}"? Esta acción no se puede deshacer.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text(
+                  'Eliminar',
+                  style: TextStyle(color: Colors.redAccent),
+                ),
+              ),
+            ],
+          ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _deletingTeams.add(id));
+    try {
+      await TechnicalTeamService.delete(id.toString());
+      if (!mounted) return;
+      setState(() {
+        _teamMembers.remove(id);
+        _deletingTeams.remove(id);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Equipo "${team.name}" eliminado')),
+      );
+      await widget.onRefresh();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _deletingTeams.remove(id));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al eliminar equipo: $e')));
+    }
   }
 
   @override
@@ -241,7 +412,6 @@ class _CuadrillasInicioPageState extends State<CuadrillasInicioPage> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  // ...existing code...
                   // Listado de cuadrillas
                   ...cuadrillasFiltradas.map((cuadrilla) {
                     final String nombre =
@@ -257,10 +427,19 @@ class _CuadrillasInicioPageState extends State<CuadrillasInicioPage> {
                         !_leadersInfo.containsKey(leaderId)) {
                       _fetchLeaderInfo(leaderId);
                     }
-                    final List miembros = const []; // No existe en modelo
+                    final int? teamId = cuadrilla.id;
+                    if (teamId != null &&
+                        !_teamMembers.containsKey(teamId) &&
+                        !_loadingTeamMembers.contains(teamId)) {
+                      _ensureTeamMembersLoaded(teamId);
+                    }
+                    final List<_MemberView> miembros =
+                        teamId != null
+                            ? (_teamMembers[teamId] ?? const [])
+                            : const [];
                     final int pendientes = 0;
                     final int completados = 0;
-                    final String ubicacion = 'Ubicación no disponible';
+                    // Ubicación no usada actualmente
 
                     return Padding(
                       padding: const EdgeInsets.symmetric(
@@ -372,7 +551,8 @@ class _CuadrillasInicioPageState extends State<CuadrillasInicioPage> {
                                               ),
                                             )
                                             : Text(
-                                              (leader.name != null && leader.name!.isNotEmpty)
+                                              (leader.name != null &&
+                                                      leader.name!.isNotEmpty)
                                                   ? leader.name![0]
                                                   : '?',
                                               style: AppTextStyles.body(
@@ -425,65 +605,165 @@ class _CuadrillasInicioPageState extends State<CuadrillasInicioPage> {
                               ),
                               const SizedBox(height: 4),
                               Container(
-                                constraints: const BoxConstraints(
-                                  maxHeight: 110,
-                                ),
-                                child: ListView.builder(
-                                  shrinkWrap: true,
-                                  itemCount: miembros.length,
-                                  itemBuilder: (context, idx) {
-                                    final miembro = miembros[idx];
-                                    return Card(
-                                      color: AppColors.secondaryBlue,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      margin: const EdgeInsets.symmetric(
-                                        vertical: 2,
-                                      ),
-                                      child: ListTile(
-                                        leading: CircleAvatar(
-                                          backgroundColor: AppColors.iconBlue,
-                                          child: Text(
-                                            miembro.name.isNotEmpty
-                                                ? miembro.name[0]
-                                                : '?',
-                                            style: AppTextStyles.body(
-                                              color: Colors.white,
-                                            ),
+                                constraints: const BoxConstraints(),
+                                child:
+                                    (teamId != null &&
+                                            _loadingTeamMembers.contains(
+                                              teamId,
+                                            ))
+                                        ? const Center(
+                                          child: Padding(
+                                            padding: EdgeInsets.all(12.0),
+                                            child: CircularProgressIndicator(),
                                           ),
+                                        )
+                                        : ListView.builder(
+                                          shrinkWrap: true,
+                                          itemCount: miembros.length,
+                                          itemBuilder: (context, idx) {
+                                            final miembro = miembros[idx];
+                                            return Card(
+                                              color: AppColors.secondaryBlue,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                              margin:
+                                                  const EdgeInsets.symmetric(
+                                                    vertical: 2,
+                                                  ),
+                                              child: ListTile(
+                                                leading: CircleAvatar(
+                                                  backgroundColor:
+                                                      AppColors.iconBlue,
+                                                  child: Text(
+                                                    miembro.name.isNotEmpty
+                                                        ? miembro.name[0]
+                                                        : '?',
+                                                    style: AppTextStyles.body(
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                                title: Text(
+                                                  miembro.name,
+                                                  style: AppTextStyles.body(),
+                                                ),
+                                                subtitle: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      '${miembro.speciality} • CI: ${miembro.ci}',
+                                                      style:
+                                                          AppTextStyles.bodySmall(),
+                                                    ),
+                                                  ],
+                                                ),
+                                                trailing:
+                                                    (miembro.uuid.isEmpty ||
+                                                            teamId == null)
+                                                        ? const SizedBox.shrink()
+                                                        : (_removingMembers
+                                                                .contains(
+                                                                  miembro.uuid,
+                                                                )
+                                                            ? const SizedBox(
+                                                              width: 20,
+                                                              height: 20,
+                                                              child:
+                                                                  CircularProgressIndicator(
+                                                                    strokeWidth:
+                                                                        2.0,
+                                                                  ),
+                                                            )
+                                                            : IconButton(
+                                                              tooltip:
+                                                                  'Quitar del equipo',
+                                                              icon: const Icon(
+                                                                Icons
+                                                                    .delete_outline,
+                                                                color:
+                                                                    Colors
+                                                                        .redAccent,
+                                                              ),
+                                                              onPressed: () async {
+                                                                setState(() {
+                                                                  _removingMembers
+                                                                      .add(
+                                                                        miembro
+                                                                            .uuid,
+                                                                      );
+                                                                });
+                                                                try {
+                                                                  await TechnicianService.assignToTeam(
+                                                                    miembro
+                                                                        .uuid,
+                                                                    null,
+                                                                  );
+                                                                  if (!mounted)
+                                                                    return;
+                                                                  setState(() {
+                                                                    final list =
+                                                                        _teamMembers[teamId]!;
+                                                                    list.removeWhere(
+                                                                      (m) =>
+                                                                          m.uuid ==
+                                                                          miembro
+                                                                              .uuid,
+                                                                    );
+                                                                  });
+                                                                  ScaffoldMessenger.of(
+                                                                    context,
+                                                                  ).showSnackBar(
+                                                                    SnackBar(
+                                                                      content: Text(
+                                                                        'Eliminado ${miembro.name} del equipo',
+                                                                      ),
+                                                                    ),
+                                                                  );
+                                                                } catch (e) {
+                                                                  if (!mounted)
+                                                                    return;
+                                                                  ScaffoldMessenger.of(
+                                                                    context,
+                                                                  ).showSnackBar(
+                                                                    SnackBar(
+                                                                      content: Text(
+                                                                        'Error al eliminar del equipo: $e',
+                                                                      ),
+                                                                    ),
+                                                                  );
+                                                                } finally {
+                                                                  if (mounted) {
+                                                                    setState(() {
+                                                                      _removingMembers.remove(
+                                                                        miembro
+                                                                            .uuid,
+                                                                      );
+                                                                    });
+                                                                  }
+                                                                }
+                                                              },
+                                                            )),
+                                                contentPadding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 12,
+                                                      vertical: 2,
+                                                    ),
+                                              ),
+                                            );
+                                          },
                                         ),
-                                        title: Text(
-                                          miembro.name,
-                                          style: AppTextStyles.body(),
-                                        ),
-                                        subtitle: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              '${miembro.speciality ?? ''} • CI: ${miembro.ci ?? ''}',
-                                              style: AppTextStyles.bodySmall(),
-                                            ),
-                                          ],
-                                        ),
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                              horizontal: 12,
-                                              vertical: 2,
-                                            ),
-                                      ),
-                                    );
-                                  },
-                                ),
                               ),
                               Padding(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 6,
                                 ),
                                 child: OutlinedButton.icon(
-                                  onPressed:
-                                      () {}, // TODO: implementar agregar miembro
+                                  onPressed: () {
+                                    _abrirModalAgregarMiembro(cuadrilla);
+                                  },
                                   icon: const Icon(
                                     Icons.add,
                                     color: AppColors.iconBlue,
@@ -569,6 +849,41 @@ class _CuadrillasInicioPageState extends State<CuadrillasInicioPage> {
                                       foregroundColor: AppColors.iconBlue,
                                       side: const BorderSide(
                                         color: AppColors.iconBlue,
+                                      ),
+                                      textStyle: AppTextStyles.button(),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  OutlinedButton.icon(
+                                    onPressed:
+                                        (cuadrilla.id == null ||
+                                                _deletingTeams.contains(
+                                                  cuadrilla.id!,
+                                                ))
+                                            ? null
+                                            : () => _confirmAndDeleteTeam(
+                                              cuadrilla,
+                                            ),
+                                    icon:
+                                        _deletingTeams.contains(
+                                              cuadrilla.id ?? -1,
+                                            )
+                                            ? const SizedBox(
+                                              width: 16,
+                                              height: 16,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                            : const Icon(
+                                              Icons.delete_outline,
+                                              size: 18,
+                                            ),
+                                    label: const Text('Eliminar'),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: Colors.redAccent,
+                                      side: const BorderSide(
+                                        color: Colors.redAccent,
                                       ),
                                       textStyle: AppTextStyles.button(),
                                     ),

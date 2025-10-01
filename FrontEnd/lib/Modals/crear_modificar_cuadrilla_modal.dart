@@ -4,8 +4,6 @@ import '../Services/technician_service.dart';
 import '../Services/technician_speciality_service.dart';
 import '../Services/user_service.dart';
 import '../Models/backend_types.dart';
-import 'create_technician_modal.dart';
-import 'create_speciality_modal.dart';
 
 List<Map<String, dynamic>> users = [];
 
@@ -63,7 +61,7 @@ class _CrearModificarCuadrillaPageState
       isLoading = true;
     });
     try {
-      final techniciansFuture = TechnicianService.getAll();
+      final techniciansFuture = TechnicianService.getUnassigned();
       final especialidadesFuture = TechnicianSpecialityService.getAll();
       final usersFuture = UserService.getAll();
       final results = await Future.wait([
@@ -81,7 +79,7 @@ class _CrearModificarCuadrillaPageState
                 (u) => {
                   'uuid': u.uuid ?? '',
                   'name': u.name ?? '',
-                  'email': u.email ?? '',
+                  'email': u.email,
                 },
               )
               .map((m) => m.map((k, v) => MapEntry(k, v.toString())))
@@ -137,43 +135,6 @@ class _CrearModificarCuadrillaPageState
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Error al cargar datos: $e')));
-    }
-  }
-
-  void _onAgregarMiembro() {
-    setState(() {
-      miembros.add(null); // sin técnico seleccionado inicialmente
-    });
-  }
-
-  Future<void> _onEliminarMiembro(int index) async {
-    if (index < 0 || index >= miembros.length) return;
-
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Confirmar eliminación'),
-            content: const Text(
-              '¿Está seguro de que desea eliminar este miembro?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancelar'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Eliminar'),
-              ),
-            ],
-          ),
-    );
-
-    if (confirm == true) {
-      setState(() {
-        miembros.removeAt(index);
-      });
     }
   }
 
@@ -274,119 +235,7 @@ class _CrearModificarCuadrillaPageState
     }
   }
 
-  Future<void> _onEliminar() async {
-    if (widget.cuadrillaData?['id'] == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No se puede eliminar una cuadrilla que no existe'),
-        ),
-      );
-      return;
-    }
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Confirmar eliminación'),
-            content: const Text(
-              '¿Está seguro de que desea eliminar esta cuadrilla?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancelar'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Eliminar'),
-              ),
-            ],
-          ),
-    );
-
-    if (confirm == true) {
-      setState(() {
-        isLoading = true;
-      });
-      try {
-        await TechnicalTeamService.delete(
-          widget.cuadrillaData!['id'].toString(),
-        );
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Equipo técnico eliminado exitosamente'),
-          ),
-        );
-        widget.onSuccess?.call();
-        Navigator.of(context).pop();
-      } catch (e) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error al eliminar: $e')));
-      } finally {
-        if (mounted) {
-          setState(() {
-            isLoading = false;
-          });
-        }
-      }
-    }
-  }
-
   // Modales para crear técnico y especialidad
-  Future<void> _openCrearTecnicoModal() async {
-    await showDialog<Map<String, dynamic>>(
-      context: context,
-      builder:
-          (context) => CreateTechnicianModal(
-            especialidades: especialidades,
-            onCreate: (data) async {
-              try {
-                await TechnicianService.create(data);
-                if (!mounted) return;
-                Navigator.of(context).pop();
-                await _loadDataFromAPI();
-              } catch (e) {
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error al crear técnico: $e')),
-                );
-              }
-            },
-            onCancel: () => Navigator.of(context).pop(),
-          ),
-    );
-  }
-
-  Future<void> _openCrearEspecialidadModal() async {
-    final result = await showDialog<String>(
-      context: context,
-      builder:
-          (context) => CreateSpecialityModal(
-            onCreate: (especialidad) async {
-              try {
-                await TechnicianSpecialityService.create(especialidad);
-                if (!mounted) return;
-                Navigator.of(context).pop(especialidad);
-              } catch (e) {
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error al crear especialidad: $e')),
-                );
-              }
-            },
-            onCancel: () => Navigator.of(context).pop(),
-          ),
-    );
-    if (result != null && mounted) {
-      await _loadDataFromAPI();
-      setState(() {
-        _especialidadSeleccionada = result;
-      });
-    }
-  }
 
   @override
   void dispose() {
